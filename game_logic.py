@@ -1,0 +1,176 @@
+import math, random, copy, psycopg2
+
+ROWS = 9
+COLS = 9
+EMPTY = 0
+RED = 1
+YELLOW = 2
+
+# ── BOARD ──────────────────────────────────────────
+def create_board():
+    return [[EMPTY]*COLS for _ in range(ROWS)]
+
+def is_valid_col(board, col):
+    return 0 <= col < COLS and board[0][col] == EMPTY
+
+def get_valid_cols(board):
+    return [c for c in range(COLS) if is_valid_col(board, c)]
+
+def drop_piece(board, col, player):
+    for r in range(ROWS-1, -1, -1):
+        if board[r][col] == EMPTY:
+            board[r][col] = player
+            return r
+    return -1
+
+def check_winner(board, player):
+    # Horizontal
+    for r in range(ROWS):
+        for c in range(COLS-3):
+            if all(board[r][c+i]==player for i in range(4)):
+                return True
+    # Vertical
+    for r in range(ROWS-3):
+        for c in range(COLS):
+            if all(board[r+i][c]==player for i in range(4)):
+                return True
+    # Diag /
+    for r in range(3, ROWS):
+        for c in range(COLS-3):
+            if all(board[r-i][c+i]==player for i in range(4)):
+                return True
+    # Diag \
+    for r in range(ROWS-3):
+        for c in range(COLS-3):
+            if all(board[r+i][c+i]==player for i in range(4)):
+                return True
+    return False
+
+def is_draw(board):
+    return all(board[0][c] != EMPTY for c in range(COLS))
+
+# ── SCORING ────────────────────────────────────────
+def score_window(window, player):
+    opp = RED if player==YELLOW else YELLOW
+    s = 0
+    if window.count(player)==4: s+=100
+    elif window.count(player)==3 and window.count(EMPTY)==1: s+=5
+    elif window.count(player)==2 and window.count(EMPTY)==2: s+=2
+    if window.count(opp)==3 and window.count(EMPTY)==1: s-=4
+    return s
+
+def score_board(board, player):
+    score = 0
+    mid = COLS//2
+    center = [board[r][mid] for r in range(ROWS)]
+    score += center.count(player)*3
+    for r in range(ROWS):
+        for c in range(COLS-3):
+            score += score_window([board[r][c+i] for i in range(4)], player)
+    for r in range(ROWS-3):
+        for c in range(COLS):
+            score += score_window([board[r+i][c] for i in range(4)], player)
+    for r in range(3, ROWS):
+        for c in range(COLS-3):
+            score += score_window([board[r-i][c+i] for i in range(4)], player)
+    for r in range(ROWS-3):
+        for c in range(COLS-3):
+            score += score_window([board[r+i][c+i] for i in range(4)], player)
+    return score
+
+# ── MINIMAX ────────────────────────────────────────
+def minimax(board, depth, alpha, beta, maximizing, player):
+    opp = RED if player==YELLOW else YELLOW
+    valid = get_valid_cols(board)
+    if check_winner(board, player): return None, 1000000
+    if check_winner(board, opp):   return None, -1000000
+    if not valid or depth==0:      return None, score_board(board, player)
+
+    if maximizing:
+        best, best_col = -math.inf, random.choice(valid)
+        for col in valid:
+            b = copy.deepcopy(board)
+            drop_piece(b, col, player)
+            _, sc = minimax(b, depth-1, alpha, beta, False, player)
+            if sc > best: best, best_col = sc, col
+            alpha = max(alpha, best)
+            if alpha >= beta: break
+        return best_col, best
+    else:
+        best, best_col = math.inf, random.choice(valid)
+        for col in valid:
+            b = copy.deepcopy(board)
+            drop_piece(b, col, opp)
+            _, sc = minimax(b, depth-1, alpha, beta, True, player)
+            if sc < best: best, best_col = sc, col
+            beta = min(beta, best)
+            if alpha >= beta: break
+        return best_col, best
+
+# ── IA NIVEAU ──────────────────────────────────────
+def ai_easy(board):
+    """Complètement random."""
+    valid = get_valid_cols(board)
+    return random.choice(valid) if valid else None
+
+def ai_medium(board, player):
+    """
+    Utilise les séquences de la BDD pour choisir le coup le plus fréquent
+    depuis la position courante. Fallback sur random si rien trouvé.
+    """
+    # Reconstruit la séquence des coups joués depuis le board
+    # On passe la séquence en paramètre depuis le backend
+    valid = get_valid_cols(board)
+    return random.choice(valid) if valid else None
+
+def ai_medium_with_seq(board, player, sequence_played):
+    """
+    Version avec séquence : cherche dans la BDD les suites de la séquence actuelle
+    et choisit le coup le plus fréquent.
+    """
+    valid = get_valid_cols(board)
+    if not valid:
+        return None
+
+    try:
+        conn = psycopg2.connect(
+            dbname="postgres", user="postgres",
+            password="12082004", host="localhost"
+        )
+        cur = conn.cursor()
+
+        # Cherche toutes les parties qui commencent par cette séquence
+        prefix = sequence_played
+        cur.execute("""
+            SELECT sequence_coups FROM parties
+            WHERE sequence_coups LIKE %s AND statut = 'TERMINEE'
+            LIMIT 500
+        """, (prefix + '%',))
+
+        rows = cur.fetchall()
+        conn.close()
+
+        if not rows:
+            return random.choice(valid)
+
+        # Compte les prochains coups
+        next_col_counts = {}
+        for (seq,) in rows:
+            if len(seq) > len(prefix):
+                next_move = int(seq[len(prefix)]) - 1  # BGA 1-indexed -> 0-indexed
+                if next_move in valid:
+                    next_col_counts[next_move] = next_col_counts.get(next_move, 0) + 1
+
+        if not next_col_counts:
+            return random.choice(valid)
+
+        # Retourne le coup le plus fréquent
+        return max(next_col_counts, key=next_col_counts.get)
+
+    except Exception:
+        return random.choice(valid)
+
+def ai_hard(board, player, depth=4):
+    """Minimax avec élagage alpha-bêta."""
+    col, _ = minimax(board, depth, -math.inf, math.inf, True, player)
+    return col
