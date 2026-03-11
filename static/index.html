@@ -21,8 +21,6 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'DM
 body::before{content:'';position:fixed;inset:0;pointer-events:none;
   background:radial-gradient(ellipse 80% 50% at 10% 0%,rgba(79,110,247,.06) 0%,transparent 60%),
              radial-gradient(ellipse 50% 60% at 90% 100%,rgba(255,45,85,.04) 0%,transparent 60%);}
-
-/* HEADER */
 header{display:flex;align-items:center;justify-content:space-between;
   padding:16px 24px;border-bottom:1px solid var(--border);position:relative;z-index:10;}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.12em;
@@ -32,13 +30,9 @@ header{display:flex;align-items:center;justify-content:space-between;
   font-family:'DM Sans',sans-serif;font-size:.82rem;padding:6px 13px;
   border-radius:8px;cursor:pointer;transition:all .2s;}
 .back-btn:hover{border-color:var(--accent);color:var(--text)}
-
-/* PAGES */
 .page{display:none;min-height:calc(100vh - 57px);flex-direction:column;
   align-items:center;justify-content:center;padding:28px 16px;position:relative;z-index:1;}
 .page.active{display:flex}
-
-/* HOME */
 .home-hero{text-align:center;margin-bottom:44px}
 .home-hero h1{font-family:'Bebas Neue',sans-serif;
   font-size:clamp(3.5rem,12vw,7rem);letter-spacing:.04em;line-height:.88;margin-bottom:14px;}
@@ -58,8 +52,6 @@ header{display:flex;align-items:center;justify-content:space-between;
 .hcard-icon{font-size:2rem;margin-bottom:10px}
 .hcard-label{font-weight:600;font-size:.9rem;margin-bottom:4px}
 .hcard-desc{color:var(--muted);font-size:.75rem;line-height:1.4}
-
-/* WAITING */
 .wait-box{text-align:center;max-width:370px;width:100%;
   background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:44px 32px;}
 .wait-box h2{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:.1em;margin-bottom:8px}
@@ -76,11 +68,7 @@ header{display:flex;align-items:center;justify-content:space-between;
   background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;
   cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
 .invite-copy:hover{border-color:var(--accent);color:var(--accent)}
-
-/* GAME PAGE */
 #game-page{padding:12px;gap:10px;justify-content:flex-start;padding-top:16px;align-items:center}
-
-/* Status pill */
 .turn-pill{display:inline-flex;align-items:center;gap:9px;
   padding:9px 18px;background:var(--s1);border:1px solid var(--border);
   border-radius:40px;font-size:.88rem;font-weight:500;transition:all .3s;}
@@ -89,11 +77,7 @@ header{display:flex;align-items:center;justify-content:space-between;
 .pill-dot.red{background:var(--red);box-shadow:0 0 7px var(--red-glow)}
 .pill-dot.yellow{background:var(--yellow);box-shadow:0 0 7px var(--yellow-glow)}
 .pill-dot.gray{background:var(--muted)}
-
-/* TOOLBAR */
 .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;max-width:800px;width:100%}
-
-/* Niveau IA */
 .level-group{display:flex;gap:4px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:3px;}
 .lvl-btn{background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;
   font-size:.78rem;font-weight:500;padding:5px 11px;border-radius:7px;cursor:pointer;transition:all .2s;}
@@ -101,8 +85,6 @@ header{display:flex;align-items:center;justify-content:space-between;
 .lvl-btn.active-medium{background:var(--orange-dim);color:var(--orange)}
 .lvl-btn.active-hard{background:var(--red-dim);color:var(--red)}
 .lvl-btn:hover:not(.active-easy):not(.active-medium):not(.active-hard){color:var(--text)}
-
-/* Navigation coups */
 .nav-group{display:flex;gap:4px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:3px;}
 .nav-btn{background:none;border:none;color:var(--muted);font-size:.85rem;
   padding:5px 10px;border-radius:7px;cursor:pointer;transition:all .2s;min-width:32px;}
@@ -110,18 +92,10 @@ header{display:flex;align-items:center;justify-content:space-between;
 .nav-btn:disabled{opacity:.3;cursor:default}
 .move-counter{font-size:.78rem;color:var(--muted);padding:5px 10px;
   font-family:'Bebas Neue',sans-serif;letter-spacing:.05em;min-width:58px;text-align:center;}
-
-/* Bouton rejouer dans le jeu */
-.game-replay-btn{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:7px 16px;border-radius:10px;
+.game-replay-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:10px;
   background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);
-  font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;
-  cursor:pointer;transition:all .2s;
-}
+  font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;}
 .game-replay-btn:hover{background:var(--accent);color:#fff}
-
-/* BOARD */
 .board-outer{background:var(--s1);border:1px solid var(--border);border-radius:18px;
   padding:12px;box-shadow:0 24px 60px rgba(0,0,0,.6);}
 .col-hints{display:grid;grid-template-columns:repeat(9,var(--cell));gap:4px;height:16px;margin-bottom:4px;}
@@ -146,8 +120,6 @@ header{display:flex;align-items:center;justify-content:space-between;
 .cell.last-move{outline:2px solid rgba(255,255,255,.5);outline-offset:2px}
 @keyframes pop{0%{transform:scale(.4);opacity:.5}100%{transform:scale(1);opacity:1}}
 @keyframes wink{0%{filter:brightness(1);transform:scale(1)}100%{filter:brightness(1.5);transform:scale(1.07)}}
-
-/* SCORE */
 .score-bar{display:flex;gap:8px;width:100%;max-width:500px;}
 .score-card{flex:1;background:var(--s1);border:1px solid var(--border);border-radius:10px;
   padding:10px 14px;display:flex;align-items:center;gap:8px;}
@@ -157,11 +129,8 @@ header{display:flex;align-items:center;justify-content:space-between;
 .sc-dot.red{background:var(--red)}.sc-dot.yellow{background:var(--yellow)}
 .sc-name{font-size:.82rem;font-weight:500;flex:1}
 .sc-score{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.05em;color:var(--muted)}
-/* Badge "moi" */
 .my-badge{font-size:.65rem;background:var(--accent-dim);color:var(--accent);
   border:1px solid var(--accent);border-radius:4px;padding:1px 5px;margin-left:4px;}
-
-/* OVERLAYS */
 .overlay{display:none;position:fixed;inset:0;z-index:200;
   background:rgba(8,8,16,.85);backdrop-filter:blur(10px);
   align-items:center;justify-content:center;padding:20px;}
@@ -173,15 +142,12 @@ header{display:flex;align-items:center;justify-content:space-between;
 .modal-emoji{font-size:3rem;margin-bottom:12px}
 .modal-title{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:.08em;margin-bottom:5px}
 .modal-sub{color:var(--muted);font-size:.86rem;margin-bottom:22px}
-
-/* Choix couleur */
 .color-picker{display:flex;gap:8px;margin-bottom:20px;}
 .col-pick-btn{flex:1;padding:10px 6px;border-radius:10px;border:2px solid var(--border);
   background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;
   font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;}
 .col-pick-btn.sel-red{border-color:var(--red);background:var(--red-dim);color:var(--red)}
 .col-pick-btn.sel-yellow{border-color:var(--yellow);background:var(--yellow-dim);color:var(--yellow)}
-
 .btn-stack{display:flex;flex-direction:column;gap:9px}
 .btn{display:flex;align-items:center;justify-content:center;gap:7px;
   padding:13px 22px;border-radius:10px;border:none;
@@ -191,16 +157,12 @@ header{display:flex;align-items:center;justify-content:space-between;
 .btn-accent:hover{background:#6070ff;transform:translateY(-2px)}
 .btn-ghost2{background:transparent;border:1px solid var(--border);color:var(--muted)}
 .btn-ghost2:hover{border-color:var(--accent);color:var(--text)}
-
-/* TOAST */
 .toast{position:fixed;bottom:22px;left:50%;
   transform:translateX(-50%) translateY(12px);
   background:var(--s2);border:1px solid var(--border);border-radius:10px;
   padding:10px 20px;font-size:.86rem;opacity:0;
   transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* RESPONSIVE */
 @media(max-width:480px){
   :root{--cell:36px}
   header{padding:12px 14px}
@@ -216,7 +178,6 @@ header{display:flex;align-items:center;justify-content:space-between;
   <button class="back-btn" onclick="goHome()">Accueil</button>
 </header>
 
-<!-- HOME -->
 <div class="page active" id="home-page">
   <div class="home-hero">
     <h1>Puissance<em>Quatre 9x9</em></h1>
@@ -240,38 +201,24 @@ header{display:flex;align-items:center;justify-content:space-between;
   </div>
 </div>
 
-<!-- MODAL IA -->
 <div class="overlay" id="ai-modal">
   <div class="modal-card">
     <div class="modal-emoji">&#129302;</div>
     <div class="modal-title">Vs IA</div>
     <div class="modal-sub">Choisis ta couleur et la difficulte</div>
-
     <div class="color-picker">
-      <button class="col-pick-btn sel-red" id="cpick-red" onclick="selectColor('red')">
-        &#128308; Rouge
-      </button>
-      <button class="col-pick-btn" id="cpick-yellow" onclick="selectColor('yellow')">
-        &#128993; Jaune
-      </button>
+      <button class="col-pick-btn sel-red" id="cpick-red" onclick="selectColor('red')">&#128308; Rouge</button>
+      <button class="col-pick-btn" id="cpick-yellow" onclick="selectColor('yellow')">&#128993; Jaune</button>
     </div>
-
     <div class="btn-stack">
-      <button class="btn" style="background:var(--green-dim);border:1px solid var(--green);color:var(--green)" onclick="startAI('easy')">
-        &#127922; Facile 
-      </button>
-      <button class="btn" style="background:var(--orange-dim);border:1px solid var(--orange);color:var(--orange)" onclick="startAI('medium')">
-        &#128218; Moyen
-      </button>
-      <button class="btn" style="background:var(--red-dim);border:1px solid var(--red);color:var(--red)" onclick="startAI('hard')">
-        &#129504; Difficile
-      </button>
+      <button class="btn" style="background:var(--green-dim);border:1px solid var(--green);color:var(--green)" onclick="startAI('easy')">&#127922; Facile</button>
+      <button class="btn" style="background:var(--orange-dim);border:1px solid var(--orange);color:var(--orange)" onclick="startAI('medium')">&#128218; Moyen</button>
+      <button class="btn" style="background:var(--red-dim);border:1px solid var(--red);color:var(--red)" onclick="startAI('hard')">&#129504; Difficile</button>
       <button class="btn btn-ghost2" onclick="closeAIModal()">Annuler</button>
     </div>
   </div>
 </div>
 
-<!-- WAITING -->
 <div class="page" id="wait-page">
   <div class="wait-box">
     <div class="spinner"></div>
@@ -287,26 +234,17 @@ header{display:flex;align-items:center;justify-content:space-between;
   </div>
 </div>
 
-<!-- GAME -->
 <div class="page" id="game-page">
-
-  <!-- Status -->
   <div class="turn-pill" id="turn-pill">
     <div class="pill-dot gray" id="pill-dot"></div>
     <span id="turn-text">Connexion...</span>
   </div>
-
-  <!-- Toolbar -->
   <div class="toolbar">
-
-    <!-- Niveau IA -->
     <div class="level-group" id="level-group" style="display:none">
       <button class="lvl-btn" id="lvl-easy" onclick="setLevel('easy')">Facile</button>
       <button class="lvl-btn" id="lvl-medium" onclick="setLevel('medium')">Moyen</button>
       <button class="lvl-btn" id="lvl-hard" onclick="setLevel('hard')">Difficile</button>
     </div>
-
-    <!-- Navigation coups -->
     <div class="nav-group">
       <button class="nav-btn" id="nav-start" onclick="navTo(0)" title="Debut">&#9198;</button>
       <button class="nav-btn" id="nav-prev" onclick="navStep(-1)" title="Precedent">&#9664;</button>
@@ -314,31 +252,18 @@ header{display:flex;align-items:center;justify-content:space-between;
       <button class="nav-btn" id="nav-next" onclick="navStep(1)" title="Suivant">&#9654;</button>
       <button class="nav-btn" id="nav-end" onclick="navTo(-1)" title="Fin">&#9197;</button>
     </div>
-
-    <!-- Rejouer -->
-    <button class="game-replay-btn" id="game-replay-btn" onclick="sendRestart()">
-      &#8634; Rejouer
-    </button>
-
+    <button class="game-replay-btn" onclick="sendRestart()">&#8634; Rejouer</button>
   </div>
-
-  <!-- Board -->
   <div class="board-outer">
     <div class="col-hints" id="col-hints">
-      <div class="ch" data-col="0">&#9660;</div>
-      <div class="ch" data-col="1">&#9660;</div>
-      <div class="ch" data-col="2">&#9660;</div>
-      <div class="ch" data-col="3">&#9660;</div>
-      <div class="ch" data-col="4">&#9660;</div>
-      <div class="ch" data-col="5">&#9660;</div>
-      <div class="ch" data-col="6">&#9660;</div>
-      <div class="ch" data-col="7">&#9660;</div>
+      <div class="ch" data-col="0">&#9660;</div><div class="ch" data-col="1">&#9660;</div>
+      <div class="ch" data-col="2">&#9660;</div><div class="ch" data-col="3">&#9660;</div>
+      <div class="ch" data-col="4">&#9660;</div><div class="ch" data-col="5">&#9660;</div>
+      <div class="ch" data-col="6">&#9660;</div><div class="ch" data-col="7">&#9660;</div>
       <div class="ch" data-col="8">&#9660;</div>
     </div>
     <div class="board-grid" id="board-grid"></div>
   </div>
-
-  <!-- Scores -->
   <div class="score-bar">
     <div class="score-card" id="sc-red">
       <div class="sc-dot red"></div>
@@ -353,7 +278,6 @@ header{display:flex;align-items:center;justify-content:space-between;
   </div>
 </div>
 
-<!-- OVERLAY RESULTAT -->
 <div class="overlay" id="result-overlay">
   <div class="modal-card">
     <div class="modal-emoji" id="res-emoji">&#127942;</div>
@@ -371,8 +295,6 @@ header{display:flex;align-items:center;justify-content:space-between;
 
 <script>
 const ROWS=9,COLS=9,RED=1,YELLOW=2;
-
-// Etat global
 let ws=null, myColor=null, chosenColor='red';
 let liveBoard=new Array(ROWS*COLS).fill(0);
 let liveHistory=[];
@@ -380,7 +302,6 @@ let liveCurrent=RED, gameStatus='waiting', gameMode='pvp', aiLevel='hard';
 let scores={red:0,yellow:0};
 let reviewCursor=0, reviewMode=false;
 
-// ── NAVIGATION PAGES ──────────────────────────
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -394,13 +315,12 @@ function goHome(){
 }
 
 function openAIModal(){
-  selectColor('red'); // reset selection
+  selectColor('red');
   document.getElementById('ai-modal').classList.add('show');
 }
 function closeAIModal(){document.getElementById('ai-modal').classList.remove('show')}
 function closeResult(){document.getElementById('result-overlay').classList.remove('show')}
 
-// ── CHOIX COULEUR ──────────────────────────────
 function selectColor(c){
   chosenColor=c;
   ['red','yellow'].forEach(x=>{
@@ -409,7 +329,6 @@ function selectColor(c){
   });
 }
 
-// ── WS ────────────────────────────────────────
 function openWS(msg){
   const proto=location.protocol==='https:'?'wss':'ws';
   ws=new WebSocket(`${proto}://${location.host}/ws`);
@@ -419,27 +338,28 @@ function openWS(msg){
   ws.onclose=()=>{if(gameStatus==='playing')toast('Connexion perdue')};
 }
 
-// ── ACTIONS HOME ──────────────────────────────
 function startQueue(){
+  if(ws){ws.close();ws=null;}
   showPage('wait-page');
   document.getElementById('wait-desc').textContent="Recherche d'un adversaire...";
   document.getElementById('invite-box').classList.remove('show');
   openWS({action:'queue'});
 }
+
 function startInvite(){
+  if(ws){ws.close();ws=null;}
   showPage('wait-page');
   document.getElementById('wait-desc').textContent="En attente que ton ami rejoigne";
   openWS({action:'invite'});
 }
+
 function startAI(level){
+  if(ws){ws.close();ws=null;}
   closeAIModal();
   aiLevel=level;
-  // Determine la couleur reelle
-  const realColor=chosenColor;
-  openWS({action:'ai', ai_level:level, preferred_color:realColor});
+  openWS({action:'ai', ai_level:level, preferred_color:chosenColor});
 }
 
-// ── MESSAGES WS ───────────────────────────────
 function handleMsg(msg){
   if(msg.type==='error'){toast(msg.msg);goHome();return;}
   if(msg.type==='waiting') return;
@@ -480,12 +400,10 @@ function handleMsg(msg){
 
     if(msg.status==='finished'){
       setTimeout(()=>showResult(msg),500);
-    } else {
     }
   }
 }
 
-// ── BOARD ─────────────────────────────────────
 function buildBoard(){
   const g=document.getElementById('board-grid');
   g.innerHTML='';
@@ -510,7 +428,6 @@ function buildBoard(){
 }
 
 function renderFromHistory(){
-  // Reconstruit le plateau jusqu'a reviewCursor
   const board=new Array(ROWS*COLS).fill(0);
   let cur=RED;
   let lastR=-1, lastC=-1;
@@ -541,11 +458,9 @@ function renderFromHistory(){
     if(v===RED){cell.classList.add('red');if(isReview)cell.classList.add('static');}
     else if(v===YELLOW){cell.classList.add('yellow');if(isReview)cell.classList.add('static');}
     else if(isMyTurn) cell.classList.add('playable');
-    // Highlight dernier coup en review
     if(isReview&&r===lastR&&c===lastC) cell.classList.add('last-move');
   });
 
-  // Score cards highlight
   document.getElementById('sc-red').className=
     'score-card'+(liveCurrent===RED&&gameStatus==='playing'&&!isReview?' active-red':'');
   document.getElementById('sc-yellow').className=
@@ -558,7 +473,6 @@ function play(col){
   ws.send(JSON.stringify({type:'move',col}));
 }
 
-// ── NAVIGATION COUPS ──────────────────────────
 function navTo(idx){
   if(idx===-1) idx=liveHistory.length;
   reviewCursor=Math.max(0,Math.min(liveHistory.length,idx));
@@ -584,14 +498,12 @@ function updateNavUI(){
   document.getElementById('nav-end').disabled=reviewCursor===total;
 }
 
-// ── STATUS ────────────────────────────────────
 function updateTurn(){
   const pill=document.getElementById('turn-pill');
   const dot=document.getElementById('pill-dot');
   const txt=document.getElementById('turn-text');
   pill.classList.remove('my-turn');
   dot.className='pill-dot';
-
   if(gameStatus==='waiting'){dot.classList.add('gray');txt.textContent='En attente...';return;}
   if(gameStatus==='playing'){
     dot.classList.add(liveCurrent===RED?'red':'yellow');
@@ -604,10 +516,9 @@ function updateTurn(){
 
 function updateScoreNames(){
   if(gameMode==='ai'){
-    // Le joueur est myColor, l'IA est l'autre
-    const playerIsRed = myColor===RED;
-    const playerStr = playerIsRed ? 'red' : 'yellow';
-    const aiStr     = playerIsRed ? 'yellow' : 'red';
+    const playerIsRed=myColor===RED;
+    const playerStr=playerIsRed?'red':'yellow';
+    const aiStr=playerIsRed?'yellow':'red';
     document.getElementById('sc-'+playerStr+'-name').innerHTML=
       (playerIsRed?'Rouge':'Jaune')+' <span class="my-badge">moi</span>';
     document.getElementById('sc-'+aiStr+'-name').innerHTML=
@@ -622,7 +533,6 @@ function updateScoreNames(){
   }
 }
 
-// ── NIVEAU IA ─────────────────────────────────
 function setupLevelUI(){
   const grp=document.getElementById('level-group');
   grp.style.display=gameMode==='ai'?'flex':'none';
@@ -642,33 +552,26 @@ function highlightLevel(level){
   });
 }
 
-// ── RESULTAT ──────────────────────────────────
 function showResult(msg){
   const emoji=document.getElementById('res-emoji');
   const title=document.getElementById('res-title');
   const sub=document.getElementById('res-sub');
-
   if(msg.winner==='draw'){
-    emoji.textContent='Egal !';
-    title.textContent='Match nul';
-    sub.textContent='Personne ne gagne cette fois';
-    title.style.color='var(--text)';
+    emoji.textContent='Egal !';title.textContent='Match nul';
+    sub.textContent='Personne ne gagne cette fois';title.style.color='var(--text)';
   } else {
     const iWon=(msg.winner==='red'&&myColor===RED)||(msg.winner==='yellow'&&myColor===YELLOW);
     if(iWon){
-      emoji.innerHTML='&#127942;';
-      title.textContent='Victoire !';
+      emoji.innerHTML='&#127942;';title.textContent='Victoire !';
       sub.textContent='Tu les as ecrases !';
       title.style.color=myColor===RED?'var(--red)':'var(--yellow)';
     } else {
-      emoji.innerHTML='&#128580;';
-      title.textContent='Defaite';
+      emoji.innerHTML='&#128580;';title.textContent='Defaite';
       sub.textContent=gameMode==='ai'?`L'IA t'a eu (${aiLevel})...`:"L'adversaire a ete plus fort";
       title.style.color='var(--muted)';
     }
     scores[msg.winner]=(scores[msg.winner]||0)+1;
   }
-
   document.getElementById('sc-red-score').textContent=scores.red||0;
   document.getElementById('sc-yellow-score').textContent=scores.yellow||0;
   document.getElementById('result-overlay').classList.add('show');
@@ -681,7 +584,6 @@ function sendRestart(){
   if(ws) ws.send(JSON.stringify({type:'restart'}));
 }
 
-// ── UTILS ─────────────────────────────────────
 function copyInvite(){
   const link=document.getElementById('invite-link').textContent;
   navigator.clipboard.writeText(link).then(()=>toast('Lien copie !'));
@@ -692,8 +594,6 @@ function toast(msg){
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-
-// -- HOVER COLONNE --
 function hoverCol(col){
   if(liveCurrent!==myColor||gameStatus!=='playing'||reviewMode) return;
   const cls=myColor===RED?'red-hover':'yellow-hover';
@@ -702,7 +602,6 @@ function hoverCol(col){
       cell.classList.add('col-hover',cls);
     }
   });
-  // highlight la fleche de la colonne
   document.querySelectorAll('.ch').forEach(h=>{
     if(parseInt(h.dataset.col)===col) h.style.opacity='1';
   });
@@ -712,11 +611,12 @@ function clearHover(){
     cell.classList.remove('col-hover','red-hover','yellow-hover');
   });
 }
-// Auto-join depuis URL
+
 window.addEventListener('load',()=>{
   const p=new URLSearchParams(location.search);
   const join=p.get('join');
   if(join){
+    if(ws){ws.close();ws=null;}
     showPage('wait-page');
     document.getElementById('wait-desc').textContent='Connexion a la partie...';
     document.getElementById('invite-box').classList.remove('show');
