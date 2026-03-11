@@ -9,7 +9,6 @@ from game_logic import (
 )
 
 app = FastAPI()
-
 rooms = {}
 queue = []
 
@@ -73,7 +72,6 @@ async def do_ai_move(room):
     valid = get_valid_cols(room.board)
     if not valid:
         return
-
     ai_val, ai_str = get_ai_color(room)
     level = room.ai_level
     if level == "easy":
@@ -82,14 +80,11 @@ async def do_ai_move(room):
         col = ai_medium_with_seq(room.board, ai_val, room.sequence)
     else:
         col = ai_hard(room.board, ai_val, depth=4)
-
     if col is None or col not in valid:
         col = random.choice(valid)
-
     drop_piece(room.board, col, ai_val)
     room.history.append(col)
     room.sequence += str(col + 1)
-
     if check_winner(room.board, ai_val):
         room.status = "finished"
         room.winner = ai_str
@@ -98,8 +93,14 @@ async def do_ai_move(room):
         room.winner = "draw"
     else:
         room.current = RED if room.current == YELLOW else YELLOW
-
     await broadcast(room)
+
+def board_from_flat(flat):
+    """Reconstruit un board 2D depuis la liste plate envoyée par le client."""
+    board = []
+    for r in range(ROWS):
+        board.append(flat[r * COLS:(r + 1) * COLS])
+    return board
 
 @app.websocket("/ws")
 async def ws_endpoint(websocket: WebSocket):
@@ -109,6 +110,28 @@ async def ws_endpoint(websocket: WebSocket):
         action = init.get("action")
         ai_level = init.get("ai_level", "hard")
 
+        # ── HINT IA pour mode local 2 joueurs ──────────────────────
+        if action == "ai_hint":
+            flat = init.get("board", [])
+            player_val = init.get("player", RED)
+            level = init.get("ai_level", "hard")
+            board = board_from_flat(flat)
+            valid = get_valid_cols(board)
+            if not valid:
+                await websocket.send_text(json.dumps({"type": "ai_hint", "col": -1}))
+                return
+            if level == "easy":
+                col = ai_easy(board)
+            elif level == "medium":
+                col = ai_medium_with_seq(board, player_val, "")
+            else:
+                col = ai_hard(board, player_val, depth=4)
+            if col is None or col not in valid:
+                col = random.choice(valid)
+            await websocket.send_text(json.dumps({"type": "ai_hint", "col": col}))
+            return
+
+        # ── IA contre joueur ───────────────────────────────────────
         if action == "ai":
             rid = gen_id()
             room = RoomState(rid, "ai", ai_level)
@@ -123,6 +146,7 @@ async def ws_endpoint(websocket: WebSocket):
                 await do_ai_move(room)
             await handle_game(websocket, room, player_color)
 
+        # ── Matchmaking ────────────────────────────────────────────
         elif action == "queue":
             future = asyncio.get_event_loop().create_future()
             await try_match(websocket, future)
@@ -140,6 +164,7 @@ async def ws_endpoint(websocket: WebSocket):
             await broadcast(room)
             await handle_game(websocket, room, color)
 
+        # ── Invitation ─────────────────────────────────────────────
         elif action == "invite":
             rid = gen_id()
             room = RoomState(rid, "pvp")
@@ -190,16 +215,13 @@ async def handle_game(websocket, room, color):
             if msg.get("type") == "move" and room.status == "playing":
                 col = int(msg.get("col", -1))
                 player_val = RED if color == "red" else YELLOW
-
                 if room.current != player_val:
                     continue
                 if col not in get_valid_cols(room.board):
                     continue
-
                 drop_piece(room.board, col, player_val)
                 room.history.append(col)
                 room.sequence += str(col + 1)
-
                 if check_winner(room.board, player_val):
                     room.status = "finished"
                     room.winner = color
@@ -208,15 +230,38 @@ async def handle_game(websocket, room, color):
                     room.winner = "draw"
                 else:
                     room.current = YELLOW if room.current == RED else RED
-
                 await broadcast(room)
-
                 ai_v, _ = get_ai_color(room)
                 print(f"après coup: mode={room.mode} status={room.status} current={room.current} ai_v={ai_v}")
                 if room.mode == "ai" and room.status == "playing" and room.current == ai_v:
                     delay = 0.3 if room.ai_level == "easy" else (0.6 if room.ai_level == "medium" else 1.0)
                     await asyncio.sleep(delay)
                     await do_ai_move(room)
+
+            # ── IA joue à la place du joueur humain (mode pvp en ligne) ──
+            elif msg.get("type") == "ai_move" and room.status == "playing":
+                player_val = RED if color == "red" else YELLOW
+                if room.current != player_val:
+                    continue
+                level = msg.get("ai_level", "hard")
+                valid = get_valid_cols(room.board)
+                if not valid:
+                    continue
+                col = ai_hard(room.board, player_val, depth=4)
+                if col is None or col not in valid:
+                    col = random.choice(valid)
+                drop_piece(room.board, col, player_val)
+                room.history.append(col)
+                room.sequence += str(col + 1)
+                if check_winner(room.board, player_val):
+                    room.status = "finished"
+                    room.winner = color
+                elif is_draw(room.board):
+                    room.status = "finished"
+                    room.winner = "draw"
+                else:
+                    room.current = YELLOW if room.current == RED else RED
+                await broadcast(room)
 
             elif msg.get("type") == "restart":
                 room.board = create_board()
