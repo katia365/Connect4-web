@@ -39,7 +39,6 @@ header{display:flex;align-items:center;justify-content:space-between;
 .home-hero h1 em{font-style:normal;display:block;
   background:linear-gradient(100deg,var(--red),var(--yellow));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.home-hero p{color:var(--muted);font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;font-weight:300}
 .home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
   gap:12px;width:100%;max-width:560px}
 .hcard{background:var(--s1);border:1px solid var(--border);border-radius:14px;
@@ -96,6 +95,12 @@ header{display:flex;align-items:center;justify-content:space-between;
   background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);
   font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;}
 .game-replay-btn:hover{background:var(--accent);color:#fff}
+/* Bouton IA joue pour moi */
+.ai-play-btn{display:none;align-items:center;gap:6px;padding:7px 16px;border-radius:10px;
+  background:var(--orange-dim);border:1px solid var(--orange);color:var(--orange);
+  font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;}
+.ai-play-btn:hover{background:var(--orange);color:#fff}
+.ai-play-btn.show{display:inline-flex}
 .board-outer{background:var(--s1);border:1px solid var(--border);border-radius:18px;
   padding:12px;box-shadow:0 24px 60px rgba(0,0,0,.6);}
 .col-hints{display:grid;grid-template-columns:repeat(9,var(--cell));gap:4px;height:16px;margin-bottom:4px;}
@@ -183,6 +188,11 @@ header{display:flex;align-items:center;justify-content:space-between;
     <h1>Puissance<em>Quatre 9x9</em></h1>
   </div>
   <div class="home-grid">
+    <div class="hcard" onclick="startLocal()">
+      <div class="hcard-icon">&#128101;</div>
+      <div class="hcard-label">Local 2 joueurs</div>
+      <div class="hcard-desc">Même écran, même ordi</div>
+    </div>
     <div class="hcard" onclick="startQueue()">
       <div class="hcard-icon">&#9889;</div>
       <div class="hcard-label">Partie rapide</div>
@@ -246,12 +256,14 @@ header{display:flex;align-items:center;justify-content:space-between;
       <button class="lvl-btn" id="lvl-hard" onclick="setLevel('hard')">Difficile</button>
     </div>
     <div class="nav-group">
-      <button class="nav-btn" id="nav-start" onclick="navTo(0)" title="Debut">&#9198;</button>
-      <button class="nav-btn" id="nav-prev" onclick="navStep(-1)" title="Precedent">&#9664;</button>
+      <button class="nav-btn" id="nav-start" onclick="navTo(0)">&#9198;</button>
+      <button class="nav-btn" id="nav-prev" onclick="navStep(-1)">&#9664;</button>
       <div class="move-counter" id="move-counter">0 / 0</div>
-      <button class="nav-btn" id="nav-next" onclick="navStep(1)" title="Suivant">&#9654;</button>
-      <button class="nav-btn" id="nav-end" onclick="navTo(-1)" title="Fin">&#9197;</button>
+      <button class="nav-btn" id="nav-next" onclick="navStep(1)">&#9654;</button>
+      <button class="nav-btn" id="nav-end" onclick="navTo(-1)">&#9197;</button>
     </div>
+    <!-- Bouton IA joue pour moi (local + online pvp) -->
+    <button class="ai-play-btn" id="ai-play-btn" onclick="requestAIMove()">&#129504; IA joue</button>
     <button class="game-replay-btn" onclick="sendRestart()">&#8634; Rejouer</button>
   </div>
   <div class="board-outer">
@@ -301,6 +313,7 @@ let liveHistory=[];
 let liveCurrent=RED, gameStatus='waiting', gameMode='pvp', aiLevel='hard';
 let scores={red:0,yellow:0};
 let reviewCursor=0, reviewMode=false;
+let isLocalMode=false; // true = 2 joueurs local, pas de WS
 
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -310,6 +323,7 @@ function showPage(id){
 function goHome(){
   if(ws){ws.close();ws=null;}
   document.getElementById('result-overlay').classList.remove('show');
+  isLocalMode=false;
   showPage('home-page');
   try{history.replaceState({},'','/');}catch(e){}
 }
@@ -335,11 +349,189 @@ function openWS(msg){
   ws.onopen=()=>ws.send(JSON.stringify(msg));
   ws.onmessage=e=>handleMsg(JSON.parse(e.data));
   ws.onerror=()=>toast('Erreur reseau');
-  ws.onclose=()=>{if(gameStatus==='playing')toast('Connexion perdue')};
+  ws.onclose=()=>{if(gameStatus==='playing'&&!isLocalMode)toast('Connexion perdue')};
 }
 
+// ── MODE LOCAL ────────────────────────────────
+function startLocal(){
+  isLocalMode=true;
+  gameMode='local';
+  gameStatus='playing';
+  liveCurrent=RED;
+  myColor=RED; // en local myColor représente toujours le joueur actuel
+  liveBoard=new Array(ROWS*COLS).fill(0);
+  liveHistory=[];
+  reviewCursor=0; reviewMode=false;
+  scores={red:0,yellow:0};
+  showPage('game-page');
+  buildBoard();
+  updateLocalScoreNames();
+  document.getElementById('level-group').style.display='none';
+  document.getElementById('ai-play-btn').classList.add('show');
+  renderLocalBoard();
+  updateLocalTurn();
+  updateNavUI();
+}
+
+function renderLocalBoard(){
+  const board=new Array(ROWS*COLS).fill(0);
+  let cur=RED;
+  let lastR=-1,lastC=-1;
+  for(let i=0;i<reviewCursor;i++){
+    const col=liveHistory[i];
+    for(let r=ROWS-1;r>=0;r--){
+      if(board[r*COLS+col]===0){board[r*COLS+col]=cur;if(i===reviewCursor-1){lastR=r;lastC=col;}break;}
+    }
+    cur=cur===RED?YELLOW:RED;
+  }
+  const isReview=reviewCursor<liveHistory.length;
+  const isMyTurn=!isReview&&gameStatus==='playing';
+  const colorCls=liveCurrent===RED?'show-red':'show-yellow';
+  document.querySelectorAll('.ch').forEach(h=>{h.className='ch'+(isMyTurn?' '+colorCls:'');});
+  document.querySelectorAll('.cell').forEach(cell=>{
+    const r=parseInt(cell.dataset.r),c=parseInt(cell.dataset.c);
+    const v=board[r*COLS+c];
+    cell.className='cell';
+    if(v===RED){cell.classList.add('red');if(isReview)cell.classList.add('static');}
+    else if(v===YELLOW){cell.classList.add('yellow');if(isReview)cell.classList.add('static');}
+    else if(isMyTurn) cell.classList.add('playable');
+    if(isReview&&r===lastR&&c===lastC) cell.classList.add('last-move');
+  });
+  document.getElementById('sc-red').className='score-card'+(liveCurrent===RED&&gameStatus==='playing'&&!isReview?' active-red':'');
+  document.getElementById('sc-yellow').className='score-card'+(liveCurrent===YELLOW&&gameStatus==='playing'&&!isReview?' active-yellow':'');
+}
+
+function updateLocalTurn(){
+  const pill=document.getElementById('turn-pill');
+  const dot=document.getElementById('pill-dot');
+  const txt=document.getElementById('turn-text');
+  pill.classList.remove('my-turn');
+  dot.className='pill-dot';
+  if(gameStatus==='playing'){
+    dot.classList.add(liveCurrent===RED?'red':'yellow');
+    pill.classList.add('my-turn');
+    txt.textContent=(liveCurrent===RED?'Rouge':'Jaune')+' — Ton tour !';
+  }
+  if(gameStatus==='finished'){dot.classList.add('gray');txt.textContent='Partie terminee';}
+}
+
+function updateLocalScoreNames(){
+  document.getElementById('sc-red-name').innerHTML='Rouge';
+  document.getElementById('sc-yellow-name').innerHTML='Jaune';
+}
+
+function playLocal(col){
+  if(reviewMode){toast('Reviens au coup actuel pour jouer');return;}
+  if(gameStatus!=='playing') return;
+  // Vérifier colonne valide
+  const board=rebuildBoard();
+  if(board[0*COLS+col]!==0){return;}
+  // Jouer le coup
+  for(let r=ROWS-1;r>=0;r--){
+    if(board[r*COLS+col]===0){
+      liveHistory.push(col);
+      reviewCursor=liveHistory.length;
+      break;
+    }
+  }
+  const newBoard=rebuildBoard();
+  // Vérifier victoire
+  const winner=checkWinnerJS(newBoard,liveCurrent);
+  const draw=newBoard.every(v=>v!==0);
+  if(winner){
+    gameStatus='finished';
+    const winStr=liveCurrent===RED?'red':'yellow';
+    scores[winStr]=(scores[winStr]||0)+1;
+    document.getElementById('sc-red-score').textContent=scores.red||0;
+    document.getElementById('sc-yellow-score').textContent=scores.yellow||0;
+    renderLocalBoard();
+    updateLocalTurn();
+    updateNavUI();
+    setTimeout(()=>showLocalResult(winStr),500);
+    return;
+  }
+  if(draw){
+    gameStatus='finished';
+    renderLocalBoard();
+    updateLocalTurn();
+    updateNavUI();
+    setTimeout(()=>showLocalResult('draw'),500);
+    return;
+  }
+  liveCurrent=liveCurrent===RED?YELLOW:RED;
+  renderLocalBoard();
+  updateLocalTurn();
+  updateNavUI();
+}
+
+function rebuildBoard(){
+  const board=new Array(ROWS*COLS).fill(0);
+  let cur=RED;
+  for(let i=0;i<liveHistory.length;i++){
+    const col=liveHistory[i];
+    for(let r=ROWS-1;r>=0;r--){
+      if(board[r*COLS+col]===0){board[r*COLS+col]=cur;break;}
+    }
+    cur=cur===RED?YELLOW:RED;
+  }
+  return board;
+}
+
+function checkWinnerJS(board,player){
+  // Horizontal
+  for(let r=0;r<ROWS;r++)
+    for(let c=0;c<COLS-3;c++)
+      if([0,1,2,3].every(i=>board[r*COLS+c+i]===player)) return true;
+  // Vertical
+  for(let r=0;r<ROWS-3;r++)
+    for(let c=0;c<COLS;c++)
+      if([0,1,2,3].every(i=>board[(r+i)*COLS+c]===player)) return true;
+  // Diag \
+  for(let r=0;r<ROWS-3;r++)
+    for(let c=0;c<COLS-3;c++)
+      if([0,1,2,3].every(i=>board[(r+i)*COLS+c+i]===player)) return true;
+  // Diag /
+  for(let r=3;r<ROWS;r++)
+    for(let c=0;c<COLS-3;c++)
+      if([0,1,2,3].every(i=>board[(r-i)*COLS+c+i]===player)) return true;
+  return false;
+}
+
+function showLocalResult(winner){
+  const emoji=document.getElementById('res-emoji');
+  const title=document.getElementById('res-title');
+  const sub=document.getElementById('res-sub');
+  if(winner==='draw'){
+    emoji.textContent='🤝';title.textContent='Match nul';
+    sub.textContent='Personne ne gagne cette fois';title.style.color='var(--text)';
+  } else {
+    emoji.innerHTML='&#127942;';
+    title.textContent=(winner==='red'?'Rouge':'Jaune')+' gagne !';
+    sub.textContent='Bien joue !';
+    title.style.color=winner==='red'?'var(--red)':'var(--yellow)';
+  }
+  document.getElementById('result-overlay').classList.add('show');
+}
+
+function requestAIMove(){
+  if(reviewMode){toast('Reviens au coup actuel');return;}
+  if(gameStatus!=='playing') return;
+  if(isLocalMode){
+    // Demander au serveur de calculer le meilleur coup via WS temporaire
+    toast('IA réfléchit...');
+    const board=rebuildBoard();
+    if(ws){ws.close();ws=null;}
+    openWS({action:'ai_hint', board:board, player:liveCurrent, ai_level:'hard'});
+  } else {
+    // En mode pvp en ligne : demander à l'IA de jouer à notre place
+    if(ws) ws.send(JSON.stringify({type:'ai_move',ai_level:'hard'}));
+  }
+}
+
+// ── WS ────────────────────────────────────────
 function startQueue(){
   if(ws){ws.close();ws=null;}
+  isLocalMode=false;
   showPage('wait-page');
   document.getElementById('wait-desc').textContent="Recherche d'un adversaire...";
   document.getElementById('invite-box').classList.remove('show');
@@ -348,6 +540,7 @@ function startQueue(){
 
 function startInvite(){
   if(ws){ws.close();ws=null;}
+  isLocalMode=false;
   showPage('wait-page');
   document.getElementById('wait-desc').textContent="En attente que ton ami rejoigne";
   openWS({action:'invite'});
@@ -355,14 +548,22 @@ function startInvite(){
 
 function startAI(level){
   if(ws){ws.close();ws=null;}
+  isLocalMode=false;
   closeAIModal();
   aiLevel=level;
   openWS({action:'ai', ai_level:level, preferred_color:chosenColor});
 }
 
 function handleMsg(msg){
-  if(msg.type==='error'){toast(msg.msg);goHome();return;}
+  if(msg.type==='error'){toast(msg.msg);if(!isLocalMode)goHome();return;}
   if(msg.type==='waiting') return;
+
+  // Réponse hint IA pour mode local
+  if(msg.type==='ai_hint'){
+    ws.close(); ws=null;
+    playLocal(msg.col);
+    return;
+  }
 
   if(msg.type==='invite_created'){
     const link=`${location.origin}?join=${msg.room_id}`;
@@ -387,6 +588,9 @@ function handleMsg(msg){
       buildBoard();
       updateScoreNames();
       setupLevelUI();
+      // Bouton IA joue visible en pvp en ligne
+      const isMyTurnNow=liveCurrent===myColor&&gameStatus==='playing';
+      document.getElementById('ai-play-btn').classList.toggle('show', gameMode==='pvp');
     }
 
     if(msg.move_count===0) exitReview();
@@ -398,7 +602,12 @@ function handleMsg(msg){
     }
     updateNavUI();
 
+    // Mettre à jour visibilité bouton IA joue
+    const canAIHelp=gameMode==='pvp'&&liveCurrent===myColor&&gameStatus==='playing'&&!reviewMode;
+    document.getElementById('ai-play-btn').classList.toggle('show', canAIHelp);
+
     if(msg.status==='finished'){
+      document.getElementById('ai-play-btn').classList.remove('show');
       setTimeout(()=>showResult(msg),500);
     }
   }
@@ -412,12 +621,12 @@ function buildBoard(){
       const d=document.createElement('div');
       d.className='cell';
       d.dataset.r=r; d.dataset.c=c;
-      d.addEventListener('click',()=>play(c));
+      d.addEventListener('click',()=>isLocalMode?playLocal(c):play(c));
       g.appendChild(d);
     }
   }
   document.querySelectorAll('.ch').forEach(h=>{
-    h.addEventListener('click',()=>play(parseInt(h.dataset.col)));
+    h.addEventListener('click',()=>{const c=parseInt(h.dataset.col);isLocalMode?playLocal(c):play(c);});
     h.addEventListener('mouseenter',()=>hoverCol(parseInt(h.dataset.col)));
     h.addEventListener('mouseleave',()=>clearHover());
   });
@@ -434,23 +643,14 @@ function renderFromHistory(){
   for(let i=0;i<reviewCursor;i++){
     const col=liveHistory[i];
     for(let r=ROWS-1;r>=0;r--){
-      if(board[r*COLS+col]===0){
-        board[r*COLS+col]=cur;
-        if(i===reviewCursor-1){lastR=r;lastC=col;}
-        break;
-      }
+      if(board[r*COLS+col]===0){board[r*COLS+col]=cur;if(i===reviewCursor-1){lastR=r;lastC=col;}break;}
     }
     cur=cur===RED?YELLOW:RED;
   }
-
   const isReview=reviewCursor<liveHistory.length;
   const isMyTurn=!isReview&&liveCurrent===myColor&&gameStatus==='playing';
   const colorCls=myColor===RED?'show-red':'show-yellow';
-
-  document.querySelectorAll('.ch').forEach(h=>{
-    h.className='ch'+(isMyTurn?' '+colorCls:'');
-  });
-
+  document.querySelectorAll('.ch').forEach(h=>{h.className='ch'+(isMyTurn?' '+colorCls:'');});
   document.querySelectorAll('.cell').forEach(cell=>{
     const r=parseInt(cell.dataset.r), c=parseInt(cell.dataset.c);
     const v=board[r*COLS+c];
@@ -460,11 +660,8 @@ function renderFromHistory(){
     else if(isMyTurn) cell.classList.add('playable');
     if(isReview&&r===lastR&&c===lastC) cell.classList.add('last-move');
   });
-
-  document.getElementById('sc-red').className=
-    'score-card'+(liveCurrent===RED&&gameStatus==='playing'&&!isReview?' active-red':'');
-  document.getElementById('sc-yellow').className=
-    'score-card'+(liveCurrent===YELLOW&&gameStatus==='playing'&&!isReview?' active-yellow':'');
+  document.getElementById('sc-red').className='score-card'+(liveCurrent===RED&&gameStatus==='playing'&&!isReview?' active-red':'');
+  document.getElementById('sc-yellow').className='score-card'+(liveCurrent===YELLOW&&gameStatus==='playing'&&!isReview?' active-yellow':'');
 }
 
 function play(col){
@@ -477,17 +674,17 @@ function navTo(idx){
   if(idx===-1) idx=liveHistory.length;
   reviewCursor=Math.max(0,Math.min(liveHistory.length,idx));
   reviewMode=reviewCursor<liveHistory.length;
-  renderFromHistory();
+  if(isLocalMode){renderLocalBoard();}else{renderFromHistory();}
   updateNavUI();
-  if(!reviewMode) updateTurn();
+  if(!reviewMode){isLocalMode?updateLocalTurn():updateTurn();}
 }
 function navStep(delta){navTo(reviewCursor+delta)}
 function exitReview(){
   reviewMode=false;
   reviewCursor=liveHistory.length;
-  renderFromHistory();
+  if(isLocalMode){renderLocalBoard();}else{renderFromHistory();}
   updateNavUI();
-  updateTurn();
+  isLocalMode?updateLocalTurn():updateTurn();
 }
 function updateNavUI(){
   const total=liveHistory.length;
@@ -519,10 +716,8 @@ function updateScoreNames(){
     const playerIsRed=myColor===RED;
     const playerStr=playerIsRed?'red':'yellow';
     const aiStr=playerIsRed?'yellow':'red';
-    document.getElementById('sc-'+playerStr+'-name').innerHTML=
-      (playerIsRed?'Rouge':'Jaune')+' <span class="my-badge">moi</span>';
-    document.getElementById('sc-'+aiStr+'-name').innerHTML=
-      'IA <span style="font-size:.65rem;color:var(--muted)">('+aiLevel+')</span>';
+    document.getElementById('sc-'+playerStr+'-name').innerHTML=(playerIsRed?'Rouge':'Jaune')+' <span class="my-badge">moi</span>';
+    document.getElementById('sc-'+aiStr+'-name').innerHTML='IA <span style="font-size:.65rem;color:var(--muted)">('+aiLevel+')</span>';
   } else {
     const myStr=myColor===RED?'red':'yellow';
     ['red','yellow'].forEach(col=>{
@@ -542,13 +737,11 @@ function setLevel(level){
   aiLevel=level;
   if(ws) ws.send(JSON.stringify({type:'set_ai_level',level}));
   highlightLevel(level);
-  const labels={easy:'Facile',medium:'Moyen',hard:'Difficile'};
-  toast('Niveau : '+labels[level]);
+  toast('Niveau : '+{easy:'Facile',medium:'Moyen',hard:'Difficile'}[level]);
 }
 function highlightLevel(level){
   ['easy','medium','hard'].forEach(l=>{
-    const btn=document.getElementById('lvl-'+l);
-    btn.className='lvl-btn'+(l===level?' active-'+l:'');
+    document.getElementById('lvl-'+l).className='lvl-btn'+(l===level?' active-'+l:'');
   });
 }
 
@@ -557,7 +750,7 @@ function showResult(msg){
   const title=document.getElementById('res-title');
   const sub=document.getElementById('res-sub');
   if(msg.winner==='draw'){
-    emoji.textContent='Egal !';title.textContent='Match nul';
+    emoji.textContent='🤝';title.textContent='Match nul';
     sub.textContent='Personne ne gagne cette fois';title.style.color='var(--text)';
   } else {
     const iWon=(msg.winner==='red'&&myColor===RED)||(msg.winner==='yellow'&&myColor===YELLOW);
@@ -579,6 +772,17 @@ function showResult(msg){
 
 function sendRestart(){
   document.getElementById('result-overlay').classList.remove('show');
+  if(isLocalMode){
+    gameStatus='playing';
+    liveCurrent=RED;
+    liveHistory=[];
+    reviewCursor=0;reviewMode=false;
+    renderLocalBoard();
+    updateLocalTurn();
+    updateNavUI();
+    document.getElementById('ai-play-btn').classList.add('show');
+    return;
+  }
   exitReview();
   updateScoreNames();
   if(ws) ws.send(JSON.stringify({type:'restart'}));
@@ -595,12 +799,12 @@ function toast(msg){
 }
 
 function hoverCol(col){
-  if(liveCurrent!==myColor||gameStatus!=='playing'||reviewMode) return;
-  const cls=myColor===RED?'red-hover':'yellow-hover';
+  const curColor=isLocalMode?liveCurrent:myColor;
+  if((!isLocalMode&&liveCurrent!==myColor)||gameStatus!=='playing'||reviewMode) return;
+  const cls=curColor===RED?'red-hover':'yellow-hover';
   document.querySelectorAll('.cell').forEach(cell=>{
-    if(parseInt(cell.dataset.c)===col&&cell.classList.contains('playable')){
+    if(parseInt(cell.dataset.c)===col&&cell.classList.contains('playable'))
       cell.classList.add('col-hover',cls);
-    }
   });
   document.querySelectorAll('.ch').forEach(h=>{
     if(parseInt(h.dataset.col)===col) h.style.opacity='1';
@@ -617,6 +821,7 @@ window.addEventListener('load',()=>{
   const join=p.get('join');
   if(join){
     if(ws){ws.close();ws=null;}
+    isLocalMode=false;
     showPage('wait-page');
     document.getElementById('wait-desc').textContent='Connexion a la partie...';
     document.getElementById('invite-box').classList.remove('show');
