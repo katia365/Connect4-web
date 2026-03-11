@@ -5,6 +5,7 @@ except ImportError:
     psycopg2 = None
 
 DATABASE_URL = os.environ.get("DATABASE_URL", None)
+print(f"DATABASE_URL chargé: {DATABASE_URL is not None} → {DATABASE_URL[:20] if DATABASE_URL else 'None'}")
 
 ROWS = 9
 COLS = 9
@@ -175,4 +176,5 @@ def ai_medium_with_seq(board, player, sequence_played):
 def ai_hard(board, player, depth=4):
     """Minimax avec élagage alpha-bêta."""
     col, _ = minimax(board, depth, -math.inf, math.inf, True, player)
+
     return col
