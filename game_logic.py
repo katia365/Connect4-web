@@ -4,7 +4,7 @@ try:
 except ImportError:
     psycopg2 = None
 
-DATABASE_URL = os.environ.get("DATABASE_URL", None)
+DATABASE_URL = "postgresql://postgres.kpmpcmzskdriszfibywl:Connect4pass1208@aws-1-eu-west-2.pooler.supabase.com:5432/postgres"
 print(f"DATABASE_URL chargé: {DATABASE_URL is not None} → {DATABASE_URL[:20] if DATABASE_URL else 'None'}")
 
 ROWS = 9
@@ -178,3 +178,4 @@ def ai_hard(board, player, depth=4):
     col, _ = minimax(board, depth, -math.inf, math.inf, True, player)
 
     return col
+
