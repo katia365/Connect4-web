@@ -126,11 +126,12 @@ def ai_medium_with_seq(board, player, sequence_played):
         return None
 
     try:
+        db_url = os.environ.get("DATABASE_URL")
         if psycopg2 is None or DATABASE_URL is None:
             print("MEDIUM: pas de BDD, random")
             return random.choice(valid)
 
-        conn = psycopg2.connect(DATABASE_URL)
+        conn = psycopg2.connect(db_url)
         cur = conn.cursor()
         prefix = sequence_played
         winner_val = 'ROUGE' if player == RED else 'JAUNE'
