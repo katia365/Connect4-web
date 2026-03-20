@@ -7,6 +7,9 @@ from game_logic import (
     get_valid_cols, ai_easy, ai_medium_with_seq, ai_hard,
     RED, YELLOW, EMPTY, ROWS, COLS
 )
+import subprocess
+result = subprocess.run(['pip', 'show', 'psycopg2-binary'], capture_output=True, text=True)
+print(f"=== psycopg2-binary: {result.stdout.strip() or result.stderr.strip()} ===")
 
 app = FastAPI()
 rooms = {}
