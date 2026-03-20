@@ -2,7 +2,8 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import json, random, string, asyncio
-import psycopg2 as _test
+try:
+    import psycopg2 as _test
     print(f"=== psycopg2 import OK: {_test.__version__} ===")
 except Exception as e:
     print(f"=== psycopg2 import FAILED: {e} ===")
