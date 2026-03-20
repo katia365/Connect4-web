@@ -14,6 +14,7 @@ except ImportError:
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 print(f"DATABASE_URL chargé: {DATABASE_URL is not None} → {DATABASE_URL[:20] if DATABASE_URL else 'None'}")
+print(f"Toutes les vars DB: { {k:v for k,v in os.environ.items() if 'DATA' in k or 'POST' in k or 'DB' in k} }")
 
 ROWS = 9
 COLS = 9
