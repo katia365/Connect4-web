@@ -170,7 +170,7 @@ def ai_medium_with_seq(board, player, sequence_played):
         return best
 
     except Exception as e:
-        print(f"MEDIUM: erreur BDD ({e}), random")
+        print(f"MEDIUM: erreur BDD ({type(e).__name__}: {e}), random")
         return random.choice(valid)
 
 def ai_hard(board, player, depth=4):
