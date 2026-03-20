@@ -127,6 +127,7 @@ def ai_medium_with_seq(board, player, sequence_played):
 
     try:
         db_url = os.environ.get("DATABASE_URL")
+        print(f"DEBUG: psycopg2={psycopg2 is not None}, db_url={db_url is not None}")
         if psycopg2 is None or db_url is None:
             print("MEDIUM: pas de BDD, random")
             return random.choice(valid)
