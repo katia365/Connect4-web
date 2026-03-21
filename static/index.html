@@ -245,7 +245,7 @@ header{display:flex;align-items:center;justify-content:space-between;
     <h1>Puissance<em>Quatre 9x9</em></h1>
     <p>Choisissez votre mode de jeu</p>
   </div>
-  <div class="home-grid">
+  <div class="home-grid" style="max-width:520px;grid-template-columns:repeat(2,1fr)">
     <div class="hcard c-green" onclick="startAIvsAI()">
       <div class="hcard-icon">🤖</div>
       <div class="hcard-label">IA vs IA</div>
@@ -261,16 +261,6 @@ header{display:flex;align-items:center;justify-content:space-between;
       <div class="hcard-label">Humain vs Humain</div>
       <div class="hcard-desc">Même écran, deux joueurs</div>
     </div>
-    <div class="hcard c-accent" onclick="startQueue()">
-      <div class="hcard-icon">⚡</div>
-      <div class="hcard-label">Partie rapide</div>
-      <div class="hcard-desc">Matchmaking automatique</div>
-    </div>
-    <div class="hcard c-accent" onclick="startInvite()">
-      <div class="hcard-icon">🔗</div>
-      <div class="hcard-label">Inviter un ami</div>
-      <div class="hcard-desc">Joue avec qui tu veux</div>
-    </div>
     <div class="hcard c-red" onclick="openDrawMode()">
       <div class="hcard-icon">✏️</div>
       <div class="hcard-label">Dessiner une situation</div>
@@ -284,16 +274,41 @@ header{display:flex;align-items:center;justify-content:space-between;
   <div class="modal-card">
     <div class="modal-emoji">🧠</div>
     <div class="modal-title">Vs IA</div>
-    <div class="modal-sub">Choisis ta couleur et la difficulté</div>
+    <div class="modal-sub">Choisis ta couleur et le type d'IA</div>
     <div class="color-picker">
       <button class="col-pick-btn sel-red" id="cpick-red" onclick="selectColor('red')">🔴 Rouge</button>
       <button class="col-pick-btn" id="cpick-yellow" onclick="selectColor('yellow')">🟡 Jaune</button>
     </div>
     <div class="btn-stack">
-      <button class="btn" style="background:var(--green-dim);border:1px solid var(--green);color:var(--green)" onclick="startAI('easy')">🎲 Facile</button>
-      <button class="btn" style="background:var(--orange-dim);border:1px solid var(--orange);color:var(--orange)" onclick="startAI('medium')">📚 Moyen</button>
-      <button class="btn" style="background:var(--red-dim);border:1px solid var(--red);color:var(--red)" onclick="startAI('hard')">🤯 Difficile</button>
+      <button class="btn" style="background:var(--green-dim);border:1px solid var(--green);color:var(--green)" onclick="startAI('easy')">🎲 Aléatoire</button>
+      <button class="btn" style="background:var(--orange-dim);border:1px solid var(--orange);color:var(--orange)" onclick="startAI('medium')">📚 IA Apprenante</button>
+      <button class="btn" style="background:var(--red-dim);border:1px solid var(--red);color:var(--red)" onclick="selectMinimax()">♟ Minimax</button>
       <button class="btn btn-ghost2" onclick="closeAIModal()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- MINIMAX DEPTH MODAL -->
+<div class="overlay" id="minimax-modal">
+  <div class="modal-card">
+    <div class="modal-emoji">♟</div>
+    <div class="modal-title">Minimax</div>
+    <div class="modal-sub">Régle la profondeur de recherche</div>
+    <div style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:.82rem;color:var(--muted)">
+        <span>Profondeur</span>
+        <span id="depth-display" style="color:var(--text);font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:.05em">4</span>
+      </div>
+      <input type="range" id="depth-slider" min="1" max="8" value="4"
+        oninput="document.getElementById('depth-display').textContent=this.value;minimaxDepth=parseInt(this.value)"
+        style="width:100%;accent-color:var(--accent);cursor:pointer">
+      <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-top:4px">
+        <span>1 — Rapide</span><span>8 — Très lent</span>
+      </div>
+    </div>
+    <div class="btn-stack">
+      <button class="btn btn-accent" onclick="startAI('hard')">Jouer</button>
+      <button class="btn btn-ghost2" onclick="closeMinimax()">↩ Retour</button>
     </div>
   </div>
 </div>
@@ -329,9 +344,16 @@ header{display:flex;align-items:center;justify-content:space-between;
       <button class="mode-btn" id="mode-local" onclick="switchMode('local')">👥 Local</button>
     </div>
     <div class="tb-group" id="level-group" style="display:none">
-      <button class="tb-btn" id="lvl-easy"   onclick="setLevel('easy')">Facile</button>
-      <button class="tb-btn" id="lvl-medium" onclick="setLevel('medium')">Moyen</button>
-      <button class="tb-btn" id="lvl-hard"   onclick="setLevel('hard')">Difficile</button>
+      <button class="tb-btn" id="lvl-easy"   onclick="setLevel('easy')">Aléatoire</button>
+      <button class="tb-btn" id="lvl-medium" onclick="setLevel('medium')">Apprenante</button>
+      <button class="tb-btn" id="lvl-hard"   onclick="setLevel('hard')">Minimax</button>
+    </div>
+    <!-- Depth control (only in minimax) -->
+    <div class="tb-group" id="depth-group" style="display:none">
+      <span style="font-size:.72rem;color:var(--muted);padding:5px 6px">Prof.</span>
+      <button class="tb-btn" id="depth-minus" onclick="changeDepth(-1)">−</button>
+      <div class="move-counter" id="depth-counter" style="min-width:28px">4</div>
+      <button class="tb-btn" id="depth-plus"  onclick="changeDepth(+1)">+</button>
     </div>
     <button class="hint-btn" id="hint-btn" onclick="requestHint()">💡 Conseil IA</button>
     <div class="tb-group">
@@ -404,13 +426,13 @@ header{display:flex;align-items:center;justify-content:space-between;
     <div class="modal-sub">Qui joue à partir de cette situation ?</div>
     <div class="draw-mode-grid">
       <button class="draw-mode-card" onclick="launchFromDraw('ai','easy')">
-        <div class="dmc-icon">🧠</div>Vs IA Facile
+        <div class="dmc-icon">🎲</div>Vs IA Aléatoire
       </button>
       <button class="draw-mode-card" onclick="launchFromDraw('ai','medium')">
-        <div class="dmc-icon">📚</div>Vs IA Moyen
+        <div class="dmc-icon">📚</div>Vs IA Apprenante
       </button>
       <button class="draw-mode-card" onclick="launchFromDraw('ai','hard')">
-        <div class="dmc-icon">🤯</div>Vs IA Difficile
+        <div class="dmc-icon">♟</div>Vs Minimax
       </button>
       <button class="draw-mode-card" onclick="launchFromDraw('local','')">
         <div class="dmc-icon">👥</div>Humain vs Humain
@@ -433,6 +455,7 @@ let ws=null,myColor=null,chosenColor='red';
 let liveBoard=new Array(ROWS*COLS).fill(0);
 let liveHistory=[],liveCurrent=RED;
 let gameStatus='waiting',gameMode='pvp',aiLevel='hard';
+let minimaxDepth=4;
 let scores={red:0,yellow:0};
 let reviewCursor=0,reviewMode=false;
 let drawMode=false,drawColor='red';
@@ -463,6 +486,17 @@ function goHome(){
 // ── MODALS ──
 function openAIModal(){selectColor('red');document.getElementById('ai-modal').classList.add('show');}
 function closeAIModal(){document.getElementById('ai-modal').classList.remove('show');}
+function selectMinimax(){
+  closeAIModal();
+  // sync slider with current depth
+  document.getElementById('depth-slider').value=minimaxDepth;
+  document.getElementById('depth-display').textContent=minimaxDepth;
+  document.getElementById('minimax-modal').classList.add('show');
+}
+function closeMinimax(){
+  document.getElementById('minimax-modal').classList.remove('show');
+  document.getElementById('ai-modal').classList.add('show');
+}
 function closeResult(){document.getElementById('result-overlay').classList.remove('show');}
 function closeDMC(){document.getElementById('draw-chooser').classList.remove('show');}
 function selectColor(c){
@@ -499,8 +533,9 @@ function startInvite(){
 function startAI(level){
   if(ws){ws.close();ws=null;}
   closeAIModal();
+  document.getElementById('minimax-modal').classList.remove('show');
   aiLevel=level;
-  openWS({action:'ai',ai_level:level,preferred_color:chosenColor});
+  openWS({action:'ai',ai_level:level,preferred_color:chosenColor,minimax_depth:minimaxDepth});
 }
 function startLocalPvP(){
   stopAIAI();
@@ -820,22 +855,36 @@ function setupModeUI(){
   });
   const showLevel=gameMode==='ai'||gameMode==='aiai';
   document.getElementById('level-group').style.display=showLevel?'flex':'none';
-  if(showLevel) highlightLevel(aiLevel);
+  if(showLevel){highlightLevel(aiLevel);updateDepthUI();}
+  else document.getElementById('depth-group').style.display='none';
   // hide mode switcher for online pvp
   document.getElementById('mode-switcher').style.display=
     (gameMode==='pvp')?'none':'';
 }
 function setLevel(level){
   aiLevel=level;
-  if(ws) ws.send(JSON.stringify({type:'set_ai_level',level}));
+  if(ws) ws.send(JSON.stringify({type:'set_ai_level',level,minimax_depth:minimaxDepth}));
   highlightLevel(level);
-  toast('Niveau : '+{easy:'Facile',medium:'Moyen',hard:'Difficile'}[level]);
+  updateDepthUI();
+  toast('Type IA : '+{easy:'Aléatoire',medium:'IA Apprenante',hard:'Minimax'}[level]);
 }
 function highlightLevel(level){
   ['easy','medium','hard'].forEach(l=>{
     const btn=document.getElementById('lvl-'+l);
     if(btn) btn.className='tb-btn'+(l===level?' active-'+l:'');
   });
+  updateDepthUI();
+}
+function updateDepthUI(){
+  const show=aiLevel==='hard';
+  document.getElementById('depth-group').style.display=show?'flex':'none';
+  document.getElementById('depth-counter').textContent=minimaxDepth;
+}
+function changeDepth(delta){
+  minimaxDepth=Math.max(1,Math.min(8,minimaxDepth+delta));
+  document.getElementById('depth-counter').textContent=minimaxDepth;
+  if(ws) ws.send(JSON.stringify({type:'set_ai_level',level:'hard',minimax_depth:minimaxDepth}));
+  toast('Profondeur Minimax : '+minimaxDepth);
 }
 
 // ── HINT ──
@@ -989,13 +1038,17 @@ function updateTurn(){
   if(gameMode==='local'){txt.textContent=(liveCurrent===RED?'Rouge':'Jaune')+' — à vous !';pill.classList.add('my-turn');return;}
   const mine=liveCurrent===myColor;
   if(mine){pill.classList.add('my-turn');txt.textContent='Ton tour !';}
-  else txt.textContent=gameMode==='ai'?`IA (${aiLevel}) réfléchit...`:"Tour de l'adversaire...";
+  else{
+    const labels={easy:'Aléatoire',medium:'Apprenante',hard:'Minimax'};
+    txt.textContent=gameMode==='ai'?`IA ${labels[aiLevel]} réfléchit...`:"Tour de l'adversaire...";
+  }
 }
 function updateScoreNames(){
   if(gameMode==='ai'){
     const ps=myColor===RED?'red':'yellow',as=myColor===RED?'yellow':'red';
+    const labels={easy:'Aléatoire',medium:'Apprenante',hard:'Minimax'};
     document.getElementById('sc-'+ps+'-name').innerHTML=(myColor===RED?'Rouge':'Jaune')+' <span class="my-badge">moi</span>';
-    document.getElementById('sc-'+as+'-name').innerHTML='IA <span style="font-size:.65rem;color:var(--muted)">('+aiLevel+')</span>';
+    document.getElementById('sc-'+as+'-name').innerHTML='IA <span style="font-size:.65rem;color:var(--muted)">('+labels[aiLevel]+')</span>';
   } else if(gameMode==='aiai'){
     document.getElementById('sc-red-name').innerHTML='IA Rouge';
     document.getElementById('sc-yellow-name').innerHTML='IA Jaune';
@@ -1021,7 +1074,9 @@ function showResult(msg){
   else{
     const iWon=(msg.winner==='red'&&myColor===RED)||(msg.winner==='yellow'&&myColor===YELLOW);
     if(iWon){emoji.innerHTML='🏆';title.textContent='Victoire !';sub.textContent='Tu les as écrasés !';title.style.color=myColor===RED?'var(--red)':'var(--yellow)';}
-    else{emoji.innerHTML='😔';title.textContent='Défaite';sub.textContent=gameMode==='ai'?`L'IA t'a eu (${aiLevel})...`:"L'adversaire a été plus fort";title.style.color='var(--muted)';}
+    else{emoji.innerHTML='😔';title.textContent='Défaite';
+      const labels={easy:'Aléatoire',medium:'Apprenante',hard:'Minimax'};
+      sub.textContent=gameMode==='ai'?`L'IA ${labels[aiLevel]} t'a eu...`:"L'adversaire a été plus fort";title.style.color='var(--muted)';}
     scores[msg.winner]=(scores[msg.winner]||0)+1;
   }
   document.getElementById('sc-red-score').textContent=scores.red||0;
