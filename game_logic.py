@@ -1,11 +1,10 @@
 import math, random, copy, os
 
-# Charge le .env en local (ignoré sur Render qui a ses propres variables)
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
-    pass  # python-dotenv pas installé -> pas grave sur Render
+    pass
 
 try:
     import psycopg2
@@ -14,7 +13,6 @@ except ImportError:
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 print(f"DATABASE_URL chargé: {DATABASE_URL is not None} → {DATABASE_URL[:20] if DATABASE_URL else 'None'}")
-print(f"Toutes les vars DB: { {k:v for k,v in os.environ.items() if 'DATA' in k or 'POST' in k or 'DB' in k} }")
 
 ROWS = 9
 COLS = 9
@@ -127,9 +125,8 @@ def ai_medium_with_seq(board, player, sequence_played):
 
     try:
         db_url = os.environ.get("DATABASE_URL")
-        print(f"DEBUG: psycopg2={psycopg2 is not None}, db_url={db_url is not None}")
         if psycopg2 is None or db_url is None:
-            print("MEDIUM: pas de BDD, random")
+            print(f"MEDIUM: pas de BDD (psycopg2={psycopg2 is not None}, url={db_url is not None}), random")
             return random.choice(valid)
 
         conn = psycopg2.connect(db_url)
@@ -149,7 +146,6 @@ def ai_medium_with_seq(board, player, sequence_played):
             print(f"MEDIUM: aucune partie trouvée, random")
             return random.choice(valid)
 
-        # Score chaque coup : +2 si victoire, +1 si nul, 0 si défaite
         scores = {}
         for (seq, vainqueur) in rows:
             if len(seq) > len(prefix):
@@ -161,7 +157,6 @@ def ai_medium_with_seq(board, player, sequence_played):
                         scores[next_move] += 2
                     elif vainqueur == 'MATCH_NUL':
                         scores[next_move] += 1
-                    # défaite → +0
 
         if not scores:
             print(f"MEDIUM: pas de coup valide en BDD, random")
@@ -176,5 +171,7 @@ def ai_medium_with_seq(board, player, sequence_played):
         return random.choice(valid)
 
 def ai_hard(board, player, depth=4):
+    depth = max(1, min(8, int(depth)))  # clamp 1-8
+    print(f"MINIMAX: profondeur={depth}")
     col, _ = minimax(board, depth, -math.inf, math.inf, True, player)
     return col
