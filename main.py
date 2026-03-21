@@ -307,7 +307,6 @@ async def get_parties():
                    to_char(date_debut, 'DD/MM/YYYY HH24:MI') as date_debut
             FROM parties
             ORDER BY date_debut DESC
-            LIMIT 2000
         """)
         cols = [d[0] for d in cur.description]
         rows = [dict(zip(cols, row)) for row in cur.fetchall()]
