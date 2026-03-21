@@ -13,33 +13,35 @@
   --accent:#4f6ef7;--accent-dim:rgba(79,110,247,.15);--accent-glow:rgba(79,110,247,.35);
   --green:#30d158;--green-dim:rgba(48,209,88,.15);
   --orange:#ff9f0a;--orange-dim:rgba(255,159,10,.15);
+  --purple:#bf5af2;--purple-dim:rgba(191,90,242,.15);
   --text:#eeeef5;--muted:#62627a;
   --cell:46px;
-  --sidebar:260px;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;
   background:radial-gradient(ellipse 80% 50% at 10% 0%,rgba(79,110,247,.06) 0%,transparent 60%),
              radial-gradient(ellipse 50% 60% at 90% 100%,rgba(255,45,85,.04) 0%,transparent 60%);}
-
-/* ── HEADER ── */
 header{display:flex;align-items:center;justify-content:space-between;
-  padding:14px 24px;border-bottom:1px solid var(--border);position:relative;z-index:10;height:57px;}
+  padding:16px 24px;border-bottom:1px solid var(--border);position:relative;z-index:10;}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.12em;
   background:linear-gradient(120deg,var(--red),var(--yellow));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.header-right{display:flex;align-items:center;gap:8px;}
 .back-btn{background:none;border:1px solid var(--border);color:var(--muted);
   font-family:'DM Sans',sans-serif;font-size:.82rem;padding:6px 13px;
   border-radius:8px;cursor:pointer;transition:all .2s;}
 .back-btn:hover{border-color:var(--accent);color:var(--text)}
-
-/* ── PAGES ── */
+.hint-indicator{display:none;align-items:center;gap:6px;padding:6px 14px;
+  background:var(--purple-dim);border:1px solid var(--purple);border-radius:20px;
+  font-size:.8rem;color:var(--purple);}
+.hint-indicator.show{display:inline-flex}
+.hint-spinner{width:12px;height:12px;border-radius:50%;border:2px solid rgba(191,90,242,.3);
+  border-top-color:var(--purple);animation:spin .7s linear infinite;}
 .page{display:none;min-height:calc(100vh - 57px);flex-direction:column;
   align-items:center;justify-content:center;padding:28px 16px;position:relative;z-index:1;}
 .page.active{display:flex}
-
-/* ── HOME ── */
+/* HOME */
 .home-hero{text-align:center;margin-bottom:44px}
 .home-hero h1{font-family:'Bebas Neue',sans-serif;
   font-size:clamp(3.5rem,12vw,7rem);letter-spacing:.04em;line-height:.88;margin-bottom:14px;}
@@ -47,20 +49,27 @@ header{display:flex;align-items:center;justify-content:space-between;
   background:linear-gradient(100deg,var(--red),var(--yellow));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .home-hero p{color:var(--muted);font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;font-weight:300}
-.home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:12px;width:100%;max-width:560px}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;width:100%;max-width:700px}
 .hcard{background:var(--s1);border:1px solid var(--border);border-radius:14px;
-  padding:24px 18px;cursor:pointer;transition:all .22s ease;text-align:center;position:relative;overflow:hidden;}
-.hcard::after{content:'';position:absolute;inset:0;border-radius:14px;
-  background:linear-gradient(135deg,var(--accent-dim),transparent);opacity:0;transition:opacity .22s;}
-.hcard:hover{transform:translateY(-4px);border-color:var(--accent);
-  box-shadow:0 16px 40px rgba(0,0,0,.5),0 0 0 1px var(--accent)}
+  padding:22px 16px;cursor:pointer;transition:all .22s ease;text-align:center;position:relative;overflow:hidden;}
+.hcard::after{content:'';position:absolute;inset:0;border-radius:14px;opacity:0;transition:opacity .22s;}
+.hcard:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.5)}
 .hcard:hover::after{opacity:1}
-.hcard-icon{font-size:2rem;margin-bottom:10px}
-.hcard-label{font-weight:600;font-size:.9rem;margin-bottom:4px}
-.hcard-desc{color:var(--muted);font-size:.75rem;line-height:1.4}
-
-/* ── WAIT ── */
+.hcard.c-green::after{background:linear-gradient(135deg,var(--green-dim),transparent)}
+.hcard.c-orange::after{background:linear-gradient(135deg,var(--orange-dim),transparent)}
+.hcard.c-purple::after{background:linear-gradient(135deg,var(--purple-dim),transparent)}
+.hcard.c-accent::after{background:linear-gradient(135deg,var(--accent-dim),transparent)}
+.hcard.c-red::after{background:linear-gradient(135deg,var(--red-dim),transparent)}
+.hcard.c-green:hover{border-color:var(--green)}
+.hcard.c-orange:hover{border-color:var(--orange)}
+.hcard.c-purple:hover{border-color:var(--purple)}
+.hcard.c-accent:hover{border-color:var(--accent)}
+.hcard.c-red:hover{border-color:var(--red)}
+.hcard-icon{font-size:1.8rem;margin-bottom:8px}
+.hcard-label{font-weight:600;font-size:.88rem;margin-bottom:3px}
+.hcard-desc{color:var(--muted);font-size:.72rem;line-height:1.4}
+/* WAIT */
 .wait-box{text-align:center;max-width:370px;width:100%;
   background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:44px 32px;}
 .wait-box h2{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:.1em;margin-bottom:8px}
@@ -77,132 +86,92 @@ header{display:flex;align-items:center;justify-content:space-between;
   background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;
   cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
 .invite-copy:hover{border-color:var(--accent);color:var(--accent)}
-
-/* ── GAME LAYOUT ── */
-#game-page{
-  flex-direction:row;align-items:stretch;justify-content:flex-start;
-  padding:0;min-height:calc(100vh - 57px);gap:0;
-}
-
-/* ── SIDEBAR ── */
-.sidebar{
-  width:var(--sidebar);min-width:var(--sidebar);
-  background:var(--s1);border-right:1px solid var(--border);
-  display:flex;flex-direction:column;gap:0;
-  overflow-y:auto;z-index:5;
-}
-.sb-section{padding:16px;border-bottom:1px solid var(--border);}
-.sb-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
-  margin-bottom:10px;font-weight:600;}
-
-/* Mode buttons */
-.mode-btn-group{display:flex;flex-direction:column;gap:6px;}
-.mode-btn{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;
-  border:1px solid var(--border);background:transparent;color:var(--muted);
-  font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;
-  cursor:pointer;transition:all .2s;width:100%;text-align:left;}
-.mode-btn:hover{border-color:var(--accent);color:var(--text);background:var(--accent-dim)}
-.mode-btn.active{border-color:var(--accent);color:var(--text);background:var(--accent-dim)}
-.mode-btn .mode-icon{font-size:1rem;flex-shrink:0}
-
-/* AI level */
-.level-row{display:flex;gap:4px;}
-.lvl-btn{flex:1;background:none;border:1px solid var(--border);color:var(--muted);
-  font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:500;
-  padding:6px 4px;border-radius:7px;cursor:pointer;transition:all .2s;}
-.lvl-btn.active-easy{background:var(--green-dim);color:var(--green);border-color:var(--green)}
-.lvl-btn.active-medium{background:var(--orange-dim);color:var(--orange);border-color:var(--orange)}
-.lvl-btn.active-hard{background:var(--red-dim);color:var(--red);border-color:var(--red)}
-.lvl-btn:hover:not(.active-easy):not(.active-medium):not(.active-hard){color:var(--text);border-color:var(--muted)}
-
-/* Draw mode */
-.draw-color-pick{display:flex;gap:6px;margin-bottom:8px;}
-.dc-btn{flex:1;padding:7px 4px;border-radius:8px;border:1px solid var(--border);
-  background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;
-  font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.dc-btn.sel-red{border-color:var(--red);background:var(--red-dim);color:var(--red)}
-.dc-btn.sel-yellow{border-color:var(--yellow);background:var(--yellow-dim);color:var(--yellow)}
-.dc-btn.sel-erase{border-color:var(--muted);background:rgba(98,98,122,.15);color:var(--muted)}
-
-/* AI messages panel */
-.ai-panel{flex:1;display:flex;flex-direction:column;min-height:0;}
-.ai-panel .sb-title{padding:16px 16px 0;margin-bottom:8px;}
-.ai-messages{flex:1;overflow-y:auto;padding:0 12px 12px;display:flex;flex-direction:column;gap:6px;min-height:120px;max-height:320px;}
-.ai-msg{background:var(--s2);border:1px solid var(--border);border-radius:8px;
-  padding:8px 10px;font-size:.75rem;line-height:1.5;color:var(--text);
-  animation:msgpop .2s ease;}
-@keyframes msgpop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-.ai-msg.thinking{border-color:var(--accent);color:var(--accent)}
-.ai-msg.win{border-color:var(--green);color:var(--green)}
-.ai-msg.warn{border-color:var(--orange);color:var(--orange)}
-.ai-msg.info{border-color:var(--muted);color:var(--muted)}
-
-/* ── MAIN GAME AREA ── */
-.game-main{flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:flex-start;padding:16px 12px;gap:10px;overflow:auto;}
-
-.turn-pill{display:inline-flex;align-items:center;gap:9px;
-  padding:9px 18px;background:var(--s1);border:1px solid var(--border);
-  border-radius:40px;font-size:.88rem;font-weight:500;transition:all .3s;}
+/* GAME */
+#game-page{padding:12px;gap:8px;justify-content:flex-start;padding-top:14px;align-items:center}
+.turn-pill{display:inline-flex;align-items:center;gap:9px;padding:9px 18px;
+  background:var(--s1);border:1px solid var(--border);border-radius:40px;
+  font-size:.88rem;font-weight:500;transition:all .3s;}
 .turn-pill.my-turn{border-color:var(--accent);box-shadow:0 0 18px var(--accent-glow)}
 .pill-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:all .3s}
 .pill-dot.red{background:var(--red);box-shadow:0 0 7px var(--red-glow)}
 .pill-dot.yellow{background:var(--yellow);box-shadow:0 0 7px var(--yellow-glow)}
 .pill-dot.gray{background:var(--muted)}
-
-/* Toolbar */
-.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;max-width:800px;width:100%}
-.nav-group{display:flex;gap:4px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:3px;}
-.nav-btn{background:none;border:none;color:var(--muted);font-size:.85rem;
-  padding:5px 10px;border-radius:7px;cursor:pointer;transition:all .2s;min-width:32px;}
-.nav-btn:hover{background:var(--border);color:var(--text)}
-.nav-btn:disabled{opacity:.3;cursor:default}
-.move-counter{font-size:.78rem;color:var(--muted);padding:5px 10px;
-  font-family:'Bebas Neue',sans-serif;letter-spacing:.05em;min-width:58px;text-align:center;}
-.game-replay-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:10px;
+/* TOOLBARS */
+.toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;max-width:900px;width:100%}
+.tb-group{display:flex;gap:3px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:3px;}
+.tb-btn{background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;
+  font-size:.78rem;font-weight:500;padding:5px 10px;border-radius:7px;cursor:pointer;transition:all .2s;min-width:30px;}
+.tb-btn:hover:not(:disabled){background:var(--border);color:var(--text)}
+.tb-btn:disabled{opacity:.3;cursor:default}
+.tb-btn.active-easy{background:var(--green-dim);color:var(--green)}
+.tb-btn.active-medium{background:var(--orange-dim);color:var(--orange)}
+.tb-btn.active-hard{background:var(--red-dim);color:var(--red)}
+.move-counter{font-size:.78rem;color:var(--muted);padding:5px 8px;
+  font-family:'Bebas Neue',sans-serif;letter-spacing:.05em;min-width:52px;text-align:center;}
+.mode-group{display:flex;gap:3px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:3px;}
+.mode-btn{background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;
+  font-size:.75rem;font-weight:500;padding:5px 9px;border-radius:7px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.mode-btn:hover{color:var(--text)}
+.mode-btn.active{background:var(--accent-dim);color:var(--accent)}
+.hint-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;
+  background:var(--purple-dim);border:1px solid var(--purple);color:var(--purple);
+  font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;}
+.hint-btn:hover:not(:disabled){background:var(--purple);color:#fff}
+.hint-btn:disabled{opacity:.4;cursor:default}
+.game-replay-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;
   background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);
-  font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;}
+  font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;}
 .game-replay-btn:hover{background:var(--accent);color:#fff}
-
-/* Draw mode indicator */
-.draw-indicator{display:none;align-items:center;gap:8px;padding:7px 14px;
-  border-radius:10px;background:rgba(255,159,10,.1);border:1px solid var(--orange);
-  color:var(--orange);font-size:.8rem;font-weight:500;}
-.draw-indicator.show{display:inline-flex}
-
-/* Board */
+/* DRAW TOOLBAR */
+.draw-toolbar{display:none;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;max-width:900px;width:100%}
+.draw-toolbar.show{display:flex}
+.color-sel-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:10px;
+  border:2px solid var(--border);background:transparent;color:var(--muted);
+  font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.color-sel-btn.sel-red{border-color:var(--red);background:var(--red-dim);color:var(--red)}
+.color-sel-btn.sel-yellow{border-color:var(--yellow);background:var(--yellow-dim);color:var(--yellow)}
+.draw-dot{width:10px;height:10px;border-radius:50%}
+.draw-dot.red{background:var(--red)}.draw-dot.yellow{background:var(--yellow)}
+.draw-start-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;
+  background:var(--green-dim);border:1px solid var(--green);color:var(--green);
+  font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;}
+.draw-start-btn:hover{background:var(--green);color:#fff}
+.draw-clear-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;
+  background:var(--red-dim);border:1px solid var(--red);color:var(--red);
+  font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;}
+.draw-clear-btn:hover{background:var(--red);color:#fff}
+/* BOARD */
 .board-outer{background:var(--s1);border:1px solid var(--border);border-radius:18px;
   padding:12px;box-shadow:0 24px 60px rgba(0,0,0,.6);}
 .col-hints{display:grid;grid-template-columns:repeat(9,var(--cell));gap:4px;height:16px;margin-bottom:4px;}
 .ch{display:flex;align-items:center;justify-content:center;font-size:10px;
   opacity:0;transition:opacity .15s;cursor:pointer;color:var(--muted);}
-.ch.show-red{opacity:1;color:var(--red)}
-.ch.show-yellow{opacity:1;color:var(--yellow)}
-.ch.show-draw{opacity:1;color:var(--orange)}
+.ch.show-red{opacity:1;color:var(--red)}.ch.show-yellow{opacity:1;color:var(--yellow)}
 .board-grid{display:grid;grid-template-columns:repeat(9,var(--cell));grid-template-rows:repeat(9,var(--cell));gap:4px;}
 .cell{width:var(--cell);height:var(--cell);border-radius:50%;background:var(--bg);
   border:2px solid var(--border);cursor:pointer;transition:border-color .15s,background .15s;}
 .cell.playable:hover{border-color:var(--muted)}
 .cell.col-hover.red-hover{border-color:rgba(255,45,85,.5);background:rgba(255,45,85,.08)}
 .cell.col-hover.yellow-hover{border-color:rgba(255,214,10,.4);background:rgba(255,214,10,.06)}
-.cell.draw-hover-red{border-color:rgba(255,45,85,.6);background:rgba(255,45,85,.12);cursor:crosshair}
-.cell.draw-hover-yellow{border-color:rgba(255,214,10,.5);background:rgba(255,214,10,.08);cursor:crosshair}
-.cell.draw-hover-erase{border-color:rgba(98,98,122,.5);cursor:crosshair}
 .cell.red{background:var(--red);border-color:#ff1040;
   box-shadow:0 0 16px var(--red-glow),inset 0 -4px 8px rgba(0,0,0,.25);
-  animation:pop .26s cubic-bezier(.34,1.56,.64,1);}
+  animation:pop .26s cubic-bezier(.34,1.56,.64,1);cursor:default;}
 .cell.yellow{background:var(--yellow);border-color:#e6c000;
   box-shadow:0 0 16px var(--yellow-glow),inset 0 -4px 8px rgba(0,0,0,.25);
-  animation:pop .26s cubic-bezier(.34,1.56,.64,1);}
+  animation:pop .26s cubic-bezier(.34,1.56,.64,1);cursor:default;}
 .cell.red.static,.cell.yellow.static{animation:none}
 .cell.winner-cell{animation:wink .5s ease-in-out infinite alternate}
 .cell.last-move{outline:2px solid rgba(255,255,255,.5);outline-offset:2px}
-/* Draw mode cells - allow placing anywhere */
+.cell.hint-cell{outline:3px solid var(--purple);outline-offset:3px;
+  animation:hint-pulse .6s ease-in-out infinite alternate}
 .cell.draw-mode{cursor:crosshair}
+.cell.draw-mode:hover{border-color:var(--accent);background:rgba(79,110,247,.08)}
+.cell.draw-red{background:var(--red);border-color:#ff1040;box-shadow:0 0 12px var(--red-glow);animation:none;cursor:crosshair}
+.cell.draw-yellow{background:var(--yellow);border-color:#e6c000;box-shadow:0 0 12px var(--yellow-glow);animation:none;cursor:crosshair}
 @keyframes pop{0%{transform:scale(.4);opacity:.5}100%{transform:scale(1);opacity:1}}
 @keyframes wink{0%{filter:brightness(1);transform:scale(1)}100%{filter:brightness(1.5);transform:scale(1.07)}}
-
-/* Score bar */
+@keyframes hint-pulse{0%{box-shadow:0 0 8px var(--purple)}100%{box-shadow:0 0 24px var(--purple),0 0 48px var(--purple-dim)}}
+/* SCORE */
 .score-bar{display:flex;gap:8px;width:100%;max-width:500px;}
 .score-card{flex:1;background:var(--s1);border:1px solid var(--border);border-radius:10px;
   padding:10px 14px;display:flex;align-items:center;gap:8px;}
@@ -214,14 +183,13 @@ header{display:flex;align-items:center;justify-content:space-between;
 .sc-score{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.05em;color:var(--muted)}
 .my-badge{font-size:.65rem;background:var(--accent-dim);color:var(--accent);
   border:1px solid var(--accent);border-radius:4px;padding:1px 5px;margin-left:4px;}
-
-/* ── MODALS ── */
+/* OVERLAYS */
 .overlay{display:none;position:fixed;inset:0;z-index:200;
   background:rgba(8,8,16,.85);backdrop-filter:blur(10px);
   align-items:center;justify-content:center;padding:20px;}
 .overlay.show{display:flex}
 .modal-card{background:var(--s1);border:1px solid var(--border);border-radius:22px;
-  padding:36px 32px;text-align:center;max-width:360px;width:100%;
+  padding:36px 32px;text-align:center;max-width:380px;width:100%;
   animation:cardpop .35s cubic-bezier(.34,1.56,.64,1);}
 @keyframes cardpop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
 .modal-emoji{font-size:3rem;margin-bottom:12px}
@@ -242,50 +210,33 @@ header{display:flex;align-items:center;justify-content:space-between;
 .btn-accent:hover{background:#6070ff;transform:translateY(-2px)}
 .btn-ghost2{background:transparent;border:1px solid var(--border);color:var(--muted)}
 .btn-ghost2:hover{border-color:var(--accent);color:var(--text)}
-.btn-orange{background:rgba(255,159,10,.15);border:1px solid var(--orange);color:var(--orange)}
-.btn-orange:hover{background:var(--orange);color:#000}
-
-/* ── TOAST ── */
-.toast{position:fixed;bottom:22px;left:50%;
-  transform:translateX(-50%) translateY(12px);
+/* DRAW CHOOSER */
+.draw-mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+.draw-mode-card{padding:14px 10px;border-radius:12px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;
+  font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;text-align:center;}
+.draw-mode-card:hover{border-color:var(--accent);color:var(--text);background:var(--accent-dim)}
+.draw-mode-card .dmc-icon{font-size:1.4rem;margin-bottom:5px}
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(12px);
   background:var(--s2);border:1px solid var(--border);border-radius:10px;
-  padding:10px 20px;font-size:.86rem;opacity:0;
-  transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap;}
+  padding:10px 20px;font-size:.86rem;opacity:0;transition:all .3s;z-index:300;
+  pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* ── AI HINT OVERLAY ── */
-.ai-thinking-badge{display:none;align-items:center;gap:6px;
-  padding:5px 12px;background:var(--accent-dim);border:1px solid var(--accent);
-  border-radius:20px;font-size:.75rem;color:var(--accent);}
-.ai-thinking-badge.show{display:inline-flex}
-.ai-thinking-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);
-  animation:blink 1s ease infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-
-/* ── RESPONSIVE ── */
-@media(max-width:900px){
-  :root{--sidebar:200px}
-  #game-page{flex-direction:column}
-  .sidebar{width:100%;min-width:unset;flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--border)}
-  .sb-section{flex:1;min-width:160px;border-bottom:none;border-right:1px solid var(--border)}
-  .ai-panel{flex:2;min-width:200px}
-  .ai-messages{max-height:120px}
-}
-@media(max-width:600px){
-  :root{--cell:34px}
-  .sidebar{flex-direction:column}
-  .sb-section{border-right:none;border-bottom:1px solid var(--border)}
-}
-@media(max-width:380px){:root{--cell:28px}}
-
-/* Draw mode: cells are not restricted to bottom */
-.board-grid.draw-active .cell:not(.red):not(.yellow){cursor:crosshair}
+@media(max-width:480px){:root{--cell:36px}header{padding:12px 14px}.tb-btn,.mode-btn{padding:4px 7px;font-size:.7rem}}
+@media(max-width:380px){:root{--cell:30px}}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">Puissance 4 Online</div>
-  <button class="back-btn" onclick="goHome()">Accueil</button>
+  <div class="header-right">
+    <div class="hint-indicator" id="hint-indicator">
+      <div class="hint-spinner"></div>
+      <span>IA réfléchit...</span>
+    </div>
+    <button class="back-btn" onclick="goHome()">Accueil</button>
+  </div>
 </header>
 
 <!-- HOME -->
@@ -295,25 +246,35 @@ header{display:flex;align-items:center;justify-content:space-between;
     <p>Choisissez votre mode de jeu</p>
   </div>
   <div class="home-grid">
-    <div class="hcard" onclick="startQueue()">
+    <div class="hcard c-green" onclick="startAIvsAI()">
+      <div class="hcard-icon">🤖</div>
+      <div class="hcard-label">IA vs IA</div>
+      <div class="hcard-desc">Regarde deux IA s'affronter</div>
+    </div>
+    <div class="hcard c-orange" onclick="openAIModal()">
+      <div class="hcard-icon">🧠</div>
+      <div class="hcard-label">Contre l'IA</div>
+      <div class="hcard-desc">Montre que tu es plus fort</div>
+    </div>
+    <div class="hcard c-purple" onclick="startLocalPvP()">
+      <div class="hcard-icon">👥</div>
+      <div class="hcard-label">Humain vs Humain</div>
+      <div class="hcard-desc">Même écran, deux joueurs</div>
+    </div>
+    <div class="hcard c-accent" onclick="startQueue()">
       <div class="hcard-icon">⚡</div>
       <div class="hcard-label">Partie rapide</div>
       <div class="hcard-desc">Matchmaking automatique</div>
     </div>
-    <div class="hcard" onclick="startInvite()">
+    <div class="hcard c-accent" onclick="startInvite()">
       <div class="hcard-icon">🔗</div>
       <div class="hcard-label">Inviter un ami</div>
-      <div class="hcard-desc">Joue avec un ami de ton choix</div>
+      <div class="hcard-desc">Joue avec qui tu veux</div>
     </div>
-    <div class="hcard" onclick="openAIModal()">
-      <div class="hcard-icon">🤖</div>
-      <div class="hcard-label">Contre l'IA</div>
-      <div class="hcard-desc">Montre que tu es plus fort</div>
-    </div>
-    <div class="hcard" onclick="startDrawMode()">
+    <div class="hcard c-red" onclick="openDrawMode()">
       <div class="hcard-icon">✏️</div>
       <div class="hcard-label">Dessiner une situation</div>
-      <div class="hcard-desc">Pose les pions, l'IA finit</div>
+      <div class="hcard-desc">Pose les pions puis lance</div>
     </div>
   </div>
 </div>
@@ -321,7 +282,7 @@ header{display:flex;align-items:center;justify-content:space-between;
 <!-- AI MODAL -->
 <div class="overlay" id="ai-modal">
   <div class="modal-card">
-    <div class="modal-emoji">🤖</div>
+    <div class="modal-emoji">🧠</div>
     <div class="modal-title">Vs IA</div>
     <div class="modal-sub">Choisis ta couleur et la difficulté</div>
     <div class="color-picker">
@@ -330,8 +291,8 @@ header{display:flex;align-items:center;justify-content:space-between;
     </div>
     <div class="btn-stack">
       <button class="btn" style="background:var(--green-dim);border:1px solid var(--green);color:var(--green)" onclick="startAI('easy')">🎲 Facile</button>
-      <button class="btn" style="background:var(--orange-dim);border:1px solid var(--orange);color:var(--orange)" onclick="startAI('medium')">📘 Moyen</button>
-      <button class="btn" style="background:var(--red-dim);border:1px solid var(--red);color:var(--red)" onclick="startAI('hard')">🧠 Difficile</button>
+      <button class="btn" style="background:var(--orange-dim);border:1px solid var(--orange);color:var(--orange)" onclick="startAI('medium')">📚 Moyen</button>
+      <button class="btn" style="background:var(--red-dim);border:1px solid var(--red);color:var(--red)" onclick="startAI('hard')">🤯 Difficile</button>
       <button class="btn btn-ghost2" onclick="closeAIModal()">Annuler</button>
     </div>
   </div>
@@ -355,135 +316,71 @@ header{display:flex;align-items:center;justify-content:space-between;
 
 <!-- GAME PAGE -->
 <div class="page" id="game-page">
+  <div class="turn-pill" id="turn-pill">
+    <div class="pill-dot gray" id="pill-dot"></div>
+    <span id="turn-text">Connexion...</span>
+  </div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-
-    <!-- Mode de jeu -->
-    <div class="sb-section">
-      <div class="sb-title">Mode de jeu</div>
-      <div class="mode-btn-group">
-        <button class="mode-btn" id="mode-btn-pvp" onclick="switchMode('pvp')">
-          <span class="mode-icon">👥</span> Humain vs Humain
-        </button>
-        <button class="mode-btn" id="mode-btn-ai" onclick="switchMode('ai')">
-          <span class="mode-icon">🤖</span> Humain vs IA
-        </button>
-        <button class="mode-btn" id="mode-btn-aiai" onclick="switchMode('aiai')">
-          <span class="mode-icon">⚔️</span> IA vs IA
-        </button>
-      </div>
+  <!-- Main toolbar -->
+  <div class="toolbar" id="main-toolbar">
+    <div class="mode-group" id="mode-switcher">
+      <button class="mode-btn" id="mode-aiai"  onclick="switchMode('aiai')">🤖 IA/IA</button>
+      <button class="mode-btn" id="mode-ai"    onclick="switchMode('ai')">🧠 vs IA</button>
+      <button class="mode-btn" id="mode-local" onclick="switchMode('local')">👥 Local</button>
     </div>
-
-    <!-- Niveau IA -->
-    <div class="sb-section" id="sb-level" style="display:none">
-      <div class="sb-title">Niveau IA</div>
-      <div class="level-row">
-        <button class="lvl-btn" id="lvl-easy" onclick="setLevel('easy')">Facile</button>
-        <button class="lvl-btn" id="lvl-medium" onclick="setLevel('medium')">Moyen</button>
-        <button class="lvl-btn" id="lvl-hard" onclick="setLevel('hard')">Difficile</button>
-      </div>
+    <div class="tb-group" id="level-group" style="display:none">
+      <button class="tb-btn" id="lvl-easy"   onclick="setLevel('easy')">Facile</button>
+      <button class="tb-btn" id="lvl-medium" onclick="setLevel('medium')">Moyen</button>
+      <button class="tb-btn" id="lvl-hard"   onclick="setLevel('hard')">Difficile</button>
     </div>
-
-    <!-- Mode dessin -->
-    <div class="sb-section">
-      <div class="sb-title">Dessiner une situation</div>
-      <div id="draw-mode-off">
-        <button class="btn btn-orange" style="font-size:.78rem;padding:8px" onclick="enableDrawMode()">
-          ✏️ Activer le dessin
-        </button>
-      </div>
-      <div id="draw-mode-on" style="display:none">
-        <div class="draw-color-pick">
-          <button class="dc-btn sel-red" id="dc-red" onclick="setDrawColor('red')">🔴 Rouge</button>
-          <button class="dc-btn" id="dc-yellow" onclick="setDrawColor('yellow')">🟡 Jaune</button>
-          <button class="dc-btn" id="dc-erase" onclick="setDrawColor('erase')">🗑</button>
-        </div>
-        <div style="display:flex;gap:6px;">
-          <button class="btn" style="background:var(--green-dim);border:1px solid var(--green);color:var(--green);font-size:.75rem;padding:7px" onclick="confirmDrawMode()">
-            ▶ Lancer l'IA
-          </button>
-          <button class="btn btn-ghost2" style="font-size:.75rem;padding:7px" onclick="disableDrawMode()">
-            Annuler
-          </button>
-        </div>
-      </div>
+    <button class="hint-btn" id="hint-btn" onclick="requestHint()">💡 Conseil IA</button>
+    <div class="tb-group">
+      <button class="tb-btn" id="nav-start" onclick="navTo(0)"    title="Début">⏮</button>
+      <button class="tb-btn" id="nav-prev"  onclick="navStep(-1)" title="Précédent">◀</button>
+      <div class="move-counter" id="move-counter">0 / 0</div>
+      <button class="tb-btn" id="nav-next"  onclick="navStep(1)"  title="Suivant">▶</button>
+      <button class="tb-btn" id="nav-end"   onclick="navTo(-1)"   title="Fin">⏭</button>
     </div>
+    <button class="game-replay-btn" onclick="sendRestart()">↺ Rejouer</button>
+  </div>
 
-    <!-- Actions -->
-    <div class="sb-section">
-      <div class="sb-title">Actions</div>
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        <button class="mode-btn" onclick="sendRestart()">🔄 Rejouer</button>
-        <button class="mode-btn" id="sb-ai-hint-btn" onclick="requestAIHint()" style="display:none">
-          💡 Conseil IA
-        </button>
-      </div>
+  <!-- Draw toolbar -->
+  <div class="draw-toolbar" id="draw-toolbar">
+    <button class="color-sel-btn sel-red" id="draw-red-btn" onclick="selectDrawColor('red')">
+      <div class="draw-dot red"></div> Rouge
+    </button>
+    <button class="color-sel-btn" id="draw-yellow-btn" onclick="selectDrawColor('yellow')">
+      <div class="draw-dot yellow"></div> Jaune
+    </button>
+    <button class="draw-start-btn" onclick="openDrawModeChooser()">▶ Lancer la partie</button>
+    <button class="draw-clear-btn" onclick="clearDrawBoard()">✕ Effacer</button>
+    <button class="back-btn" onclick="exitDrawMode()">↩ Annuler</button>
+  </div>
+
+  <div class="board-outer">
+    <div class="col-hints" id="col-hints">
+      <div class="ch" data-col="0">▼</div><div class="ch" data-col="1">▼</div>
+      <div class="ch" data-col="2">▼</div><div class="ch" data-col="3">▼</div>
+      <div class="ch" data-col="4">▼</div><div class="ch" data-col="5">▼</div>
+      <div class="ch" data-col="6">▼</div><div class="ch" data-col="7">▼</div>
+      <div class="ch" data-col="8">▼</div>
     </div>
+    <div class="board-grid" id="board-grid"></div>
+  </div>
 
-    <!-- Panneau messages IA -->
-    <div class="ai-panel">
-      <div class="sb-title" style="padding:16px 16px 0">Messages IA</div>
-      <div class="ai-messages" id="ai-messages">
-        <div class="ai-msg info">L'IA est prête. Lance une partie !</div>
-      </div>
+  <div class="score-bar">
+    <div class="score-card" id="sc-red">
+      <div class="sc-dot red"></div>
+      <span class="sc-name" id="sc-red-name">Rouge</span>
+      <span class="sc-score" id="sc-red-score">0</span>
     </div>
-
-  </div><!-- /sidebar -->
-
-  <!-- MAIN -->
-  <div class="game-main">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;">
-      <div class="turn-pill" id="turn-pill">
-        <div class="pill-dot gray" id="pill-dot"></div>
-        <span id="turn-text">Connexion...</span>
-      </div>
-      <div class="ai-thinking-badge" id="ai-thinking-badge">
-        <div class="dot"></div>
-        IA réfléchit...
-      </div>
-      <div class="draw-indicator" id="draw-indicator">
-        ✏️ Mode dessin actif
-      </div>
+    <div class="score-card" id="sc-yellow">
+      <div class="sc-dot yellow"></div>
+      <span class="sc-name" id="sc-yellow-name">Jaune</span>
+      <span class="sc-score" id="sc-yellow-score">0</span>
     </div>
-
-    <div class="toolbar">
-      <div class="nav-group">
-        <button class="nav-btn" id="nav-start" onclick="navTo(0)" title="Début">⏮</button>
-        <button class="nav-btn" id="nav-prev" onclick="navStep(-1)" title="Précédent">◀</button>
-        <div class="move-counter" id="move-counter">0 / 0</div>
-        <button class="nav-btn" id="nav-next" onclick="navStep(1)" title="Suivant">▶</button>
-        <button class="nav-btn" id="nav-end" onclick="navTo(-1)" title="Fin">⏭</button>
-      </div>
-      <button class="game-replay-btn" onclick="sendRestart()">↺ Rejouer</button>
-    </div>
-
-    <div class="board-outer">
-      <div class="col-hints" id="col-hints">
-        <div class="ch" data-col="0">▼</div><div class="ch" data-col="1">▼</div>
-        <div class="ch" data-col="2">▼</div><div class="ch" data-col="3">▼</div>
-        <div class="ch" data-col="4">▼</div><div class="ch" data-col="5">▼</div>
-        <div class="ch" data-col="6">▼</div><div class="ch" data-col="7">▼</div>
-        <div class="ch" data-col="8">▼</div>
-      </div>
-      <div class="board-grid" id="board-grid"></div>
-    </div>
-
-    <div class="score-bar">
-      <div class="score-card" id="sc-red">
-        <div class="sc-dot red"></div>
-        <span class="sc-name" id="sc-red-name">Rouge</span>
-        <span class="sc-score" id="sc-red-score">0</span>
-      </div>
-      <div class="score-card" id="sc-yellow">
-        <div class="sc-dot yellow"></div>
-        <span class="sc-name" id="sc-yellow-name">Jaune</span>
-        <span class="sc-score" id="sc-yellow-score">0</span>
-      </div>
-    </div>
-  </div><!-- /game-main -->
-
-</div><!-- /game-page -->
+  </div>
+</div>
 
 <!-- RESULT OVERLAY -->
 <div class="overlay" id="result-overlay">
@@ -499,54 +396,79 @@ header{display:flex;align-items:center;justify-content:space-between;
   </div>
 </div>
 
+<!-- DRAW MODE CHOOSER -->
+<div class="overlay" id="draw-chooser">
+  <div class="modal-card">
+    <div class="modal-emoji">✏️</div>
+    <div class="modal-title">Lancer la partie</div>
+    <div class="modal-sub">Qui joue à partir de cette situation ?</div>
+    <div class="draw-mode-grid">
+      <button class="draw-mode-card" onclick="launchFromDraw('ai','easy')">
+        <div class="dmc-icon">🧠</div>Vs IA Facile
+      </button>
+      <button class="draw-mode-card" onclick="launchFromDraw('ai','medium')">
+        <div class="dmc-icon">📚</div>Vs IA Moyen
+      </button>
+      <button class="draw-mode-card" onclick="launchFromDraw('ai','hard')">
+        <div class="dmc-icon">🤯</div>Vs IA Difficile
+      </button>
+      <button class="draw-mode-card" onclick="launchFromDraw('local','')">
+        <div class="dmc-icon">👥</div>Humain vs Humain
+      </button>
+      <button class="draw-mode-card" onclick="launchFromDraw('aiai','hard')">
+        <div class="dmc-icon">🤖</div>IA vs IA
+      </button>
+      <button class="draw-mode-card" onclick="closeDMC()">
+        <div class="dmc-icon">↩</div>Annuler
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 const ROWS=9,COLS=9,RED=1,YELLOW=2;
-let ws=null, myColor=null, chosenColor='red';
+let ws=null,myColor=null,chosenColor='red';
 let liveBoard=new Array(ROWS*COLS).fill(0);
-let liveHistory=[];
-let liveCurrent=RED, gameStatus='waiting', gameMode='pvp', aiLevel='hard';
+let liveHistory=[],liveCurrent=RED;
+let gameStatus='waiting',gameMode='pvp',aiLevel='hard';
 let scores={red:0,yellow:0};
-let reviewCursor=0, reviewMode=false;
-
-// Draw mode
-let drawModeActive=false;
-let drawColor='red'; // 'red','yellow','erase'
-let drawBoard=new Array(ROWS*COLS).fill(0); // free-placed board for draw mode
-
-// Local game mode (no WS needed for pvp local / aiai)
-let localMode=false; // true when no WS (draw mode start, mode switch offline)
+let reviewCursor=0,reviewMode=false;
+let drawMode=false,drawColor='red';
+let drawBoardState=new Array(ROWS*COLS).fill(0);
+let hintCol=null,hintTimeout=null;
+let aiaiTimer=null,aiaiRunning=false;
 let localBoard=null;
-let localCurrent=RED;
 
-// ── PAGES ──
+// ── NAV ──
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-
 function goHome(){
   if(ws){ws.close();ws=null;}
+  stopAIAI();
+  drawMode=false;
+  gameStatus='waiting';
   document.getElementById('result-overlay').classList.remove('show');
-  disableDrawMode(true);
+  document.getElementById('draw-chooser').classList.remove('show');
+  document.getElementById('main-toolbar').style.display='';
+  document.getElementById('draw-toolbar').classList.remove('show');
+  document.getElementById('turn-pill').style.display='';
   showPage('home-page');
   try{history.replaceState({},'','/');}catch(e){}
 }
 
 // ── MODALS ──
-function openAIModal(){
-  selectColor('red');
-  document.getElementById('ai-modal').classList.add('show');
-}
-function closeAIModal(){document.getElementById('ai-modal').classList.remove('show')}
-function closeResult(){document.getElementById('result-overlay').classList.remove('show')}
-
+function openAIModal(){selectColor('red');document.getElementById('ai-modal').classList.add('show');}
+function closeAIModal(){document.getElementById('ai-modal').classList.remove('show');}
+function closeResult(){document.getElementById('result-overlay').classList.remove('show');}
+function closeDMC(){document.getElementById('draw-chooser').classList.remove('show');}
 function selectColor(c){
   chosenColor=c;
   ['red','yellow'].forEach(x=>{
-    const btn=document.getElementById('cpick-'+x);
-    btn.className='col-pick-btn'+(c===x?' sel-'+x:'');
+    document.getElementById('cpick-'+x).className='col-pick-btn'+(c===x?' sel-'+x:'');
   });
 }
 
@@ -557,9 +479,10 @@ function openWS(msg){
   ws.onopen=()=>ws.send(JSON.stringify(msg));
   ws.onmessage=e=>handleMsg(JSON.parse(e.data));
   ws.onerror=()=>toast('Erreur réseau');
-  ws.onclose=()=>{if(gameStatus==='playing')toast('Connexion perdue')};
+  ws.onclose=()=>{if(gameStatus==='playing'&&gameMode==='pvp')toast('Connexion perdue');};
 }
 
+// ── GAME START ──
 function startQueue(){
   if(ws){ws.close();ws=null;}
   showPage('wait-page');
@@ -567,403 +490,481 @@ function startQueue(){
   document.getElementById('invite-box').classList.remove('show');
   openWS({action:'queue'});
 }
-
 function startInvite(){
   if(ws){ws.close();ws=null;}
   showPage('wait-page');
   document.getElementById('wait-desc').textContent="En attente que ton ami rejoigne";
   openWS({action:'invite'});
 }
-
 function startAI(level){
   if(ws){ws.close();ws=null;}
   closeAIModal();
   aiLevel=level;
-  openWS({action:'ai', ai_level:level, preferred_color:chosenColor});
+  openWS({action:'ai',ai_level:level,preferred_color:chosenColor});
 }
-
-// ── DRAW MODE (from home) ──
-function startDrawMode(){
-  // Open game page in draw mode without WS
-  localMode=true;
-  gameMode='draw';
-  gameStatus='drawing';
-  liveBoard=new Array(ROWS*COLS).fill(0);
+function startLocalPvP(){
+  stopAIAI();
+  if(ws){ws.close();ws=null;}
+  initLocalGame('local','hard');
+}
+function startAIvsAI(){
+  stopAIAI();
+  if(ws){ws.close();ws=null;}
+  initLocalGame('aiai','hard');
+}
+function initLocalGame(mode,level,board){
+  gameMode=mode;
+  myColor=RED;
+  aiLevel=level;
+  liveBoard=board?[...board]:new Array(ROWS*COLS).fill(0);
+  localBoard=[...liveBoard];
+  // count pieces to determine whose turn
+  const reds=liveBoard.filter(v=>v===RED).length;
+  const yellows=liveBoard.filter(v=>v===YELLOW).length;
+  liveCurrent=reds<=yellows?RED:YELLOW;
   liveHistory=[];
-  drawBoard=new Array(ROWS*COLS).fill(0);
-  const firstTime=true;
+  gameStatus='playing';
+  scores={red:0,yellow:0};
   showPage('game-page');
   buildBoard();
   updateScoreNames();
   setupModeUI();
-  enableDrawMode();
-  aiMsg('Dessine ta situation : place les pions rouges et jaunes librement, puis clique sur "Lancer l\'IA".','info');
+  renderLocalBoard(false);
+  updateTurn();
+  updateNavUI();
+  document.getElementById('sc-red-score').textContent='0';
+  document.getElementById('sc-yellow-score').textContent='0';
+  if(mode==='aiai') runAIAILoop();
+  else if(mode==='ai'&&liveCurrent!==myColor) setTimeout(()=>doLocalAIMove(),600);
 }
 
-// ── MSG HANDLER ──
+// ── AI vs AI LOOP ──
+function stopAIAI(){
+  aiaiRunning=false;
+  if(aiaiTimer){clearTimeout(aiaiTimer);aiaiTimer=null;}
+}
+async function runAIAILoop(){
+  aiaiRunning=true;
+  while(aiaiRunning&&gameStatus==='playing'&&gameMode==='aiai'){
+    await new Promise(r=>{aiaiTimer=setTimeout(r,700);});
+    if(!aiaiRunning||gameStatus!=='playing'||gameMode!=='aiai') break;
+    const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,'');
+    if(col===null||col===-1){
+      const v=getValidColsFlat(liveBoard);
+      if(!v.length) break;
+      applyLocalMove(v[Math.floor(Math.random()*v.length)]);
+    } else {
+      applyLocalMove(col);
+    }
+    if(!reviewMode){
+      reviewCursor=liveHistory.length;
+      renderLocalBoard(false);
+      updateTurn();
+      updateNavUI();
+    }
+    if(gameStatus==='finished') break;
+  }
+  aiaiRunning=false;
+}
+
+// ── LOCAL LOGIC ──
+function applyLocalMove(col){
+  let row=-1;
+  for(let r=ROWS-1;r>=0;r--){if(liveBoard[r*COLS+col]===0){row=r;break;}}
+  if(row===-1) return;
+  const nb=[...liveBoard];
+  nb[row*COLS+col]=liveCurrent;
+  liveBoard=nb; localBoard=nb;
+  liveHistory=[...liveHistory,col];
+  if(checkWinnerFlat(liveBoard,liveCurrent)){
+    gameStatus='finished';
+    const winner=liveCurrent===RED?'red':'yellow';
+    scores[winner]=(scores[winner]||0)+1;
+    document.getElementById('sc-red-score').textContent=scores.red||0;
+    document.getElementById('sc-yellow-score').textContent=scores.yellow||0;
+    setTimeout(()=>showResultLocal(winner),400);
+  } else if(liveBoard.every(v=>v!==0)){
+    gameStatus='finished';
+    setTimeout(()=>showResultLocal('draw'),400);
+  } else {
+    liveCurrent=liveCurrent===RED?YELLOW:RED;
+  }
+}
+function checkWinnerFlat(flat,player){
+  const b=[];for(let r=0;r<ROWS;r++)b.push(flat.slice(r*COLS,(r+1)*COLS));
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS-3;c++)if([0,1,2,3].every(i=>b[r][c+i]===player))return true;
+  for(let r=0;r<ROWS-3;r++)for(let c=0;c<COLS;c++)if([0,1,2,3].every(i=>b[r+i][c]===player))return true;
+  for(let r=3;r<ROWS;r++)for(let c=0;c<COLS-3;c++)if([0,1,2,3].every(i=>b[r-i][c+i]===player))return true;
+  for(let r=0;r<ROWS-3;r++)for(let c=0;c<COLS-3;c++)if([0,1,2,3].every(i=>b[r+i][c+i]===player))return true;
+  return false;
+}
+function getValidColsFlat(flat){return Array.from({length:COLS},(_,c)=>c).filter(c=>flat[c]===0);}
+function showResultLocal(winner){
+  const emoji=document.getElementById('res-emoji'),
+        title=document.getElementById('res-title'),
+        sub=document.getElementById('res-sub');
+  title.style.color='var(--text)';
+  if(winner==='draw'){emoji.textContent='🤝';title.textContent='Match nul';sub.textContent='Égalité parfaite';}
+  else{
+    const col=winner==='red'?'Rouge':'Jaune';
+    emoji.textContent='🏆';title.textContent=col+' gagne !';
+    title.style.color=winner==='red'?'var(--red)':'var(--yellow)';
+    sub.textContent=gameMode==='aiai'?'L\'IA '+col.toLowerCase()+' a dominé':col+' remporte la partie !';
+  }
+  document.getElementById('result-overlay').classList.add('show');
+}
+
+// ── RENDER LOCAL ──
+function renderLocalBoard(isReviewRender){
+  if(reviewCursor<liveHistory.length){
+    renderFromHistoryLocal(); return;
+  }
+  clearHint();
+  document.querySelectorAll('.cell').forEach(cell=>{
+    const r=parseInt(cell.dataset.r),c=parseInt(cell.dataset.c);
+    const v=liveBoard[r*COLS+c];
+    cell.className='cell';
+    if(v===RED) cell.classList.add('red');
+    else if(v===YELLOW) cell.classList.add('yellow');
+    else if(gameStatus==='playing'&&gameMode!=='aiai') cell.classList.add('playable');
+  });
+  document.getElementById('sc-red').className=
+    'score-card'+(liveCurrent===RED&&gameStatus==='playing'?' active-red':'');
+  document.getElementById('sc-yellow').className=
+    'score-card'+(liveCurrent===YELLOW&&gameStatus==='playing'?' active-yellow':'');
+  const showH=gameMode==='local'&&gameStatus==='playing';
+  const cls=liveCurrent===RED?'show-red':'show-yellow';
+  document.querySelectorAll('.ch').forEach(h=>{h.className='ch'+(showH?' '+cls:'');});
+}
+function renderFromHistoryLocal(){
+  const board=new Array(ROWS*COLS).fill(0);
+  let cur=RED,lastIdx=-1;
+  for(let i=0;i<reviewCursor;i++){
+    const col=liveHistory[i];
+    for(let r=ROWS-1;r>=0;r--){
+      if(board[r*COLS+col]===0){board[r*COLS+col]=cur;if(i===reviewCursor-1)lastIdx=r*COLS+col;break;}
+    }
+    cur=cur===RED?YELLOW:RED;
+  }
+  document.querySelectorAll('.cell').forEach(cell=>{
+    const r=parseInt(cell.dataset.r),c=parseInt(cell.dataset.c);
+    const v=board[r*COLS+c];
+    cell.className='cell';
+    if(v===RED)cell.classList.add('red','static');
+    else if(v===YELLOW)cell.classList.add('yellow','static');
+    if(r*COLS+c===lastIdx)cell.classList.add('last-move');
+  });
+}
+
+// ── WS MESSAGE HANDLER ──
 function handleMsg(msg){
   if(msg.type==='error'){toast(msg.msg);goHome();return;}
   if(msg.type==='waiting') return;
-
   if(msg.type==='invite_created'){
     const link=`${location.origin}?join=${msg.room_id}`;
     document.getElementById('invite-link').textContent=link;
     document.getElementById('invite-box').classList.add('show');
-    myColor=RED; gameMode='pvp';
-    return;
+    myColor=RED; gameMode='pvp'; return;
   }
-
+  if(msg.type==='ai_hint'){showHintOnBoard(msg.col);return;}
   if(msg.type==='state'){
-    liveBoard=msg.board;
-    liveHistory=msg.history||[];
-    liveCurrent=msg.current;
-    gameStatus=msg.status;
+    liveBoard=msg.board;liveHistory=msg.history||[];
+    liveCurrent=msg.current;gameStatus=msg.status;
     gameMode=msg.mode;
     if(msg.ai_level) aiLevel=msg.ai_level;
     if(msg.your_color) myColor=msg.your_color==='red'?RED:YELLOW;
-
-    const firstTime=!document.getElementById('game-page').classList.contains('active');
-    if(firstTime){
-      showPage('game-page');
-      buildBoard();
-      updateScoreNames();
-      setupModeUI();
+    const first=!document.getElementById('game-page').classList.contains('active');
+    if(first){
+      showPage('game-page');buildBoard();updateScoreNames();
+      setupModeUI();scores={red:0,yellow:0};
+      document.getElementById('sc-red-score').textContent='0';
+      document.getElementById('sc-yellow-score').textContent='0';
     }
-
     if(msg.move_count===0) exitReview();
-
-    if(!reviewMode){
-      reviewCursor=liveHistory.length;
-      renderFromHistory();
-      updateTurn();
-    }
+    if(!reviewMode){reviewCursor=liveHistory.length;renderFromHistory();updateTurn();}
     updateNavUI();
-
-    if(msg.status==='finished'){
-      setTimeout(()=>showResult(msg),500);
-    }
-
-    // Generate AI message
-    if(msg.status==='playing' && gameMode==='ai'){
-      generateAIMessage(msg);
-    }
-  }
-
-  if(msg.type==='ai_hint'){
-    document.getElementById('ai-thinking-badge').classList.remove('show');
-    if(msg.col>=0){
-      highlightHintCol(msg.col);
-      aiMsg(`💡 Conseil : joue la colonne ${msg.col+1}`,'win');
-    }
+    if(msg.status==='finished') setTimeout(()=>showResult(msg),500);
   }
 }
 
-// ── AI MESSAGES ──
-function aiMsg(text, type='info'){
-  const panel=document.getElementById('ai-messages');
-  const div=document.createElement('div');
-  div.className=`ai-msg ${type}`;
-  div.textContent=text;
-  panel.appendChild(div);
-  // Keep max 20 messages
-  while(panel.children.length>20) panel.removeChild(panel.firstChild);
-  panel.scrollTop=panel.scrollHeight;
-}
-
-function generateAIMessage(msg){
-  const moveCount=liveHistory.length;
-  const isAITurn=liveCurrent!==myColor;
-
-  if(moveCount===0){
-    aiMsg('🎮 Nouvelle partie commencée !','info');
-    return;
-  }
-
-  // Analyze board for threats
-  const board=rebuildBoard(liveHistory);
-  const aiVal=myColor===RED?YELLOW:RED;
-  const playerVal=myColor;
-
-  const aiThreats=countThreats(board,aiVal);
-  const playerThreats=countThreats(board,playerVal);
-
-  if(isAITurn){
-    document.getElementById('ai-thinking-badge').classList.add('show');
-    setTimeout(()=>document.getElementById('ai-thinking-badge').classList.remove('show'),1200);
-
-    if(aiThreats>=2){
-      aiMsg(`⚡ L'IA voit ${aiThreats} menaces actives — elle peut gagner bientôt !`,'win');
-    } else if(playerThreats>=2){
-      aiMsg(`🛡 L'IA doit bloquer ${playerThreats} attaques de ta part...`,'warn');
-    } else if(moveCount<6){
-      aiMsg(`🧠 L'IA analyse les ${COLS} colonnes disponibles...`,'thinking');
-    } else {
-      const msgs=[
-        `🧠 L'IA calcule sur ${aiLevel==='hard'?'4':aiLevel==='medium'?'BDD':'1'} coup${aiLevel==='hard'?'s':''} d'avance...`,
-        `♟ L'IA évalue ${countValid(board)} coups possibles...`,
-        `🔍 L'IA analyse la position (coup ${moveCount})...`,
-      ];
-      aiMsg(msgs[moveCount%msgs.length],'thinking');
-    }
-  } else {
-    document.getElementById('ai-thinking-badge').classList.remove('show');
-    const lastCol=liveHistory[liveHistory.length-1];
-    if(playerThreats>=1){
-      aiMsg(`⚠️ Tu menaces la colonne ${lastCol+1} — l'IA va répondre !`,'warn');
-    }
-  }
-}
-
-function countThreats(board,player){
-  let threats=0;
-  // Check all windows of 4
-  for(let r=0;r<ROWS;r++)
-    for(let c=0;c<COLS-3;c++){
-      const w=[board[r][c],board[r][c+1],board[r][c+2],board[r][c+3]];
-      if(w.filter(x=>x===player).length===3&&w.filter(x=>x===0).length===1) threats++;
-    }
-  for(let r=0;r<ROWS-3;r++)
-    for(let c=0;c<COLS;c++){
-      const w=[board[r][c],board[r+1][c],board[r+2][c],board[r+3][c]];
-      if(w.filter(x=>x===player).length===3&&w.filter(x=>x===0).length===1) threats++;
-    }
-  return threats;
-}
-
-function countValid(board){
-  let n=0;
-  for(let c=0;c<COLS;c++) if(board[0][c]===0) n++;
-  return n;
-}
-
-function rebuildBoard(history){
-  const board=Array.from({length:ROWS},()=>new Array(COLS).fill(0));
-  let cur=RED;
-  for(const col of history){
-    for(let r=ROWS-1;r>=0;r--){
-      if(board[r][col]===0){board[r][col]=cur;break;}
-    }
-    cur=cur===RED?YELLOW:RED;
-  }
-  return board;
-}
-
-// ── AI HINT ──
-function requestAIHint(){
-  if(!ws||gameStatus!=='playing') return;
-  const playerVal=myColor===RED?RED:YELLOW;
-  document.getElementById('ai-thinking-badge').classList.add('show');
-  aiMsg('💡 Calcul du meilleur coup pour toi...','thinking');
-  const flat=liveBoard;
-  ws.send(JSON.stringify({type:'ai_hint_req',board:flat,player:playerVal,ai_level:aiLevel}));
-}
-
-function highlightHintCol(col){
-  document.querySelectorAll('.cell').forEach(cell=>{
-    if(parseInt(cell.dataset.c)===col&&!cell.classList.contains('red')&&!cell.classList.contains('yellow')){
-      cell.style.background='rgba(79,110,247,.25)';
-      cell.style.borderColor='var(--accent)';
-      setTimeout(()=>{cell.style.background='';cell.style.borderColor='';},2000);
-    }
-  });
-}
-
-// ── MODE SWITCH (in game) ──
-function switchMode(newMode){
-  if(!ws) return; // only when connected
-  aiMsg(`🔄 Changement de mode : ${newMode==='pvp'?'Humain vs Humain':newMode==='ai'?'Humain vs IA':'IA vs IA'}...`,'info');
-  ws.send(JSON.stringify({type:'switch_mode',mode:newMode,ai_level:aiLevel}));
-  gameMode=newMode;
-  setupModeUI();
-}
-
-// ── DRAW MODE (in game) ──
-function enableDrawMode(){
-  drawModeActive=true;
-  drawColor='red';
-  document.getElementById('draw-mode-off').style.display='none';
-  document.getElementById('draw-mode-on').style.display='block';
-  document.getElementById('draw-indicator').classList.add('show');
-  document.getElementById('board-grid').classList.add('draw-active');
-  updateDrawColorUI();
-  renderDrawBoard();
-  aiMsg('✏️ Mode dessin activé. Clique sur n\'importe quelle case pour placer un pion.','info');
-}
-
-function disableDrawMode(silent){
-  drawModeActive=false;
-  document.getElementById('draw-mode-off').style.display='block';
-  document.getElementById('draw-mode-on').style.display='none';
-  document.getElementById('draw-indicator').classList.remove('show');
-  document.getElementById('board-grid').classList.remove('draw-active');
-  if(!silent) renderFromHistory();
-}
-
-function setDrawColor(c){
-  drawColor=c;
-  updateDrawColorUI();
-}
-
-function updateDrawColorUI(){
-  ['red','yellow','erase'].forEach(c=>{
-    const btn=document.getElementById('dc-'+c);
-    if(btn) btn.className='dc-btn'+(c===drawColor?' sel-'+c:'');
-  });
-}
-
-function renderDrawBoard(){
-  document.querySelectorAll('.cell').forEach(cell=>{
-    const r=parseInt(cell.dataset.r),c=parseInt(cell.dataset.c);
-    const v=drawBoard[r*COLS+c];
-    cell.className='cell draw-mode';
-    if(v===RED) cell.classList.add('red','static');
-    else if(v===YELLOW) cell.classList.add('yellow','static');
-  });
-  document.querySelectorAll('.ch').forEach(h=>{h.className='ch show-draw';});
-}
-
-function confirmDrawMode(){
-  // Count pieces
-  const reds=drawBoard.filter(x=>x===RED).length;
-  const yellows=drawBoard.filter(x=>x===YELLOW).length;
-  if(reds===0&&yellows===0){
-    toast('Place au moins un pion !');
-    return;
-  }
-  aiMsg(`✅ Situation chargée : ${reds} rouge(s), ${yellows} jaune(s). L'IA prend le relais !`,'win');
-  disableDrawMode(true);
-  // Determine who plays next (more reds = yellow's turn, else red's turn)
-  const nextPlayer=reds>yellows?YELLOW:RED;
-  // Send to server
-  if(ws){
-    ws.send(JSON.stringify({type:'load_board',board:drawBoard,next:nextPlayer,ai_level:aiLevel}));
-  } else {
-    toast('Connecte-toi d\'abord à une partie IA pour charger la situation');
-    // Re-enable draw mode
-    enableDrawMode();
-  }
-}
-
-function clickDrawCell(r,c){
-  if(!drawModeActive) return;
-  const idx=r*COLS+c;
-  if(drawColor==='erase') drawBoard[idx]=0;
-  else if(drawColor==='red') drawBoard[idx]=RED;
-  else drawBoard[idx]=YELLOW;
-  renderDrawBoard();
-}
-
-// ── BOARD ──
+// ── BUILD BOARD ──
 function buildBoard(){
   const g=document.getElementById('board-grid');
   g.innerHTML='';
   for(let r=0;r<ROWS;r++){
     for(let c=0;c<COLS;c++){
       const d=document.createElement('div');
-      d.className='cell';
-      d.dataset.r=r; d.dataset.c=c;
-      d.addEventListener('click',()=>{
-        if(drawModeActive){ clickDrawCell(r,c); return; }
-        play(c);
-      });
-      d.addEventListener('mouseenter',()=>{
-        if(drawModeActive){ hoverDrawCell(r,c); return; }
-        hoverCol(c);
-      });
-      d.addEventListener('mouseleave',()=>{
-        if(drawModeActive){ clearDrawHover(); return; }
-        clearHover();
-      });
+      d.className='cell';d.dataset.r=r;d.dataset.c=c;
+      d.addEventListener('click',()=>onCellClick(c,r));
+      d.addEventListener('mouseenter',()=>{if(!drawMode)hoverCol(c);});
+      d.addEventListener('mouseleave',()=>{if(!drawMode)clearHover();});
       g.appendChild(d);
     }
   }
   document.querySelectorAll('.ch').forEach(h=>{
-    h.addEventListener('click',()=>{
-      if(!drawModeActive) play(parseInt(h.dataset.col));
-    });
-    h.addEventListener('mouseenter',()=>{if(!drawModeActive)hoverCol(parseInt(h.dataset.col));});
-    h.addEventListener('mouseleave',()=>{if(!drawModeActive)clearHover();});
+    h.addEventListener('click',()=>{if(!drawMode)onColClick(parseInt(h.dataset.col));});
+    h.addEventListener('mouseenter',()=>{if(!drawMode)hoverCol(parseInt(h.dataset.col));});
+    h.addEventListener('mouseleave',()=>{if(!drawMode)clearHover();});
   });
 }
 
-function hoverDrawCell(r,c){
-  clearDrawHover();
-  document.querySelectorAll('.cell').forEach(cell=>{
-    if(parseInt(cell.dataset.r)===r&&parseInt(cell.dataset.c)===c){
-      if(drawColor==='red') cell.classList.add('draw-hover-red');
-      else if(drawColor==='yellow') cell.classList.add('draw-hover-yellow');
-      else cell.classList.add('draw-hover-erase');
-    }
-  });
+function onCellClick(col,row){
+  if(drawMode){handleDrawClick(col,row);return;}
+  if(gameMode==='local'){playLocal(col);return;}
+  if(gameMode==='ai'&&!ws){
+    // local AI mode (from draw)
+    if(liveCurrent===myColor) playLocalAI(col);
+    return;
+  }
+  play(col);
 }
-function clearDrawHover(){
-  document.querySelectorAll('.cell').forEach(cell=>{
-    cell.classList.remove('draw-hover-red','draw-hover-yellow','draw-hover-erase');
-  });
+function onColClick(col){
+  if(gameMode==='local'){playLocal(col);return;}
+  if(gameMode==='ai'&&!ws){if(liveCurrent===myColor)playLocalAI(col);return;}
+  play(col);
 }
 
+// ── WS RENDER ──
 function renderFromHistory(){
-  if(drawModeActive){ renderDrawBoard(); return; }
+  clearHint();
   const board=new Array(ROWS*COLS).fill(0);
-  let cur=RED;
-  let lastR=-1, lastC=-1;
+  let cur=RED,lastR=-1,lastC=-1;
   for(let i=0;i<reviewCursor;i++){
     const col=liveHistory[i];
     for(let r=ROWS-1;r>=0;r--){
-      if(board[r*COLS+col]===0){
-        board[r*COLS+col]=cur;
-        if(i===reviewCursor-1){lastR=r;lastC=col;}
-        break;
-      }
+      if(board[r*COLS+col]===0){board[r*COLS+col]=cur;if(i===reviewCursor-1){lastR=r;lastC=col;}break;}
     }
     cur=cur===RED?YELLOW:RED;
   }
-
   const isReview=reviewCursor<liveHistory.length;
   const isMyTurn=!isReview&&liveCurrent===myColor&&gameStatus==='playing';
   const colorCls=myColor===RED?'show-red':'show-yellow';
-
-  document.querySelectorAll('.ch').forEach(h=>{
-    h.className='ch'+(isMyTurn?' '+colorCls:'');
-  });
-
+  document.querySelectorAll('.ch').forEach(h=>{h.className='ch'+(isMyTurn?' '+colorCls:'');});
   document.querySelectorAll('.cell').forEach(cell=>{
-    const r=parseInt(cell.dataset.r), c=parseInt(cell.dataset.c);
+    const r=parseInt(cell.dataset.r),c=parseInt(cell.dataset.c);
     const v=board[r*COLS+c];
     cell.className='cell';
     if(v===RED){cell.classList.add('red');if(isReview)cell.classList.add('static');}
     else if(v===YELLOW){cell.classList.add('yellow');if(isReview)cell.classList.add('static');}
-    else if(isMyTurn) cell.classList.add('playable');
-    if(isReview&&r===lastR&&c===lastC) cell.classList.add('last-move');
+    else if(isMyTurn)cell.classList.add('playable');
+    if(isReview&&r===lastR&&c===lastC)cell.classList.add('last-move');
   });
-
   document.getElementById('sc-red').className=
     'score-card'+(liveCurrent===RED&&gameStatus==='playing'&&!isReview?' active-red':'');
   document.getElementById('sc-yellow').className=
     'score-card'+(liveCurrent===YELLOW&&gameStatus==='playing'&&!isReview?' active-yellow':'');
 }
 
+// ── PLAY ──
 function play(col){
   if(reviewMode){toast('Reviens au coup actuel pour jouer');return;}
-  if(!ws||gameStatus!=='playing'||liveCurrent!==myColor)return;
+  if(!ws||gameStatus!=='playing'||liveCurrent!==myColor) return;
   ws.send(JSON.stringify({type:'move',col}));
 }
+function playLocal(col){
+  if(reviewMode){toast('Reviens au coup actuel pour jouer');return;}
+  if(gameStatus!=='playing'||gameMode==='aiai') return;
+  if(liveBoard[col]!==0) return;
+  clearHint();
+  applyLocalMove(col);
+  reviewCursor=liveHistory.length;
+  renderLocalBoard(false);
+  updateTurn();
+  updateNavUI();
+}
+function playLocalAI(col){
+  if(reviewMode){toast('Reviens au coup actuel pour jouer');return;}
+  if(gameStatus!=='playing') return;
+  if(liveBoard[col]!==0) return;
+  clearHint();
+  applyLocalMove(col);
+  reviewCursor=liveHistory.length;
+  renderLocalBoard(false);
+  updateTurn();
+  updateNavUI();
+  if(gameStatus==='playing'&&liveCurrent!==myColor) setTimeout(()=>doLocalAIMove(),600);
+}
 
+// ── LOCAL AI MOVE ──
+async function doLocalAIMove(){
+  if(gameStatus!=='playing') return;
+  const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,'');
+  const valid=getValidColsFlat(liveBoard);
+  if(!valid.length) return;
+  applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
+  reviewCursor=liveHistory.length;
+  renderLocalBoard(false);
+  updateTurn();
+  updateNavUI();
+  if(gameStatus==='playing'&&gameMode==='ai'&&liveCurrent!==myColor) setTimeout(()=>doLocalAIMove(),600);
+}
+
+// ── MODE SWITCHER ──
+function switchMode(newMode){
+  if(newMode===gameMode) return;
+  const prev=gameMode;
+  stopAIAI();
+  gameMode=newMode;
+  setupModeUI();
+  updateTurn();
+  if(newMode==='aiai'&&gameStatus==='playing') runAIAILoop();
+  else if(newMode==='ai'&&gameStatus==='playing'&&liveCurrent!==myColor&&!ws)
+    setTimeout(()=>doLocalAIMove(),600);
+  const labels={aiai:'IA vs IA',ai:'Vs IA',local:'Local PvP'};
+  toast('Mode : '+labels[newMode]);
+}
+function setupModeUI(){
+  ['aiai','ai','local'].forEach(m=>{
+    const btn=document.getElementById('mode-'+m);
+    if(btn) btn.className='mode-btn'+(gameMode===m?' active':'');
+  });
+  const showLevel=gameMode==='ai'||gameMode==='aiai';
+  document.getElementById('level-group').style.display=showLevel?'flex':'none';
+  if(showLevel) highlightLevel(aiLevel);
+  // hide mode switcher for online pvp
+  document.getElementById('mode-switcher').style.display=
+    (gameMode==='pvp')?'none':'';
+}
+function setLevel(level){
+  aiLevel=level;
+  if(ws) ws.send(JSON.stringify({type:'set_ai_level',level}));
+  highlightLevel(level);
+  toast('Niveau : '+{easy:'Facile',medium:'Moyen',hard:'Difficile'}[level]);
+}
+function highlightLevel(level){
+  ['easy','medium','hard'].forEach(l=>{
+    const btn=document.getElementById('lvl-'+l);
+    if(btn) btn.className='tb-btn'+(l===level?' active-'+l:'');
+  });
+}
+
+// ── HINT ──
+function requestHint(){
+  if(gameStatus!=='playing') return;
+  const btn=document.getElementById('hint-btn');
+  btn.disabled=true;
+  document.getElementById('hint-indicator').classList.add('show');
+  clearHint();
+  const player=(gameMode==='local'||gameMode==='aiai')?liveCurrent:myColor;
+  getAIHintFast(liveBoard,player,aiLevel,'').then(col=>{
+    document.getElementById('hint-indicator').classList.remove('show');
+    btn.disabled=false;
+    if(col!==null&&col!==-1){showHintOnBoard(col);toast('💡 Conseil : colonne '+(col+1));}
+    else toast('Aucun conseil disponible');
+  });
+}
+async function getAIHintFast(board,player,level,seq){
+  try{
+    const proto=location.protocol==='https:'?'wss':'ws';
+    return await new Promise((resolve)=>{
+      const hws=new WebSocket(`${proto}://${location.host}/ws`);
+      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve(null);},3000);
+      hws.onopen=()=>hws.send(JSON.stringify({action:'ai_hint',board:[...board],player,ai_level:level,sequence:seq}));
+      hws.onmessage=e=>{
+        clearTimeout(t);
+        const msg=JSON.parse(e.data);
+        try{hws.close();}catch(e){}
+        resolve(msg.type==='ai_hint'?msg.col:null);
+      };
+      hws.onerror=()=>{clearTimeout(t);resolve(null);};
+    });
+  }catch(e){return null;}
+}
+function showHintOnBoard(col){
+  clearHint();
+  hintCol=col;
+  let targetRow=-1;
+  for(let r=ROWS-1;r>=0;r--){if(liveBoard[r*COLS+col]===0){targetRow=r;break;}}
+  if(targetRow===-1) return;
+  const cell=document.querySelectorAll('.cell')[targetRow*COLS+col];
+  if(cell) cell.classList.add('hint-cell');
+  if(hintTimeout) clearTimeout(hintTimeout);
+  hintTimeout=setTimeout(()=>clearHint(),3000);
+}
+function clearHint(){
+  document.querySelectorAll('.hint-cell').forEach(c=>c.classList.remove('hint-cell'));
+  hintCol=null;
+  if(hintTimeout){clearTimeout(hintTimeout);hintTimeout=null;}
+}
+
+// ── DRAW MODE ──
+function openDrawMode(){
+  drawBoardState=new Array(ROWS*COLS).fill(0);
+  drawMode=true; drawColor='red';
+  liveBoard=[...drawBoardState];
+  liveHistory=[];liveCurrent=RED;
+  gameStatus='drawing';myColor=RED;gameMode='draw';
+  showPage('game-page');
+  buildBoard();
+  document.getElementById('main-toolbar').style.display='none';
+  document.getElementById('draw-toolbar').classList.add('show');
+  document.getElementById('turn-pill').style.display='none';
+  renderDrawBoard();
+  selectDrawColor('red');
+}
+function exitDrawMode(){
+  drawMode=false;
+  document.getElementById('main-toolbar').style.display='';
+  document.getElementById('draw-toolbar').classList.remove('show');
+  document.getElementById('turn-pill').style.display='';
+  goHome();
+}
+function selectDrawColor(c){
+  drawColor=c;
+  document.getElementById('draw-red-btn').className='color-sel-btn'+(c==='red'?' sel-red':'');
+  document.getElementById('draw-yellow-btn').className='color-sel-btn'+(c==='yellow'?' sel-yellow':'');
+}
+function handleDrawClick(col,row){
+  if(!drawMode) return;
+  const idx=row*COLS+col;
+  const cv=drawColor==='red'?RED:YELLOW;
+  drawBoardState[idx]=(drawBoardState[idx]===cv)?0:cv;
+  liveBoard=[...drawBoardState];
+  renderDrawBoard();
+}
+function renderDrawBoard(){
+  document.querySelectorAll('.cell').forEach(cell=>{
+    const r=parseInt(cell.dataset.r),c=parseInt(cell.dataset.c);
+    const v=drawBoardState[r*COLS+c];
+    cell.className='cell draw-mode';
+    if(v===RED) cell.classList.add('draw-red');
+    else if(v===YELLOW) cell.classList.add('draw-yellow');
+  });
+}
+function clearDrawBoard(){
+  drawBoardState=new Array(ROWS*COLS).fill(0);
+  liveBoard=[...drawBoardState];
+  renderDrawBoard();
+}
+function openDrawModeChooser(){document.getElementById('draw-chooser').classList.add('show');}
+function launchFromDraw(mode,level){
+  closeDMC();
+  drawMode=false;
+  document.getElementById('draw-toolbar').classList.remove('show');
+  document.getElementById('main-toolbar').style.display='';
+  document.getElementById('turn-pill').style.display='';
+  if(ws){ws.close();ws=null;}
+  stopAIAI();
+  const savedBoard=[...drawBoardState];
+  initLocalGame(mode,level||'hard',savedBoard);
+}
+
+// ── REPLAY ──
 function navTo(idx){
   if(idx===-1) idx=liveHistory.length;
   reviewCursor=Math.max(0,Math.min(liveHistory.length,idx));
   reviewMode=reviewCursor<liveHistory.length;
-  renderFromHistory();
+  if(gameMode==='local'||gameMode==='aiai'||gameMode==='ai') renderLocalBoard(true);
+  else renderFromHistory();
   updateNavUI();
   if(!reviewMode) updateTurn();
 }
-function navStep(delta){navTo(reviewCursor+delta)}
+function navStep(delta){navTo(reviewCursor+delta);}
 function exitReview(){
-  reviewMode=false;
-  reviewCursor=liveHistory.length;
-  renderFromHistory();
-  updateNavUI();
-  updateTurn();
+  reviewMode=false;reviewCursor=liveHistory.length;
+  if(gameMode==='local'||gameMode==='aiai'||gameMode==='ai') renderLocalBoard(false);
+  else renderFromHistory();
+  updateNavUI();updateTurn();
 }
 function updateNavUI(){
   const total=liveHistory.length;
@@ -974,93 +975,53 @@ function updateNavUI(){
   document.getElementById('nav-end').disabled=reviewCursor===total;
 }
 
+// ── TURN / NAMES ──
 function updateTurn(){
-  const pill=document.getElementById('turn-pill');
-  const dot=document.getElementById('pill-dot');
-  const txt=document.getElementById('turn-text');
-  pill.classList.remove('my-turn');
-  dot.className='pill-dot';
-  if(drawModeActive){dot.classList.add('gray');txt.textContent='Mode dessin';return;}
+  const pill=document.getElementById('turn-pill'),
+        dot=document.getElementById('pill-dot'),
+        txt=document.getElementById('turn-text');
+  pill.classList.remove('my-turn');dot.className='pill-dot';
+  if(gameStatus==='drawing'){dot.classList.add('gray');txt.textContent='Mode dessin — place les pions';return;}
   if(gameStatus==='waiting'){dot.classList.add('gray');txt.textContent='En attente...';return;}
-  if(gameStatus==='playing'){
-    dot.classList.add(liveCurrent===RED?'red':'yellow');
-    const mine=liveCurrent===myColor;
-    if(mine){pill.classList.add('my-turn');txt.textContent='Ton tour !';}
-    else txt.textContent=gameMode==='ai'?`IA (${aiLevel}) réfléchit...`:"Tour de l'adversaire...";
-  }
-  if(gameStatus==='finished'){dot.classList.add('gray');txt.textContent='Partie terminée';}
+  if(gameStatus==='finished'){dot.classList.add('gray');txt.textContent='Partie terminée';return;}
+  dot.classList.add(liveCurrent===RED?'red':'yellow');
+  if(gameMode==='aiai'){txt.textContent='IA '+(liveCurrent===RED?'Rouge':'Jaune')+' réfléchit...';return;}
+  if(gameMode==='local'){txt.textContent=(liveCurrent===RED?'Rouge':'Jaune')+' — à vous !';pill.classList.add('my-turn');return;}
+  const mine=liveCurrent===myColor;
+  if(mine){pill.classList.add('my-turn');txt.textContent='Ton tour !';}
+  else txt.textContent=gameMode==='ai'?`IA (${aiLevel}) réfléchit...`:"Tour de l'adversaire...";
 }
-
 function updateScoreNames(){
   if(gameMode==='ai'){
-    const playerIsRed=myColor===RED;
-    const playerStr=playerIsRed?'red':'yellow';
-    const aiStr=playerIsRed?'yellow':'red';
-    document.getElementById('sc-'+playerStr+'-name').innerHTML=
-      (playerIsRed?'Rouge':'Jaune')+' <span class="my-badge">moi</span>';
-    document.getElementById('sc-'+aiStr+'-name').innerHTML=
-      'IA <span style="font-size:.65rem;color:var(--muted)">('+aiLevel+')</span>';
+    const ps=myColor===RED?'red':'yellow',as=myColor===RED?'yellow':'red';
+    document.getElementById('sc-'+ps+'-name').innerHTML=(myColor===RED?'Rouge':'Jaune')+' <span class="my-badge">moi</span>';
+    document.getElementById('sc-'+as+'-name').innerHTML='IA <span style="font-size:.65rem;color:var(--muted)">('+aiLevel+')</span>';
+  } else if(gameMode==='aiai'){
+    document.getElementById('sc-red-name').innerHTML='IA Rouge';
+    document.getElementById('sc-yellow-name').innerHTML='IA Jaune';
+  } else if(gameMode==='local'||gameMode==='draw'){
+    document.getElementById('sc-red-name').innerHTML='Rouge';
+    document.getElementById('sc-yellow-name').innerHTML='Jaune';
   } else {
     const myStr=myColor===RED?'red':'yellow';
     ['red','yellow'].forEach(col=>{
-      const nameEl=document.getElementById('sc-'+col+'-name');
-      const isMine=col===myStr;
-      nameEl.innerHTML=(col==='red'?'Rouge':'Jaune')+(isMine?' <span class="my-badge">moi</span>':'');
+      document.getElementById('sc-'+col+'-name').innerHTML=
+        (col==='red'?'Rouge':'Jaune')+(col===myStr?' <span class="my-badge">moi</span>':'');
     });
   }
 }
 
-function setupModeUI(){
-  // Highlight active mode button
-  ['pvp','ai','aiai'].forEach(m=>{
-    const btn=document.getElementById('mode-btn-'+m);
-    if(btn) btn.classList.toggle('active',m===gameMode);
-  });
-  // Show/hide level
-  const showLevel=gameMode==='ai';
-  document.getElementById('sb-level').style.display=showLevel?'block':'none';
-  if(showLevel) highlightLevel(aiLevel);
-  // Show hint button only in ai mode
-  document.getElementById('sb-ai-hint-btn').style.display=showLevel?'block':'none';
-}
-
-function setLevel(level){
-  aiLevel=level;
-  if(ws) ws.send(JSON.stringify({type:'set_ai_level',level}));
-  highlightLevel(level);
-  const labels={easy:'Facile',medium:'Moyen',hard:'Difficile'};
-  toast('Niveau : '+labels[level]);
-  aiMsg(`🎚 Niveau changé : ${labels[level]}`,'info');
-}
-
-function highlightLevel(level){
-  ['easy','medium','hard'].forEach(l=>{
-    const btn=document.getElementById('lvl-'+l);
-    if(btn) btn.className='lvl-btn'+(l===level?' active-'+l:'');
-  });
-}
-
+// ── RESULT (WS) ──
 function showResult(msg){
-  const emoji=document.getElementById('res-emoji');
-  const title=document.getElementById('res-title');
-  const sub=document.getElementById('res-sub');
-  if(msg.winner==='draw'){
-    emoji.textContent='🤝';title.textContent='Match nul';
-    sub.textContent='Personne ne gagne cette fois';title.style.color='var(--text)';
-    aiMsg('🤝 Match nul ! Bien joué des deux côtés.','info');
-  } else {
+  const emoji=document.getElementById('res-emoji'),
+        title=document.getElementById('res-title'),
+        sub=document.getElementById('res-sub');
+  title.style.color='var(--text)';
+  if(msg.winner==='draw'){emoji.textContent='🤝';title.textContent='Match nul';sub.textContent='Personne ne gagne';}
+  else{
     const iWon=(msg.winner==='red'&&myColor===RED)||(msg.winner==='yellow'&&myColor===YELLOW);
-    if(iWon){
-      emoji.innerHTML='🏆';title.textContent='Victoire !';
-      sub.textContent='Tu les as écrasés !';
-      title.style.color=myColor===RED?'var(--red)':'var(--yellow)';
-      aiMsg('🏆 Bravo ! Tu as battu l\'IA !','win');
-    } else {
-      emoji.innerHTML='😔';title.textContent='Défaite';
-      sub.textContent=gameMode==='ai'?`L'IA t'a eu (${aiLevel})...`:"L'adversaire a été plus fort";
-      title.style.color='var(--muted)';
-      aiMsg(`🤖 L'IA gagne (niveau ${aiLevel}). Tente encore !`,'warn');
-    }
+    if(iWon){emoji.innerHTML='🏆';title.textContent='Victoire !';sub.textContent='Tu les as écrasés !';title.style.color=myColor===RED?'var(--red)':'var(--yellow)';}
+    else{emoji.innerHTML='😔';title.textContent='Défaite';sub.textContent=gameMode==='ai'?`L'IA t'a eu (${aiLevel})...`:"L'adversaire a été plus fort";title.style.color='var(--muted)';}
     scores[msg.winner]=(scores[msg.winner]||0)+1;
   }
   document.getElementById('sc-red-score').textContent=scores.red||0;
@@ -1068,50 +1029,55 @@ function showResult(msg){
   document.getElementById('result-overlay').classList.add('show');
 }
 
+// ── RESTART ──
 function sendRestart(){
   document.getElementById('result-overlay').classList.remove('show');
-  exitReview();
+  stopAIAI();exitReview();
+  if(gameMode==='local'||gameMode==='ai'||gameMode==='aiai'){
+    liveBoard=new Array(ROWS*COLS).fill(0);localBoard=[...liveBoard];
+    liveCurrent=RED;liveHistory=[];gameStatus='playing';
+    renderLocalBoard(false);updateTurn();updateNavUI();
+    if(gameMode==='aiai') runAIAILoop();
+    else if(gameMode==='ai'&&liveCurrent!==myColor) setTimeout(()=>doLocalAIMove(),600);
+    return;
+  }
   updateScoreNames();
   if(ws) ws.send(JSON.stringify({type:'restart'}));
-  aiMsg('🔄 Nouvelle partie !','info');
 }
 
 // ── HOVER ──
 function hoverCol(col){
-  if(liveCurrent!==myColor||gameStatus!=='playing'||reviewMode) return;
-  const cls=myColor===RED?'red-hover':'yellow-hover';
+  if(drawMode||gameMode==='aiai') return;
+  let canPlay=false;
+  if(gameMode==='local') canPlay=gameStatus==='playing'&&!reviewMode;
+  else if(gameMode==='ai'&&!ws) canPlay=gameStatus==='playing'&&liveCurrent===myColor&&!reviewMode;
+  else canPlay=liveCurrent===myColor&&gameStatus==='playing'&&!reviewMode;
+  if(!canPlay) return;
+  const cls=liveCurrent===RED?'red-hover':'yellow-hover';
   document.querySelectorAll('.cell').forEach(cell=>{
-    if(parseInt(cell.dataset.c)===col&&cell.classList.contains('playable')){
+    if(parseInt(cell.dataset.c)===col&&cell.classList.contains('playable'))
       cell.classList.add('col-hover',cls);
-    }
   });
   document.querySelectorAll('.ch').forEach(h=>{
     if(parseInt(h.dataset.col)===col) h.style.opacity='1';
   });
 }
 function clearHover(){
-  document.querySelectorAll('.cell').forEach(cell=>{
-    cell.classList.remove('col-hover','red-hover','yellow-hover');
-  });
+  document.querySelectorAll('.cell').forEach(c=>c.classList.remove('col-hover','red-hover','yellow-hover'));
 }
 
-// ── INVITE ──
+// ── MISC ──
 function copyInvite(){
-  const link=document.getElementById('invite-link').textContent;
-  navigator.clipboard.writeText(link).then(()=>toast('Lien copié !'));
+  navigator.clipboard.writeText(document.getElementById('invite-link').textContent).then(()=>toast('Lien copié !'));
 }
-
-// ── TOAST ──
 function toast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-// ── INIT ──
 window.addEventListener('load',()=>{
-  const p=new URLSearchParams(location.search);
-  const join=p.get('join');
+  const join=new URLSearchParams(location.search).get('join');
   if(join){
     if(ws){ws.close();ws=null;}
     showPage('wait-page');
