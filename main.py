@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-import json, random, string, asyncio
+from fastapi.responses import FileResponse, JSONResponse
+import json, random, string, asyncio, os
 
 try:
     import psycopg2 as _test
@@ -290,6 +290,31 @@ async def handle_game(websocket, room, color):
             await broadcast(room)
         if not room.players:
             rooms.pop(room.id, None)
+
+@app.get("/api/parties")
+async def get_parties():
+    """Retourne toutes les parties pour le visualiseur."""
+    db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        return JSONResponse({"error": "DATABASE_URL non défini"}, status_code=500)
+    try:
+        import psycopg2
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, sequence_coups, sequence_miroir, mode_jeu, dimensions,
+                   statut, vainqueur, source,
+                   to_char(date_debut, 'DD/MM/YYYY HH24:MI') as date_debut
+            FROM parties
+            ORDER BY date_debut DESC
+            LIMIT 2000
+        """)
+        cols = [d[0] for d in cur.description]
+        rows = [dict(zip(cols, row)) for row in cur.fetchall()]
+        conn.close()
+        return JSONResponse(rows)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
