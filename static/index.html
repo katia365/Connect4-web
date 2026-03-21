@@ -217,6 +217,63 @@ header{display:flex;align-items:center;justify-content:space-between;
   font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;text-align:center;}
 .draw-mode-card:hover{border-color:var(--accent);color:var(--text);background:var(--accent-dim)}
 .draw-mode-card .dmc-icon{font-size:1.4rem;margin-bottom:5px}
+/* MINIMAX COL SCORES */
+.col-scores{display:none;grid-template-columns:repeat(9,var(--cell));gap:4px;margin-top:6px;}
+.col-scores.show{display:grid}
+.cs{display:flex;flex-direction:column;align-items:center;gap:2px;width:var(--cell);}
+.cs-bar-wrap{width:100%;height:28px;background:var(--s2);border-radius:4px;overflow:hidden;position:relative;}
+.cs-bar{position:absolute;bottom:0;left:0;right:0;transition:height .4s ease,background .3s;}
+.cs-val{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.04em;color:var(--muted);line-height:1;}
+/* AI MESSAGE */
+.ai-msg{display:none;align-items:center;gap:8px;padding:8px 16px;
+  background:var(--s2);border:1px solid var(--border);border-radius:20px;
+  font-size:.82rem;color:var(--muted);max-width:500px;width:100%;}
+.ai-msg.show{display:flex}
+.ai-msg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--accent);
+  animation:pulse-dot 1.2s ease-in-out infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+/* DB VIEWER PAGE */
+#db-page{padding:16px;gap:0;justify-content:flex-start;align-items:stretch;flex-direction:row;}
+.db-sidebar{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;padding-right:12px;
+  border-right:1px solid var(--border);}
+.db-search{background:var(--s2);border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.82rem;
+  width:100%;outline:none;}
+.db-search::placeholder{color:var(--muted)}
+.db-search:focus{border-color:var(--accent)}
+.db-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
+.db-item{padding:10px 12px;background:var(--s1);border:1px solid var(--border);border-radius:8px;
+  cursor:pointer;transition:all .18s;font-size:.78rem;line-height:1.5;}
+.db-item:hover{border-color:var(--accent);background:var(--accent-dim)}
+.db-item.active{border-color:var(--accent);background:var(--accent-dim)}
+.db-item-id{font-family:'Bebas Neue';font-size:.9rem;color:var(--accent);margin-right:6px}
+.db-item-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
+.db-tag{font-size:.65rem;padding:1px 6px;border-radius:4px;border:1px solid var(--border);color:var(--muted)}
+.db-tag.win-rouge{border-color:var(--red);color:var(--red);background:var(--red-dim)}
+.db-tag.win-jaune{border-color:var(--yellow);color:var(--yellow);background:var(--yellow-dim)}
+.db-tag.win-nul{border-color:var(--muted);color:var(--muted)}
+.db-main{flex:1;padding-left:16px;display:flex;flex-direction:column;gap:10px;align-items:center;}
+.db-info{font-size:.8rem;color:var(--muted);width:100%;padding:8px 12px;
+  background:var(--s1);border:1px solid var(--border);border-radius:8px;line-height:1.6;}
+.db-info span{color:var(--text)}
+.db-board{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:10px;}
+.db-board-grid{display:grid;grid-template-columns:repeat(9,38px);grid-template-rows:repeat(9,38px);gap:3px;}
+.db-cell{width:38px;height:38px;border-radius:50%;background:var(--bg);border:2px solid var(--border);}
+.db-cell.red{background:var(--red);border-color:#ff1040;box-shadow:0 0 10px var(--red-glow)}
+.db-cell.yellow{background:var(--yellow);border-color:#e6c000;box-shadow:0 0 10px var(--yellow-glow)}
+.db-cell.last{outline:2px solid rgba(255,255,255,.6);outline-offset:2px}
+.db-nav{display:flex;align-items:center;gap:6px;}
+.db-nav-btn{background:var(--s2);border:1px solid var(--border);color:var(--muted);
+  font-family:'DM Sans',sans-serif;font-size:.8rem;padding:5px 12px;border-radius:7px;
+  cursor:pointer;transition:all .2s;}
+.db-nav-btn:hover{border-color:var(--accent);color:var(--text)}
+.db-nav-btn:disabled{opacity:.3;cursor:default}
+.db-move-ctr{font-family:'Bebas Neue';font-size:1rem;letter-spacing:.05em;color:var(--muted);min-width:60px;text-align:center;}
+.db-count{font-size:.78rem;color:var(--muted);text-align:center;}
+@media(max-width:700px){
+  #db-page{flex-direction:column;}
+  .db-sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);padding-right:0;padding-bottom:12px;max-height:200px;}
+}
 /* TOAST */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(12px);
   background:var(--s2);border:1px solid var(--border);border-radius:10px;
@@ -265,6 +322,11 @@ header{display:flex;align-items:center;justify-content:space-between;
       <div class="hcard-icon">✏️</div>
       <div class="hcard-label">Dessiner une situation</div>
       <div class="hcard-desc">Pose les pions puis lance</div>
+    </div>
+    <div class="hcard c-accent" onclick="openDBViewer()" style="grid-column:1/-1">
+      <div class="hcard-icon">🗄️</div>
+      <div class="hcard-label">Visualiser la base de données</div>
+      <div class="hcard-desc">Parcourir et rejouer toutes les parties enregistrées</div>
     </div>
   </div>
 </div>
@@ -390,6 +452,25 @@ header{display:flex;align-items:center;justify-content:space-between;
     <div class="board-grid" id="board-grid"></div>
   </div>
 
+  <!-- AI message (minimax) -->
+  <div class="ai-msg" id="ai-msg">
+    <div class="ai-msg-dot"></div>
+    <span id="ai-msg-text">L'IA réfléchit...</span>
+  </div>
+
+  <!-- Minimax col scores -->
+  <div class="col-scores" id="col-scores">
+    <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-0"></div></div><div class="cs-val" id="csv-0">-</div></div>
+    <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-1"></div></div><div class="cs-val" id="csv-1">-</div></div>
+    <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-2"></div></div><div class="cs-val" id="csv-2">-</div></div>
+    <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-3"></div></div><div class="cs-val" id="csv-3">-</div></div>
+    <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-4"></div></div><div class="cs-val" id="csv-4">-</div></div>
+    <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-5"></div></div><div class="cs-val" id="csv-5">-</div></div>
+    <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-6"></div></div><div class="cs-val" id="csv-6">-</div></div>
+    <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-7"></div></div><div class="cs-val" id="csv-7">-</div></div>
+    <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-8"></div></div><div class="cs-val" id="csv-8">-</div></div>
+  </div>
+
   <div class="score-bar">
     <div class="score-card" id="sc-red">
       <div class="sc-dot red"></div>
@@ -400,6 +481,31 @@ header{display:flex;align-items:center;justify-content:space-between;
       <div class="sc-dot yellow"></div>
       <span class="sc-name" id="sc-yellow-name">Jaune</span>
       <span class="sc-score" id="sc-yellow-score">0</span>
+    </div>
+  </div>
+</div>
+
+<!-- DB VIEWER PAGE -->
+<div class="page" id="db-page">
+  <div class="db-sidebar">
+    <input class="db-search" id="db-search" placeholder="🔍 Rechercher..." oninput="dbFilter()">
+    <div class="db-count" id="db-count">Chargement...</div>
+    <div class="db-list" id="db-list"></div>
+  </div>
+  <div class="db-main">
+    <div class="db-info" id="db-info" style="display:none"></div>
+    <div class="db-board" id="db-board" style="display:none">
+      <div class="db-board-grid" id="db-board-grid"></div>
+    </div>
+    <div class="db-nav" id="db-nav" style="display:none">
+      <button class="db-nav-btn" id="db-start" onclick="dbNavTo(0)">⏮</button>
+      <button class="db-nav-btn" id="db-prev"  onclick="dbNavStep(-1)">◀</button>
+      <div class="db-move-ctr" id="db-move-ctr">0 / 0</div>
+      <button class="db-nav-btn" id="db-next"  onclick="dbNavStep(1)">▶</button>
+      <button class="db-nav-btn" id="db-end"   onclick="dbNavTo(-1)">⏭</button>
+    </div>
+    <div style="color:var(--muted);font-size:.82rem;text-align:center" id="db-empty">
+      ← Sélectionne une partie pour la visualiser
     </div>
   </div>
 </div>
@@ -1120,6 +1226,267 @@ function hoverCol(col){
 function clearHover(){
   document.querySelectorAll('.cell').forEach(c=>c.classList.remove('col-hover','red-hover','yellow-hover'));
 }
+
+// ── HINT BTN VISIBILITY ──
+function updateHintBtnVisibility(){
+  // Masquer en IA vs IA (inutile) et en mode dessin
+  const show = gameMode!=='aiai' && gameStatus!=='drawing';
+  document.getElementById('hint-btn').style.display = show ? '' : 'none';
+}
+
+// ── AI MESSAGE ──
+function showAIMsg(text, persist=false){
+  const el=document.getElementById('ai-msg');
+  const txt=document.getElementById('ai-msg-text');
+  txt.textContent=text;
+  el.classList.add('show');
+  if(!persist){
+    if(showAIMsg._t) clearTimeout(showAIMsg._t);
+    showAIMsg._t=setTimeout(()=>el.classList.remove('show'),3500);
+  }
+}
+function hideAIMsg(){
+  document.getElementById('ai-msg').classList.remove('show');
+  if(showAIMsg._t){clearTimeout(showAIMsg._t);showAIMsg._t=null;}
+}
+
+// ── MINIMAX COLUMN SCORES ──
+function updateMinimaxScores(){
+  const show = (aiLevel==='hard') && (gameMode==='ai'||gameMode==='aiai') && gameStatus==='playing' && !reviewMode;
+  const el=document.getElementById('col-scores');
+  if(!show){el.classList.remove('show');return;}
+  el.classList.add('show');
+
+  // Compute scores for each valid col via minimax depth=2 locally (lightweight)
+  const player = liveCurrent;
+  const scores_map = {};
+  const valid = getValidColsFlat(liveBoard);
+
+  for(const col of Array.from({length:COLS},(_,i)=>i)){
+    if(!valid.includes(col)){
+      scores_map[col]=null;
+      continue;
+    }
+    scores_map[col] = quickEval(liveBoard, col, player);
+  }
+
+  const vals = Object.values(scores_map).filter(v=>v!==null);
+  const minV = Math.min(...vals), maxV = Math.max(...vals);
+  const range = maxV - minV || 1;
+  const bestCol = valid.reduce((b,c)=>scores_map[c]>scores_map[b]?c:b, valid[0]);
+
+  for(let c=0;c<COLS;c++){
+    const bar=document.getElementById('csb-'+c);
+    const val=document.getElementById('csv-'+c);
+    const v=scores_map[c];
+    if(v===null){
+      bar.style.height='0%';bar.style.background='var(--border)';
+      val.textContent='✕';val.style.color='var(--muted)';
+      continue;
+    }
+    const pct=Math.max(8,Math.round(((v-minV)/range)*100));
+    bar.style.height=pct+'%';
+    const isBest=c===bestCol;
+    bar.style.background=isBest?'var(--accent)':v>=0?'rgba(48,209,88,.5)':'rgba(255,45,85,.5)';
+    val.textContent=v>9999?'WIN':v<-9999?'LOSE':v;
+    val.style.color=isBest?'var(--accent)':v>=0?'var(--green)':'var(--red)';
+  }
+}
+
+function quickEval(flat, col, player){
+  // Drop piece
+  const nb=[...flat];
+  for(let r=ROWS-1;r>=0;r--){
+    if(nb[r*COLS+col]===0){nb[r*COLS+col]=player;break;}
+  }
+  if(checkWinnerFlat(nb,player)) return 1000000;
+  // Shallow heuristic: count threats
+  return scoreFlat(nb,player) - scoreFlat(nb, player===RED?YELLOW:RED);
+}
+
+function scoreFlat(flat,player){
+  const b=[];for(let r=0;r<ROWS;r++)b.push(flat.slice(r*COLS,(r+1)*COLS));
+  let s=0,opp=player===RED?YELLOW:RED;
+  const sw=w=>{
+    if(w.filter(v=>v===player).length===4) s+=100;
+    else if(w.filter(v=>v===player).length===3&&w.filter(v=>v===0).length===1) s+=5;
+    else if(w.filter(v=>v===player).length===2&&w.filter(v=>v===0).length===2) s+=2;
+    if(w.filter(v=>v===opp).length===3&&w.filter(v=>v===0).length===1) s-=4;
+  };
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS-3;c++)sw([b[r][c],b[r][c+1],b[r][c+2],b[r][c+3]]);
+  for(let r=0;r<ROWS-3;r++)for(let c=0;c<COLS;c++)sw([b[r][c],b[r+1][c],b[r+2][c],b[r+3][c]]);
+  return s;
+}
+
+// Hook into existing functions to show minimax scores & AI messages
+const _origRenderLocal = renderLocalBoard;
+function renderLocalBoard(isRev){
+  _origRenderLocal(isRev);
+  updateMinimaxScores();
+  updateHintBtnVisibility();
+}
+const _origSetupMode = setupModeUI;
+function setupModeUI(){
+  _origSetupMode();
+  updateHintBtnVisibility();
+  updateMinimaxScores();
+}
+
+// Override do_ai_move feedback — patch updateTurn to show AI msg
+const _origUpdateTurn = updateTurn;
+function updateTurn(){
+  _origUpdateTurn();
+  // Show AI message when it's AI's turn in minimax mode
+  if(gameStatus==='playing'&&aiLevel==='hard'&&(gameMode==='ai'||gameMode==='aiai')){
+    const aiTurn = gameMode==='aiai' || liveCurrent!==myColor;
+    if(aiTurn) showAIMsg('♟ Minimax prof.'+minimaxDepth+' — calcul en cours...', true);
+    else hideAIMsg();
+  } else {
+    hideAIMsg();
+  }
+  updateMinimaxScores();
+}
+
+// After AI move completes, show best col message
+const _origApplyLocal = applyLocalMove;
+function applyLocalMove(col){
+  _origApplyLocal(col);
+  if(aiLevel==='hard'&&(gameMode==='ai'||gameMode==='aiai')){
+    showAIMsg('♟ Minimax joue colonne '+(col+1));
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// DB VIEWER
+// ════════════════════════════════════════════════════════════
+let dbGames=[], dbFiltered=[], dbSelected=null, dbCursor=0;
+
+function openDBViewer(){
+  showPage('db-page');
+  loadDBGames();
+}
+
+async function loadDBGames(){
+  document.getElementById('db-count').textContent='Chargement...';
+  try{
+    const r=await fetch('/api/parties');
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    dbGames=await r.json();
+    dbFiltered=[...dbGames];
+    renderDBList();
+  } catch(e){
+    document.getElementById('db-count').textContent='Erreur chargement: '+e.message;
+  }
+}
+
+function renderDBList(){
+  const list=document.getElementById('db-list');
+  list.innerHTML='';
+  document.getElementById('db-count').textContent=dbFiltered.length+' partie(s)';
+  dbFiltered.forEach((g,i)=>{
+    const div=document.createElement('div');
+    div.className='db-item'+(dbSelected&&dbSelected.id===g.id?' active':'');
+    const modeLabel={0:'IA/IA',1:'Humain/IA',2:'Humain/Humain'}[g.mode_jeu]||'Mode '+g.mode_jeu;
+    div.innerHTML=`<div><span class="db-item-id">#${g.id}</span>${modeLabel} — ${g.dimensions}</div>
+      <div class="db-item-tags">
+        <span class="db-tag">${g.statut}</span>
+        <span class="db-tag win-${(g.vainqueur||'').toLowerCase().replace('_','-')}">${g.vainqueur||'—'}</span>
+        <span class="db-tag">${g.source}</span>
+        <span class="db-tag">${g.sequence_coups?.length||0} coups</span>
+      </div>`;
+    div.onclick=()=>dbSelectGame(g);
+    list.appendChild(div);
+  });
+}
+
+function dbFilter(){
+  const q=document.getElementById('db-search').value.toLowerCase();
+  dbFiltered=dbGames.filter(g=>{
+    const modeLabel={0:'ia/ia',1:'humain/ia',2:'humain/humain'}[g.mode_jeu]||'';
+    return !q||
+      String(g.id).includes(q)||
+      (g.vainqueur||'').toLowerCase().includes(q)||
+      (g.statut||'').toLowerCase().includes(q)||
+      (g.source||'').toLowerCase().includes(q)||
+      modeLabel.includes(q)||
+      (g.sequence_coups||'').includes(q);
+  });
+  renderDBList();
+}
+
+function dbSelectGame(g){
+  dbSelected=g;
+  dbCursor=0;
+  // highlight
+  document.querySelectorAll('.db-item').forEach(el=>{
+    el.classList.toggle('active', el.querySelector('.db-item-id')?.textContent==='#'+g.id);
+  });
+  // show info
+  const modeLabel={0:'IA vs IA',1:'Humain vs IA',2:'Humain vs Humain'}[g.mode_jeu]||'Mode '+g.mode_jeu;
+  document.getElementById('db-info').style.display='';
+  document.getElementById('db-info').innerHTML=
+    `<b>#${g.id}</b> &nbsp;|&nbsp; <span>${modeLabel}</span> &nbsp;|&nbsp;
+     <span>${g.dimensions}</span> &nbsp;|&nbsp;
+     <span>${g.statut}</span> &nbsp;|&nbsp;
+     Vainqueur : <span>${g.vainqueur||'—'}</span> &nbsp;|&nbsp;
+     <span>${g.source}</span><br>
+     Séquence : <span style="font-family:monospace;font-size:.75rem">${g.sequence_coups||''}</span>`;
+  document.getElementById('db-board').style.display='';
+  document.getElementById('db-nav').style.display='';
+  document.getElementById('db-empty').style.display='none';
+  dbBuildGrid();
+  dbDraw();
+}
+
+function dbBuildGrid(){
+  const g=document.getElementById('db-board-grid');
+  g.innerHTML='';
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+    const d=document.createElement('div');
+    d.className='db-cell';d.id=`dbc-${r}-${c}`;
+    g.appendChild(d);
+  }
+}
+
+function dbDraw(){
+  if(!dbSelected) return;
+  const seq=dbSelected.sequence_coups||'';
+  const grid=Array.from({length:9},()=>Array(9).fill(0));
+  let lastR=-1,lastC=-1;
+  for(let i=0;i<dbCursor;i++){
+    const col=parseInt(seq[i])-1;
+    for(let r=8;r>=0;r--){
+      if(grid[r][col]===0){
+        grid[r][col]=i%2===0?1:2;
+        if(i===dbCursor-1){lastR=r;lastC=col;}
+        break;
+      }
+    }
+  }
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+    const cell=document.getElementById(`dbc-${r}-${c}`);
+    if(!cell) continue;
+    cell.className='db-cell';
+    if(grid[r][c]===1) cell.classList.add('red');
+    else if(grid[r][c]===2) cell.classList.add('yellow');
+    if(r===lastR&&c===lastC) cell.classList.add('last');
+  }
+  const total=seq.length;
+  document.getElementById('db-move-ctr').textContent=`${dbCursor} / ${total}`;
+  document.getElementById('db-start').disabled=dbCursor===0;
+  document.getElementById('db-prev').disabled=dbCursor===0;
+  document.getElementById('db-next').disabled=dbCursor===total;
+  document.getElementById('db-end').disabled=dbCursor===total;
+}
+
+function dbNavTo(idx){
+  if(!dbSelected) return;
+  const total=(dbSelected.sequence_coups||'').length;
+  if(idx===-1) idx=total;
+  dbCursor=Math.max(0,Math.min(total,idx));
+  dbDraw();
+}
+function dbNavStep(d){dbNavTo(dbCursor+d);}
 
 // ── MISC ──
 function copyInvite(){
