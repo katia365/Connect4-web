@@ -943,16 +943,34 @@ async function doLocalAIMove(){
 // ── MODE SWITCHER ──
 function switchMode(newMode){
   if(newMode===gameMode) return;
-  const prev=gameMode;
+  const wasOnline=!!ws;
   stopAIAI();
+
+  if(wasOnline){
+    // Leave remote room and continue locally from the exact current position.
+    try{ws.close();}catch(e){}
+    ws=null;
+    localBoard=[...liveBoard];
+  }
+
   gameMode=newMode;
   setupModeUI();
-  updateTurn();
+
+  if(!reviewMode){
+    reviewCursor=liveHistory.length;
+    renderLocalBoard(false);
+    updateTurn();
+  }else{
+    renderLocalBoard(true);
+  }
+  updateNavUI();
+
   if(newMode==='aiai'&&gameStatus==='playing') runAIAILoop();
   else if(newMode==='ai'&&gameStatus==='playing'&&liveCurrent!==myColor&&!ws)
     setTimeout(()=>doLocalAIMove(),600);
+
   const labels={aiai:'IA vs IA',ai:'Vs IA',local:'Local PvP'};
-  toast('Mode : '+labels[newMode]);
+  toast('Mode : '+labels[newMode]+' (partie conservée)');
 }
 function setupModeUI(){
   ['aiai','ai','local'].forEach(m=>{
