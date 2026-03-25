@@ -1,14 +1,7 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
-import json, random, string, asyncio, os
-
-try:
-    import psycopg2 as _test
-    print(f"=== psycopg2 import OK: {_test.__version__} ===")
-except Exception as e:
-    print(f"=== psycopg2 import FAILED: {e} ===")
-
+from fastapi.responses import FileResponse
+import json, random, string, asyncio
 from game_logic import (
     create_board, drop_piece, check_winner, is_draw,
     get_valid_cols, ai_easy, ai_medium_with_seq, ai_hard,
@@ -16,6 +9,7 @@ from game_logic import (
 )
 
 app = FastAPI()
+
 rooms = {}
 queue = []
 
@@ -30,7 +24,7 @@ class RoomState:
         self.id = rid
         self.mode = mode
         self.ai_level = ai_level
-        self.minimax_depth = minimax_depth  # profondeur minimax
+        self.minimax_depth = minimax_depth
         self.board = create_board()
         self.current = RED
         self.players = {}
@@ -84,7 +78,6 @@ async def do_ai_move(room):
 
     ai_val, ai_str = get_ai_color(room)
     level = room.ai_level
-
     if level == "easy":
         col = ai_easy(room.board)
     elif level == "medium":
@@ -110,16 +103,17 @@ async def do_ai_move(room):
 
     await broadcast(room)
 
-# ── HINT IA (WebSocket éphémère) ──────────────────────────────────────────────
-async def handle_hint(websocket, init):
-    """Calcule un coup IA rapidement et renvoie ai_hint."""
+async def handle_hint(websocket: WebSocket, init: dict):
     flat = init.get("board", [])
     player_val = init.get("player", RED)
     level = init.get("ai_level", "hard")
     depth = int(init.get("minimax_depth", 4))
     sequence = init.get("sequence", "")
 
-    # Reconstruire le board 2D depuis la liste plate
+    if not isinstance(flat, list) or len(flat) != ROWS * COLS:
+        await websocket.send_text(json.dumps({"type": "ai_hint", "col": -1}))
+        return
+
     board = []
     for r in range(ROWS):
         board.append(flat[r * COLS:(r + 1) * COLS])
@@ -150,12 +144,10 @@ async def ws_endpoint(websocket: WebSocket):
         ai_level = init.get("ai_level", "hard")
         minimax_depth = int(init.get("minimax_depth", 4))
 
-        # ── HINT ──────────────────────────────────────────────────────────────
         if action == "ai_hint":
             await handle_hint(websocket, init)
             return
 
-        # ── IA vs Joueur ──────────────────────────────────────────────────────
         if action == "ai":
             rid = gen_id()
             room = RoomState(rid, "ai", ai_level, minimax_depth)
@@ -170,7 +162,6 @@ async def ws_endpoint(websocket: WebSocket):
                 await do_ai_move(room)
             await handle_game(websocket, room, player_color)
 
-        # ── Matchmaking ───────────────────────────────────────────────────────
         elif action == "queue":
             future = asyncio.get_event_loop().create_future()
             await try_match(websocket, future)
@@ -188,7 +179,6 @@ async def ws_endpoint(websocket: WebSocket):
             await broadcast(room)
             await handle_game(websocket, room, color)
 
-        # ── Invitation ────────────────────────────────────────────────────────
         elif action == "invite":
             rid = gen_id()
             room = RoomState(rid, "pvp")
@@ -279,7 +269,6 @@ async def handle_game(websocket, room, color):
             elif msg.get("type") == "set_ai_level" and room.mode == "ai":
                 room.ai_level = msg.get("level", "hard")
                 room.minimax_depth = int(msg.get("minimax_depth", room.minimax_depth))
-                print(f"set_ai_level: level={room.ai_level} depth={room.minimax_depth}")
                 await broadcast(room)
 
     except WebSocketDisconnect:
@@ -290,30 +279,6 @@ async def handle_game(websocket, room, color):
             await broadcast(room)
         if not room.players:
             rooms.pop(room.id, None)
-
-@app.get("/api/parties")
-async def get_parties():
-    """Retourne toutes les parties pour le visualiseur."""
-    db_url = os.environ.get("DATABASE_URL")
-    if not db_url:
-        return JSONResponse({"error": "DATABASE_URL non défini"}, status_code=500)
-    try:
-        import psycopg2
-        conn = psycopg2.connect(db_url)
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT id, sequence_coups, sequence_miroir, mode_jeu, dimensions,
-                   statut, vainqueur, source,
-                   to_char(date_debut, 'DD/MM/YYYY HH24:MI') as date_debut
-            FROM parties
-            ORDER BY date_debut DESC
-        """)
-        cols = [d[0] for d in cur.description]
-        rows = [dict(zip(cols, row)) for row in cur.fetchall()]
-        conn.close()
-        return JSONResponse(rows)
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
