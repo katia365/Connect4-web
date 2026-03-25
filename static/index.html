@@ -49,8 +49,7 @@ header{display:flex;align-items:center;justify-content:space-between;
   background:linear-gradient(100deg,var(--red),var(--yellow));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .home-hero p{color:var(--muted);font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;font-weight:300}
-.home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-  gap:12px;width:100%;max-width:700px}
+.home-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%;max-width:520px}
 .hcard{background:var(--s1);border:1px solid var(--border);border-radius:14px;
   padding:22px 16px;cursor:pointer;transition:all .22s ease;text-align:center;position:relative;overflow:hidden;}
 .hcard::after{content:'';position:absolute;inset:0;border-radius:14px;opacity:0;transition:opacity .22s;}
@@ -183,6 +182,21 @@ header{display:flex;align-items:center;justify-content:space-between;
 .sc-score{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.05em;color:var(--muted)}
 .my-badge{font-size:.65rem;background:var(--accent-dim);color:var(--accent);
   border:1px solid var(--accent);border-radius:4px;padding:1px 5px;margin-left:4px;}
+/* MINIMAX COL SCORES */
+.col-scores{display:none;grid-template-columns:repeat(9,var(--cell));gap:4px;margin-top:4px;}
+.col-scores.show{display:grid}
+.cs{display:flex;flex-direction:column;align-items:center;gap:2px;width:var(--cell);}
+.cs-bar-wrap{width:100%;height:28px;background:var(--s2);border-radius:4px;overflow:hidden;position:relative;}
+.cs-bar{position:absolute;bottom:0;left:0;right:0;transition:height .4s ease,background .3s;}
+.cs-val{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.04em;color:var(--muted);line-height:1;}
+/* AI MESSAGE */
+.ai-msg{display:none;align-items:center;gap:8px;padding:8px 16px;
+  background:var(--s2);border:1px solid var(--border);border-radius:20px;
+  font-size:.82rem;color:var(--muted);max-width:500px;width:100%;}
+.ai-msg.show{display:flex}
+.ai-msg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--accent);
+  animation:pulse-dot 1.2s ease-in-out infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
 /* OVERLAYS */
 .overlay{display:none;position:fixed;inset:0;z-index:200;
   background:rgba(8,8,16,.85);backdrop-filter:blur(10px);
@@ -217,44 +231,21 @@ header{display:flex;align-items:center;justify-content:space-between;
   font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;text-align:center;}
 .draw-mode-card:hover{border-color:var(--accent);color:var(--text);background:var(--accent-dim)}
 .draw-mode-card .dmc-icon{font-size:1.4rem;margin-bottom:5px}
-/* MINIMAX COL SCORES */
-.col-scores{display:none;grid-template-columns:repeat(9,var(--cell));gap:4px;margin-top:6px;}
-.col-scores.show{display:grid}
-.cs{display:flex;flex-direction:column;align-items:center;gap:2px;width:var(--cell);}
-.cs-bar-wrap{width:100%;height:28px;background:var(--s2);border-radius:4px;overflow:hidden;position:relative;}
-.cs-bar{position:absolute;bottom:0;left:0;right:0;transition:height .4s ease,background .3s;}
-.cs-val{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.04em;color:var(--muted);line-height:1;}
-/* AI MESSAGE */
-.ai-msg{display:none;align-items:center;gap:8px;padding:8px 16px;
-  background:var(--s2);border:1px solid var(--border);border-radius:20px;
-  font-size:.82rem;color:var(--muted);max-width:500px;width:100%;}
-.ai-msg.show{display:flex}
-.ai-msg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--accent);
-  animation:pulse-dot 1.2s ease-in-out infinite;}
-@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
-/* DB VIEWER PAGE */
+/* DB VIEWER */
 #db-page{padding:16px;gap:0;justify-content:flex-start;align-items:stretch;flex-direction:row;}
-.db-sidebar{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;padding-right:12px;
-  border-right:1px solid var(--border);}
-.db-search{background:var(--s2);border:1px solid var(--border);border-radius:8px;
-  padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.82rem;
-  width:100%;outline:none;}
-.db-search::placeholder{color:var(--muted)}
-.db-search:focus{border-color:var(--accent)}
+.db-sidebar{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;padding-right:12px;border-right:1px solid var(--border);}
+.db-search{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.82rem;width:100%;outline:none;}
+.db-search::placeholder{color:var(--muted)}.db-search:focus{border-color:var(--accent)}
 .db-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
-.db-item{padding:10px 12px;background:var(--s1);border:1px solid var(--border);border-radius:8px;
-  cursor:pointer;transition:all .18s;font-size:.78rem;line-height:1.5;}
-.db-item:hover{border-color:var(--accent);background:var(--accent-dim)}
-.db-item.active{border-color:var(--accent);background:var(--accent-dim)}
+.db-item{padding:10px 12px;background:var(--s1);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .18s;font-size:.78rem;line-height:1.5;}
+.db-item:hover,.db-item.active{border-color:var(--accent);background:var(--accent-dim)}
 .db-item-id{font-family:'Bebas Neue';font-size:.9rem;color:var(--accent);margin-right:6px}
 .db-item-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
 .db-tag{font-size:.65rem;padding:1px 6px;border-radius:4px;border:1px solid var(--border);color:var(--muted)}
 .db-tag.win-rouge{border-color:var(--red);color:var(--red);background:var(--red-dim)}
 .db-tag.win-jaune{border-color:var(--yellow);color:var(--yellow);background:var(--yellow-dim)}
-.db-tag.win-nul{border-color:var(--muted);color:var(--muted)}
 .db-main{flex:1;padding-left:16px;display:flex;flex-direction:column;gap:10px;align-items:center;}
-.db-info{font-size:.8rem;color:var(--muted);width:100%;padding:8px 12px;
-  background:var(--s1);border:1px solid var(--border);border-radius:8px;line-height:1.6;}
+.db-info{font-size:.8rem;color:var(--muted);width:100%;padding:8px 12px;background:var(--s1);border:1px solid var(--border);border-radius:8px;line-height:1.6;}
 .db-info span{color:var(--text)}
 .db-board{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:10px;}
 .db-board-grid{display:grid;grid-template-columns:repeat(9,38px);grid-template-rows:repeat(9,38px);gap:3px;}
@@ -263,22 +254,15 @@ header{display:flex;align-items:center;justify-content:space-between;
 .db-cell.yellow{background:var(--yellow);border-color:#e6c000;box-shadow:0 0 10px var(--yellow-glow)}
 .db-cell.last{outline:2px solid rgba(255,255,255,.6);outline-offset:2px}
 .db-nav{display:flex;align-items:center;gap:6px;}
-.db-nav-btn{background:var(--s2);border:1px solid var(--border);color:var(--muted);
-  font-family:'DM Sans',sans-serif;font-size:.8rem;padding:5px 12px;border-radius:7px;
-  cursor:pointer;transition:all .2s;}
-.db-nav-btn:hover{border-color:var(--accent);color:var(--text)}
-.db-nav-btn:disabled{opacity:.3;cursor:default}
+.db-nav-btn{background:var(--s2);border:1px solid var(--border);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.8rem;padding:5px 12px;border-radius:7px;cursor:pointer;transition:all .2s;}
+.db-nav-btn:hover{border-color:var(--accent);color:var(--text)}.db-nav-btn:disabled{opacity:.3;cursor:default}
 .db-move-ctr{font-family:'Bebas Neue';font-size:1rem;letter-spacing:.05em;color:var(--muted);min-width:60px;text-align:center;}
 .db-count{font-size:.78rem;color:var(--muted);text-align:center;}
-@media(max-width:700px){
-  #db-page{flex-direction:column;}
-  .db-sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);padding-right:0;padding-bottom:12px;max-height:200px;}
-}
+@media(max-width:700px){#db-page{flex-direction:column;}.db-sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);padding-right:0;padding-bottom:12px;max-height:200px;}}
 /* TOAST */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(12px);
   background:var(--s2);border:1px solid var(--border);border-radius:10px;
-  padding:10px 20px;font-size:.86rem;opacity:0;transition:all .3s;z-index:300;
-  pointer-events:none;white-space:nowrap;}
+  padding:10px 20px;font-size:.86rem;opacity:0;transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 @media(max-width:480px){:root{--cell:36px}header{padding:12px 14px}.tb-btn,.mode-btn{padding:4px 7px;font-size:.7rem}}
 @media(max-width:380px){:root{--cell:30px}}
@@ -289,8 +273,7 @@ header{display:flex;align-items:center;justify-content:space-between;
   <div class="logo">Puissance 4 Online</div>
   <div class="header-right">
     <div class="hint-indicator" id="hint-indicator">
-      <div class="hint-spinner"></div>
-      <span>IA réfléchit...</span>
+      <div class="hint-spinner"></div><span>IA réfléchit...</span>
     </div>
     <button class="back-btn" onclick="goHome()">Accueil</button>
   </div>
@@ -302,30 +285,25 @@ header{display:flex;align-items:center;justify-content:space-between;
     <h1>Puissance<em>Quatre 9x9</em></h1>
     <p>Choisissez votre mode de jeu</p>
   </div>
-  <div class="home-grid" style="max-width:520px;grid-template-columns:repeat(2,1fr)">
+  <div class="home-grid">
     <div class="hcard c-green" onclick="startAIvsAI()">
-      <div class="hcard-icon">🤖</div>
-      <div class="hcard-label">IA vs IA</div>
+      <div class="hcard-icon">🤖</div><div class="hcard-label">IA vs IA</div>
       <div class="hcard-desc">Regarde deux IA s'affronter</div>
     </div>
     <div class="hcard c-orange" onclick="openAIModal()">
-      <div class="hcard-icon">🧠</div>
-      <div class="hcard-label">Contre l'IA</div>
+      <div class="hcard-icon">🧠</div><div class="hcard-label">Contre l'IA</div>
       <div class="hcard-desc">Montre que tu es plus fort</div>
     </div>
     <div class="hcard c-purple" onclick="startLocalPvP()">
-      <div class="hcard-icon">👥</div>
-      <div class="hcard-label">Humain vs Humain</div>
+      <div class="hcard-icon">👥</div><div class="hcard-label">Humain vs Humain</div>
       <div class="hcard-desc">Même écran, deux joueurs</div>
     </div>
     <div class="hcard c-red" onclick="openDrawMode()">
-      <div class="hcard-icon">✏️</div>
-      <div class="hcard-label">Dessiner une situation</div>
+      <div class="hcard-icon">✏️</div><div class="hcard-label">Dessiner une situation</div>
       <div class="hcard-desc">Pose les pions puis lance</div>
     </div>
     <div class="hcard c-accent" onclick="openDBViewer()" style="grid-column:1/-1">
-      <div class="hcard-icon">🗄️</div>
-      <div class="hcard-label">Visualiser la base de données</div>
+      <div class="hcard-icon">🗄️</div><div class="hcard-label">Visualiser la base de données</div>
       <div class="hcard-desc">Parcourir et rejouer toutes les parties enregistrées</div>
     </div>
   </div>
@@ -355,7 +333,7 @@ header{display:flex;align-items:center;justify-content:space-between;
   <div class="modal-card">
     <div class="modal-emoji">♟</div>
     <div class="modal-title">Minimax</div>
-    <div class="modal-sub">Régle la profondeur de recherche</div>
+    <div class="modal-sub">Règle la profondeur de recherche</div>
     <div style="margin-bottom:20px">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:.82rem;color:var(--muted)">
         <span>Profondeur</span>
@@ -395,14 +373,12 @@ header{display:flex;align-items:center;justify-content:space-between;
 <div class="page" id="game-page">
   <div class="turn-pill" id="turn-pill">
     <div class="pill-dot gray" id="pill-dot"></div>
-    <span id="turn-text">Connexion...</span>
+    <span id="turn-text">En attente...</span>
   </div>
-
-  <!-- Main toolbar -->
   <div class="toolbar" id="main-toolbar">
     <div class="mode-group" id="mode-switcher">
-      <button class="mode-btn" id="mode-aiai"  onclick="switchMode('aiai')">🤖 IA/IA</button>
-      <button class="mode-btn" id="mode-ai"    onclick="switchMode('ai')">🧠 vs IA</button>
+      <button class="mode-btn" id="mode-aiai" onclick="switchMode('aiai')">🤖 IA/IA</button>
+      <button class="mode-btn" id="mode-ai"   onclick="switchMode('ai')">🧠 vs IA</button>
       <button class="mode-btn" id="mode-local" onclick="switchMode('local')">👥 Local</button>
     </div>
     <div class="tb-group" id="level-group" style="display:none">
@@ -410,25 +386,22 @@ header{display:flex;align-items:center;justify-content:space-between;
       <button class="tb-btn" id="lvl-medium" onclick="setLevel('medium')">Apprenante</button>
       <button class="tb-btn" id="lvl-hard"   onclick="setLevel('hard')">Minimax</button>
     </div>
-    <!-- Depth control (only in minimax) -->
     <div class="tb-group" id="depth-group" style="display:none">
       <span style="font-size:.72rem;color:var(--muted);padding:5px 6px">Prof.</span>
-      <button class="tb-btn" id="depth-minus" onclick="changeDepth(-1)">−</button>
+      <button class="tb-btn" onclick="changeDepth(-1)">−</button>
       <div class="move-counter" id="depth-counter" style="min-width:28px">4</div>
-      <button class="tb-btn" id="depth-plus"  onclick="changeDepth(+1)">+</button>
+      <button class="tb-btn" onclick="changeDepth(1)">+</button>
     </div>
     <button class="hint-btn" id="hint-btn" onclick="requestHint()">💡 Conseil IA</button>
     <div class="tb-group">
-      <button class="tb-btn" id="nav-start" onclick="navTo(0)"    title="Début">⏮</button>
-      <button class="tb-btn" id="nav-prev"  onclick="navStep(-1)" title="Précédent">◀</button>
+      <button class="tb-btn" id="nav-start" onclick="navTo(0)">⏮</button>
+      <button class="tb-btn" id="nav-prev"  onclick="navStep(-1)">◀</button>
       <div class="move-counter" id="move-counter">0 / 0</div>
-      <button class="tb-btn" id="nav-next"  onclick="navStep(1)"  title="Suivant">▶</button>
-      <button class="tb-btn" id="nav-end"   onclick="navTo(-1)"   title="Fin">⏭</button>
+      <button class="tb-btn" id="nav-next"  onclick="navStep(1)">▶</button>
+      <button class="tb-btn" id="nav-end"   onclick="navTo(-1)">⏭</button>
     </div>
     <button class="game-replay-btn" onclick="sendRestart()">↺ Rejouer</button>
   </div>
-
-  <!-- Draw toolbar -->
   <div class="draw-toolbar" id="draw-toolbar">
     <button class="color-sel-btn sel-red" id="draw-red-btn" onclick="selectDrawColor('red')">
       <div class="draw-dot red"></div> Rouge
@@ -440,7 +413,6 @@ header{display:flex;align-items:center;justify-content:space-between;
     <button class="draw-clear-btn" onclick="clearDrawBoard()">✕ Effacer</button>
     <button class="back-btn" onclick="exitDrawMode()">↩ Annuler</button>
   </div>
-
   <div class="board-outer">
     <div class="col-hints" id="col-hints">
       <div class="ch" data-col="0">▼</div><div class="ch" data-col="1">▼</div>
@@ -451,14 +423,7 @@ header{display:flex;align-items:center;justify-content:space-between;
     </div>
     <div class="board-grid" id="board-grid"></div>
   </div>
-
-  <!-- AI message (minimax) -->
-  <div class="ai-msg" id="ai-msg">
-    <div class="ai-msg-dot"></div>
-    <span id="ai-msg-text">L'IA réfléchit...</span>
-  </div>
-
-  <!-- Minimax col scores -->
+  <div class="ai-msg" id="ai-msg"><div class="ai-msg-dot"></div><span id="ai-msg-text">L'IA réfléchit...</span></div>
   <div class="col-scores" id="col-scores">
     <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-0"></div></div><div class="cs-val" id="csv-0">-</div></div>
     <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-1"></div></div><div class="cs-val" id="csv-1">-</div></div>
@@ -470,18 +435,9 @@ header{display:flex;align-items:center;justify-content:space-between;
     <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-7"></div></div><div class="cs-val" id="csv-7">-</div></div>
     <div class="cs"><div class="cs-bar-wrap"><div class="cs-bar" id="csb-8"></div></div><div class="cs-val" id="csv-8">-</div></div>
   </div>
-
   <div class="score-bar">
-    <div class="score-card" id="sc-red">
-      <div class="sc-dot red"></div>
-      <span class="sc-name" id="sc-red-name">Rouge</span>
-      <span class="sc-score" id="sc-red-score">0</span>
-    </div>
-    <div class="score-card" id="sc-yellow">
-      <div class="sc-dot yellow"></div>
-      <span class="sc-name" id="sc-yellow-name">Jaune</span>
-      <span class="sc-score" id="sc-yellow-score">0</span>
-    </div>
+    <div class="score-card" id="sc-red"><div class="sc-dot red"></div><span class="sc-name" id="sc-red-name">Rouge</span><span class="sc-score" id="sc-red-score">0</span></div>
+    <div class="score-card" id="sc-yellow"><div class="sc-dot yellow"></div><span class="sc-name" id="sc-yellow-name">Jaune</span><span class="sc-score" id="sc-yellow-score">0</span></div>
   </div>
 </div>
 
@@ -494,9 +450,7 @@ header{display:flex;align-items:center;justify-content:space-between;
   </div>
   <div class="db-main">
     <div class="db-info" id="db-info" style="display:none"></div>
-    <div class="db-board" id="db-board" style="display:none">
-      <div class="db-board-grid" id="db-board-grid"></div>
-    </div>
+    <div class="db-board" id="db-board" style="display:none"><div class="db-board-grid" id="db-board-grid"></div></div>
     <div class="db-nav" id="db-nav" style="display:none">
       <button class="db-nav-btn" id="db-start" onclick="dbNavTo(0)">⏮</button>
       <button class="db-nav-btn" id="db-prev"  onclick="dbNavStep(-1)">◀</button>
@@ -504,9 +458,7 @@ header{display:flex;align-items:center;justify-content:space-between;
       <button class="db-nav-btn" id="db-next"  onclick="dbNavStep(1)">▶</button>
       <button class="db-nav-btn" id="db-end"   onclick="dbNavTo(-1)">⏭</button>
     </div>
-    <div style="color:var(--muted);font-size:.82rem;text-align:center" id="db-empty">
-      ← Sélectionne une partie pour la visualiser
-    </div>
+    <div style="color:var(--muted);font-size:.82rem;text-align:center" id="db-empty">← Sélectionne une partie</div>
   </div>
 </div>
 
@@ -531,24 +483,12 @@ header{display:flex;align-items:center;justify-content:space-between;
     <div class="modal-title">Lancer la partie</div>
     <div class="modal-sub">Qui joue à partir de cette situation ?</div>
     <div class="draw-mode-grid">
-      <button class="draw-mode-card" onclick="launchFromDraw('ai','easy')">
-        <div class="dmc-icon">🎲</div>Vs IA Aléatoire
-      </button>
-      <button class="draw-mode-card" onclick="launchFromDraw('ai','medium')">
-        <div class="dmc-icon">📚</div>Vs IA Apprenante
-      </button>
-      <button class="draw-mode-card" onclick="launchFromDraw('ai','hard')">
-        <div class="dmc-icon">♟</div>Vs Minimax
-      </button>
-      <button class="draw-mode-card" onclick="launchFromDraw('local','')">
-        <div class="dmc-icon">👥</div>Humain vs Humain
-      </button>
-      <button class="draw-mode-card" onclick="launchFromDraw('aiai','hard')">
-        <div class="dmc-icon">🤖</div>IA vs IA
-      </button>
-      <button class="draw-mode-card" onclick="closeDMC()">
-        <div class="dmc-icon">↩</div>Annuler
-      </button>
+      <button class="draw-mode-card" onclick="launchFromDraw('ai','easy')"><div class="dmc-icon">🎲</div>Vs IA Aléatoire</button>
+      <button class="draw-mode-card" onclick="launchFromDraw('ai','medium')"><div class="dmc-icon">📚</div>Vs IA Apprenante</button>
+      <button class="draw-mode-card" onclick="launchFromDraw('ai','hard')"><div class="dmc-icon">♟</div>Vs Minimax</button>
+      <button class="draw-mode-card" onclick="launchFromDraw('local','')"><div class="dmc-icon">👥</div>Humain vs Humain</button>
+      <button class="draw-mode-card" onclick="launchFromDraw('aiai','hard')"><div class="dmc-icon">🤖</div>IA vs IA</button>
+      <button class="draw-mode-card" onclick="closeDMC()"><div class="dmc-icon">↩</div>Annuler</button>
     </div>
   </div>
 </div>
@@ -556,63 +496,72 @@ header{display:flex;align-items:center;justify-content:space-between;
 <div class="toast" id="toast"></div>
 
 <script>
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
 const ROWS=9,COLS=9,RED=1,YELLOW=2;
-let ws=null,myColor=null,chosenColor='red';
+let ws=null, myColor=null, chosenColor='red';
 let liveBoard=new Array(ROWS*COLS).fill(0);
-let liveHistory=[],liveCurrent=RED;
-let gameStatus='waiting',gameMode='pvp',aiLevel='hard';
+let liveHistory=[], liveCurrent=RED;
+let gameStatus='waiting', gameMode='pvp', aiLevel='hard';
 let minimaxDepth=4;
-let scores={red:0,yellow:0};
-let reviewCursor=0,reviewMode=false;
-let drawMode=false,drawColor='red';
+let winScores={red:0,yellow:0};
+let reviewCursor=0, reviewMode=false;
+let drawMode=false, drawColor='red';
 let drawBoardState=new Array(ROWS*COLS).fill(0);
-let hintCol=null,hintTimeout=null;
-let aiaiTimer=null,aiaiRunning=false;
-let localBoard=null;
+let hintCol=null, hintTimeout=null;
+let aiaiTimer=null, aiaiRunning=false;
+let aiMsgTimer=null;
+// DB viewer
+let dbGames=[], dbFiltered=[], dbSelected=null, dbCursor=0;
 
-// ── NAV ──
+// ════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
+
 function goHome(){
   if(ws){ws.close();ws=null;}
   stopAIAI();
-  drawMode=false;
-  gameStatus='waiting';
-  document.getElementById('result-overlay').classList.remove('show');
-  document.getElementById('draw-chooser').classList.remove('show');
+  drawMode=false; gameStatus='waiting';
+  ['result-overlay','draw-chooser','minimax-modal','ai-modal'].forEach(id=>
+    document.getElementById(id).classList.remove('show'));
   document.getElementById('main-toolbar').style.display='';
   document.getElementById('draw-toolbar').classList.remove('show');
   document.getElementById('turn-pill').style.display='';
+  hideAIMsg();
   showPage('home-page');
   try{history.replaceState({},'','/');}catch(e){}
 }
 
-// ── MODALS ──
+// ════════════════════════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════════════════════════
 function openAIModal(){selectColor('red');document.getElementById('ai-modal').classList.add('show');}
 function closeAIModal(){document.getElementById('ai-modal').classList.remove('show');}
 function selectMinimax(){
   closeAIModal();
-  // sync slider with current depth
   document.getElementById('depth-slider').value=minimaxDepth;
   document.getElementById('depth-display').textContent=minimaxDepth;
   document.getElementById('minimax-modal').classList.add('show');
 }
 function closeMinimax(){
   document.getElementById('minimax-modal').classList.remove('show');
-  document.getElementById('ai-modal').classList.add('show');
+  openAIModal();
 }
 function closeResult(){document.getElementById('result-overlay').classList.remove('show');}
 function closeDMC(){document.getElementById('draw-chooser').classList.remove('show');}
 function selectColor(c){
   chosenColor=c;
-  ['red','yellow'].forEach(x=>{
-    document.getElementById('cpick-'+x).className='col-pick-btn'+(c===x?' sel-'+x:'');
-  });
+  ['red','yellow'].forEach(x=>document.getElementById('cpick-'+x).className='col-pick-btn'+(c===x?' sel-'+x:''));
 }
 
-// ── WS ──
+// ════════════════════════════════════════════════════════════
+// WEBSOCKET
+// ════════════════════════════════════════════════════════════
 function openWS(msg){
   const proto=location.protocol==='https:'?'wss':'ws';
   ws=new WebSocket(`${proto}://${location.host}/ws`);
@@ -622,20 +571,9 @@ function openWS(msg){
   ws.onclose=()=>{if(gameStatus==='playing'&&gameMode==='pvp')toast('Connexion perdue');};
 }
 
-// ── GAME START ──
-function startQueue(){
-  if(ws){ws.close();ws=null;}
-  showPage('wait-page');
-  document.getElementById('wait-desc').textContent="Recherche d'un adversaire...";
-  document.getElementById('invite-box').classList.remove('show');
-  openWS({action:'queue'});
-}
-function startInvite(){
-  if(ws){ws.close();ws=null;}
-  showPage('wait-page');
-  document.getElementById('wait-desc').textContent="En attente que ton ami rejoigne";
-  openWS({action:'invite'});
-}
+// ════════════════════════════════════════════════════════════
+// GAME START
+// ════════════════════════════════════════════════════════════
 function startAI(level){
   if(ws){ws.close();ws=null;}
   closeAIModal();
@@ -644,160 +582,34 @@ function startAI(level){
   openWS({action:'ai',ai_level:level,preferred_color:chosenColor,minimax_depth:minimaxDepth});
 }
 function startLocalPvP(){
-  stopAIAI();
-  if(ws){ws.close();ws=null;}
+  stopAIAI(); if(ws){ws.close();ws=null;}
   initLocalGame('local','hard');
 }
 function startAIvsAI(){
-  stopAIAI();
-  if(ws){ws.close();ws=null;}
+  stopAIAI(); if(ws){ws.close();ws=null;}
   initLocalGame('aiai','hard');
 }
-function initLocalGame(mode,level,board){
-  gameMode=mode;
-  myColor=RED;
-  aiLevel=level;
+
+function initLocalGame(mode, level, board){
+  gameMode=mode; myColor=RED; aiLevel=level;
   liveBoard=board?[...board]:new Array(ROWS*COLS).fill(0);
-  localBoard=[...liveBoard];
-  // count pieces to determine whose turn
   const reds=liveBoard.filter(v=>v===RED).length;
   const yellows=liveBoard.filter(v=>v===YELLOW).length;
   liveCurrent=reds<=yellows?RED:YELLOW;
-  liveHistory=[];
-  gameStatus='playing';
-  scores={red:0,yellow:0};
+  liveHistory=[]; gameStatus='playing';
+  winScores={red:0,yellow:0};
   showPage('game-page');
-  buildBoard();
-  updateScoreNames();
-  setupModeUI();
-  renderLocalBoard(false);
-  updateTurn();
-  updateNavUI();
+  buildBoard(); updateScoreNames(); setupModeUI();
+  renderBoard(); updateTurnPill(); updateNavUI();
   document.getElementById('sc-red-score').textContent='0';
   document.getElementById('sc-yellow-score').textContent='0';
   if(mode==='aiai') runAIAILoop();
-  else if(mode==='ai'&&liveCurrent!==myColor) setTimeout(()=>doLocalAIMove(),600);
+  else if(mode==='ai'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
 }
 
-// ── AI vs AI LOOP ──
-function stopAIAI(){
-  aiaiRunning=false;
-  if(aiaiTimer){clearTimeout(aiaiTimer);aiaiTimer=null;}
-}
-async function runAIAILoop(){
-  aiaiRunning=true;
-  while(aiaiRunning&&gameStatus==='playing'&&gameMode==='aiai'){
-    await new Promise(r=>{aiaiTimer=setTimeout(r,700);});
-    if(!aiaiRunning||gameStatus!=='playing'||gameMode!=='aiai') break;
-    const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,'');
-    if(col===null||col===-1){
-      const v=getValidColsFlat(liveBoard);
-      if(!v.length) break;
-      applyLocalMove(v[Math.floor(Math.random()*v.length)]);
-    } else {
-      applyLocalMove(col);
-    }
-    if(!reviewMode){
-      reviewCursor=liveHistory.length;
-      renderLocalBoard(false);
-      updateTurn();
-      updateNavUI();
-    }
-    if(gameStatus==='finished') break;
-  }
-  aiaiRunning=false;
-}
-
-// ── LOCAL LOGIC ──
-function applyLocalMove(col){
-  let row=-1;
-  for(let r=ROWS-1;r>=0;r--){if(liveBoard[r*COLS+col]===0){row=r;break;}}
-  if(row===-1) return;
-  const nb=[...liveBoard];
-  nb[row*COLS+col]=liveCurrent;
-  liveBoard=nb; localBoard=nb;
-  liveHistory=[...liveHistory,col];
-  if(checkWinnerFlat(liveBoard,liveCurrent)){
-    gameStatus='finished';
-    const winner=liveCurrent===RED?'red':'yellow';
-    scores[winner]=(scores[winner]||0)+1;
-    document.getElementById('sc-red-score').textContent=scores.red||0;
-    document.getElementById('sc-yellow-score').textContent=scores.yellow||0;
-    setTimeout(()=>showResultLocal(winner),400);
-  } else if(liveBoard.every(v=>v!==0)){
-    gameStatus='finished';
-    setTimeout(()=>showResultLocal('draw'),400);
-  } else {
-    liveCurrent=liveCurrent===RED?YELLOW:RED;
-  }
-}
-function checkWinnerFlat(flat,player){
-  const b=[];for(let r=0;r<ROWS;r++)b.push(flat.slice(r*COLS,(r+1)*COLS));
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS-3;c++)if([0,1,2,3].every(i=>b[r][c+i]===player))return true;
-  for(let r=0;r<ROWS-3;r++)for(let c=0;c<COLS;c++)if([0,1,2,3].every(i=>b[r+i][c]===player))return true;
-  for(let r=3;r<ROWS;r++)for(let c=0;c<COLS-3;c++)if([0,1,2,3].every(i=>b[r-i][c+i]===player))return true;
-  for(let r=0;r<ROWS-3;r++)for(let c=0;c<COLS-3;c++)if([0,1,2,3].every(i=>b[r+i][c+i]===player))return true;
-  return false;
-}
-function getValidColsFlat(flat){return Array.from({length:COLS},(_,c)=>c).filter(c=>flat[c]===0);}
-function showResultLocal(winner){
-  const emoji=document.getElementById('res-emoji'),
-        title=document.getElementById('res-title'),
-        sub=document.getElementById('res-sub');
-  title.style.color='var(--text)';
-  if(winner==='draw'){emoji.textContent='🤝';title.textContent='Match nul';sub.textContent='Égalité parfaite';}
-  else{
-    const col=winner==='red'?'Rouge':'Jaune';
-    emoji.textContent='🏆';title.textContent=col+' gagne !';
-    title.style.color=winner==='red'?'var(--red)':'var(--yellow)';
-    sub.textContent=gameMode==='aiai'?'L\'IA '+col.toLowerCase()+' a dominé':col+' remporte la partie !';
-  }
-  document.getElementById('result-overlay').classList.add('show');
-}
-
-// ── RENDER LOCAL ──
-function renderLocalBoard(isReviewRender){
-  if(reviewCursor<liveHistory.length){
-    renderFromHistoryLocal(); return;
-  }
-  clearHint();
-  document.querySelectorAll('.cell').forEach(cell=>{
-    const r=parseInt(cell.dataset.r),c=parseInt(cell.dataset.c);
-    const v=liveBoard[r*COLS+c];
-    cell.className='cell';
-    if(v===RED) cell.classList.add('red');
-    else if(v===YELLOW) cell.classList.add('yellow');
-    else if(gameStatus==='playing'&&gameMode!=='aiai') cell.classList.add('playable');
-  });
-  document.getElementById('sc-red').className=
-    'score-card'+(liveCurrent===RED&&gameStatus==='playing'?' active-red':'');
-  document.getElementById('sc-yellow').className=
-    'score-card'+(liveCurrent===YELLOW&&gameStatus==='playing'?' active-yellow':'');
-  const showH=gameMode==='local'&&gameStatus==='playing';
-  const cls=liveCurrent===RED?'show-red':'show-yellow';
-  document.querySelectorAll('.ch').forEach(h=>{h.className='ch'+(showH?' '+cls:'');});
-}
-function renderFromHistoryLocal(){
-  const board=new Array(ROWS*COLS).fill(0);
-  let cur=RED,lastIdx=-1;
-  for(let i=0;i<reviewCursor;i++){
-    const col=liveHistory[i];
-    for(let r=ROWS-1;r>=0;r--){
-      if(board[r*COLS+col]===0){board[r*COLS+col]=cur;if(i===reviewCursor-1)lastIdx=r*COLS+col;break;}
-    }
-    cur=cur===RED?YELLOW:RED;
-  }
-  document.querySelectorAll('.cell').forEach(cell=>{
-    const r=parseInt(cell.dataset.r),c=parseInt(cell.dataset.c);
-    const v=board[r*COLS+c];
-    cell.className='cell';
-    if(v===RED)cell.classList.add('red','static');
-    else if(v===YELLOW)cell.classList.add('yellow','static');
-    if(r*COLS+c===lastIdx)cell.classList.add('last-move');
-  });
-}
-
-// ── WS MESSAGE HANDLER ──
+// ════════════════════════════════════════════════════════════
+// WS MESSAGE HANDLER
+// ════════════════════════════════════════════════════════════
 function handleMsg(msg){
   if(msg.type==='error'){toast(msg.msg);goHome();return;}
   if(msg.type==='waiting') return;
@@ -809,38 +621,36 @@ function handleMsg(msg){
   }
   if(msg.type==='ai_hint'){showHintOnBoard(msg.col);return;}
   if(msg.type==='state'){
-    liveBoard=msg.board;liveHistory=msg.history||[];
-    liveCurrent=msg.current;gameStatus=msg.status;
-    gameMode=msg.mode;
+    liveBoard=msg.board; liveHistory=msg.history||[];
+    liveCurrent=msg.current; gameStatus=msg.status; gameMode=msg.mode;
     if(msg.ai_level) aiLevel=msg.ai_level;
     if(msg.your_color) myColor=msg.your_color==='red'?RED:YELLOW;
     const first=!document.getElementById('game-page').classList.contains('active');
     if(first){
-      showPage('game-page');buildBoard();updateScoreNames();
-      setupModeUI();scores={red:0,yellow:0};
+      showPage('game-page'); buildBoard(); updateScoreNames(); setupModeUI();
+      winScores={red:0,yellow:0};
       document.getElementById('sc-red-score').textContent='0';
       document.getElementById('sc-yellow-score').textContent='0';
     }
     if(msg.move_count===0) exitReview();
-    if(!reviewMode){reviewCursor=liveHistory.length;renderFromHistory();updateTurn();}
+    if(!reviewMode){reviewCursor=liveHistory.length;renderBoard();updateTurnPill();}
     updateNavUI();
     if(msg.status==='finished') setTimeout(()=>showResult(msg),500);
   }
 }
 
-// ── BUILD BOARD ──
+// ════════════════════════════════════════════════════════════
+// BOARD BUILD
+// ════════════════════════════════════════════════════════════
 function buildBoard(){
-  const g=document.getElementById('board-grid');
-  g.innerHTML='';
-  for(let r=0;r<ROWS;r++){
-    for(let c=0;c<COLS;c++){
-      const d=document.createElement('div');
-      d.className='cell';d.dataset.r=r;d.dataset.c=c;
-      d.addEventListener('click',()=>onCellClick(c,r));
-      d.addEventListener('mouseenter',()=>{if(!drawMode)hoverCol(c);});
-      d.addEventListener('mouseleave',()=>{if(!drawMode)clearHover();});
-      g.appendChild(d);
-    }
+  const g=document.getElementById('board-grid'); g.innerHTML='';
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const d=document.createElement('div');
+    d.className='cell'; d.dataset.r=r; d.dataset.c=c;
+    d.addEventListener('click',()=>onCellClick(c,r));
+    d.addEventListener('mouseenter',()=>{if(!drawMode)hoverCol(c);});
+    d.addEventListener('mouseleave',()=>{if(!drawMode)clearHover();});
+    g.appendChild(d);
   }
   document.querySelectorAll('.ch').forEach(h=>{
     h.addEventListener('click',()=>{if(!drawMode)onColClick(parseInt(h.dataset.col));});
@@ -852,11 +662,7 @@ function buildBoard(){
 function onCellClick(col,row){
   if(drawMode){handleDrawClick(col,row);return;}
   if(gameMode==='local'){playLocal(col);return;}
-  if(gameMode==='ai'&&!ws){
-    // local AI mode (from draw)
-    if(liveCurrent===myColor) playLocalAI(col);
-    return;
-  }
+  if(gameMode==='ai'&&!ws){if(liveCurrent===myColor)playLocalAI(col);return;}
   play(col);
 }
 function onColClick(col){
@@ -865,43 +671,80 @@ function onColClick(col){
   play(col);
 }
 
-// ── WS RENDER ──
-function renderFromHistory(){
-  clearHint();
-  const board=new Array(ROWS*COLS).fill(0);
-  let cur=RED,lastR=-1,lastC=-1;
-  for(let i=0;i<reviewCursor;i++){
-    const col=liveHistory[i];
-    for(let r=ROWS-1;r>=0;r--){
-      if(board[r*COLS+col]===0){board[r*COLS+col]=cur;if(i===reviewCursor-1){lastR=r;lastC=col;}break;}
+// ════════════════════════════════════════════════════════════
+// RENDER — single function, no redefinition
+// ════════════════════════════════════════════════════════════
+function renderBoard(){
+  if(drawMode){renderDrawBoard();return;}
+
+  // Build display board from history if in review, else use liveBoard
+  let displayBoard, lastR=-1, lastC=-1, isReview=false;
+
+  if(reviewCursor<liveHistory.length){
+    isReview=true;
+    displayBoard=new Array(ROWS*COLS).fill(0);
+    let cur=RED;
+    for(let i=0;i<reviewCursor;i++){
+      const col=liveHistory[i];
+      for(let r=ROWS-1;r>=0;r--){
+        if(displayBoard[r*COLS+col]===0){
+          displayBoard[r*COLS+col]=cur;
+          if(i===reviewCursor-1){lastR=r;lastC=col;}
+          break;
+        }
+      }
+      cur=cur===RED?YELLOW:RED;
     }
-    cur=cur===RED?YELLOW:RED;
+  } else {
+    displayBoard=[...liveBoard];
   }
-  const isReview=reviewCursor<liveHistory.length;
-  const isMyTurn=!isReview&&liveCurrent===myColor&&gameStatus==='playing';
-  const colorCls=myColor===RED?'show-red':'show-yellow';
-  document.querySelectorAll('.ch').forEach(h=>{h.className='ch'+(isMyTurn?' '+colorCls:'');});
+
+  const isMyTurn=!isReview&&gameStatus==='playing'&&(
+    gameMode==='local'||(gameMode==='ai'&&!ws&&liveCurrent===myColor)||
+    (gameMode!=='aiai'&&liveCurrent===myColor)
+  );
+  const colorCls=liveCurrent===RED?'show-red':'show-yellow';
+
+  document.querySelectorAll('.ch').forEach(h=>{
+    h.className='ch'+((isMyTurn&&gameMode==='local')||
+      (isMyTurn&&gameMode!=='aiai'&&gameMode!=='pvp')||
+      (isMyTurn&&gameMode==='pvp')?' '+colorCls:'');
+  });
+
   document.querySelectorAll('.cell').forEach(cell=>{
     const r=parseInt(cell.dataset.r),c=parseInt(cell.dataset.c);
-    const v=board[r*COLS+c];
+    const v=displayBoard[r*COLS+c];
     cell.className='cell';
     if(v===RED){cell.classList.add('red');if(isReview)cell.classList.add('static');}
     else if(v===YELLOW){cell.classList.add('yellow');if(isReview)cell.classList.add('static');}
-    else if(isMyTurn)cell.classList.add('playable');
-    if(isReview&&r===lastR&&c===lastC)cell.classList.add('last-move');
+    else if(isMyTurn&&gameMode!=='aiai') cell.classList.add('playable');
+    if(isReview&&r===lastR&&c===lastC) cell.classList.add('last-move');
+    if(hintCol!==null&&!isReview){
+      // will be set by showHintOnBoard
+    }
   });
+
+  // Score cards active state
+  const notReview=!isReview&&gameStatus==='playing';
   document.getElementById('sc-red').className=
-    'score-card'+(liveCurrent===RED&&gameStatus==='playing'&&!isReview?' active-red':'');
+    'score-card'+(notReview&&liveCurrent===RED?' active-red':'');
   document.getElementById('sc-yellow').className=
-    'score-card'+(liveCurrent===YELLOW&&gameStatus==='playing'&&!isReview?' active-yellow':'');
+    'score-card'+(notReview&&liveCurrent===YELLOW?' active-yellow':'');
+
+  // Update minimax scores and hint visibility
+  updateMinimaxScores();
+  updateHintBtnVisibility();
 }
 
-// ── PLAY ──
+// ════════════════════════════════════════════════════════════
+// PLAY
+// ════════════════════════════════════════════════════════════
 function play(col){
   if(reviewMode){toast('Reviens au coup actuel pour jouer');return;}
   if(!ws||gameStatus!=='playing'||liveCurrent!==myColor) return;
   ws.send(JSON.stringify({type:'move',col}));
 }
+
 function playLocal(col){
   if(reviewMode){toast('Reviens au coup actuel pour jouer');return;}
   if(gameStatus!=='playing'||gameMode==='aiai') return;
@@ -909,10 +752,9 @@ function playLocal(col){
   clearHint();
   applyLocalMove(col);
   reviewCursor=liveHistory.length;
-  renderLocalBoard(false);
-  updateTurn();
-  updateNavUI();
+  renderBoard(); updateTurnPill(); updateNavUI();
 }
+
 function playLocalAI(col){
   if(reviewMode){toast('Reviens au coup actuel pour jouer');return;}
   if(gameStatus!=='playing') return;
@@ -920,89 +762,111 @@ function playLocalAI(col){
   clearHint();
   applyLocalMove(col);
   reviewCursor=liveHistory.length;
-  renderLocalBoard(false);
-  updateTurn();
-  updateNavUI();
-  if(gameStatus==='playing'&&liveCurrent!==myColor) setTimeout(()=>doLocalAIMove(),600);
+  renderBoard(); updateTurnPill(); updateNavUI();
+  if(gameStatus==='playing'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
 }
 
-// ── LOCAL AI MOVE ──
+function applyLocalMove(col){
+  let row=-1;
+  for(let r=ROWS-1;r>=0;r--){if(liveBoard[r*COLS+col]===0){row=r;break;}}
+  if(row===-1) return;
+  const nb=[...liveBoard]; nb[row*COLS+col]=liveCurrent;
+  liveBoard=nb; liveHistory=[...liveHistory,col];
+  if(checkWinnerFlat(liveBoard,liveCurrent)){
+    gameStatus='finished';
+    const winner=liveCurrent===RED?'red':'yellow';
+    winScores[winner]=(winScores[winner]||0)+1;
+    document.getElementById('sc-red-score').textContent=winScores.red||0;
+    document.getElementById('sc-yellow-score').textContent=winScores.yellow||0;
+    setTimeout(()=>showResultLocal(winner),400);
+  } else if(liveBoard.every(v=>v!==0)){
+    gameStatus='finished';
+    setTimeout(()=>showResultLocal('draw'),400);
+  } else {
+    liveCurrent=liveCurrent===RED?YELLOW:RED;
+  }
+  // AI msg after move
+  if(aiLevel==='hard'&&(gameMode==='ai'||gameMode==='aiai')){
+    showAIMsg('♟ Minimax joue colonne '+(col+1));
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// AI vs AI LOOP
+// ════════════════════════════════════════════════════════════
+function stopAIAI(){
+  aiaiRunning=false;
+  if(aiaiTimer){clearTimeout(aiaiTimer);aiaiTimer=null;}
+}
+async function runAIAILoop(){
+  aiaiRunning=true;
+  while(aiaiRunning&&gameStatus==='playing'&&gameMode==='aiai'){
+    await new Promise(r=>{aiaiTimer=setTimeout(r,700);});
+    if(!aiaiRunning||gameStatus!=='playing'||gameMode!=='aiai') break;
+    const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,'');
+    const valid=getValidColsFlat(liveBoard);
+    if(!valid.length) break;
+    applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
+    if(!reviewMode){reviewCursor=liveHistory.length;renderBoard();updateTurnPill();updateNavUI();}
+    if(gameStatus==='finished') break;
+  }
+  aiaiRunning=false;
+}
+
 async function doLocalAIMove(){
   if(gameStatus!=='playing') return;
+  if(aiLevel==='hard') showAIMsg('♟ Minimax prof.'+minimaxDepth+' — calcul en cours...',true);
   const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,'');
   const valid=getValidColsFlat(liveBoard);
   if(!valid.length) return;
   applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
   reviewCursor=liveHistory.length;
-  renderLocalBoard(false);
-  updateTurn();
-  updateNavUI();
-  if(gameStatus==='playing'&&gameMode==='ai'&&liveCurrent!==myColor) setTimeout(()=>doLocalAIMove(),600);
+  renderBoard(); updateTurnPill(); updateNavUI();
+  if(gameStatus==='playing'&&gameMode==='ai'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
 }
 
-// ── MODE SWITCHER ──
+// ════════════════════════════════════════════════════════════
+// MODE SWITCHER
+// ════════════════════════════════════════════════════════════
 function switchMode(newMode){
   if(newMode===gameMode) return;
-  const wasOnline=!!ws;
   stopAIAI();
-
-  if(wasOnline){
-    // Leave remote room and continue locally from the exact current position.
-    try{ws.close();}catch(e){}
-    ws=null;
-    localBoard=[...liveBoard];
-  }
-
-  gameMode=newMode;
-  setupModeUI();
-
-  if(!reviewMode){
-    reviewCursor=liveHistory.length;
-    renderLocalBoard(false);
-    updateTurn();
-  }else{
-    renderLocalBoard(true);
-  }
-  updateNavUI();
-
+  if(ws){try{ws.close();}catch(e){}ws=null;}
+  gameMode=newMode; setupModeUI();
+  reviewCursor=liveHistory.length; reviewMode=false;
+  renderBoard(); updateTurnPill(); updateNavUI();
   if(newMode==='aiai'&&gameStatus==='playing') runAIAILoop();
-  else if(newMode==='ai'&&gameStatus==='playing'&&liveCurrent!==myColor&&!ws)
-    setTimeout(()=>doLocalAIMove(),600);
-
-  const labels={aiai:'IA vs IA',ai:'Vs IA',local:'Local PvP'};
-  toast('Mode : '+labels[newMode]+' (partie conservée)');
+  else if(newMode==='ai'&&gameStatus==='playing'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
+  toast('Mode : '+{aiai:'IA vs IA',ai:'Vs IA',local:'Local PvP'}[newMode]+' (partie conservée)');
 }
+
 function setupModeUI(){
   ['aiai','ai','local'].forEach(m=>{
     const btn=document.getElementById('mode-'+m);
     if(btn) btn.className='mode-btn'+(gameMode===m?' active':'');
   });
-  const showLevel=gameMode==='ai'||gameMode==='aiai';
-  document.getElementById('level-group').style.display=showLevel?'flex':'none';
-  if(showLevel){highlightLevel(aiLevel);updateDepthUI();}
-  else document.getElementById('depth-group').style.display='none';
-  // hide mode switcher for online pvp
-  document.getElementById('mode-switcher').style.display=
-    (gameMode==='pvp')?'none':'';
+  const showLvl=gameMode==='ai'||gameMode==='aiai';
+  document.getElementById('level-group').style.display=showLvl?'flex':'none';
+  if(showLvl) highlightLevel(aiLevel);
+  const showDepth=showLvl&&aiLevel==='hard';
+  document.getElementById('depth-group').style.display=showDepth?'flex':'none';
+  document.getElementById('depth-counter').textContent=minimaxDepth;
+  document.getElementById('mode-switcher').style.display=gameMode==='pvp'?'none':'';
+  updateHintBtnVisibility();
 }
+
 function setLevel(level){
   aiLevel=level;
   if(ws) ws.send(JSON.stringify({type:'set_ai_level',level,minimax_depth:minimaxDepth}));
   highlightLevel(level);
-  updateDepthUI();
-  toast('Type IA : '+{easy:'Aléatoire',medium:'IA Apprenante',hard:'Minimax'}[level]);
+  document.getElementById('depth-group').style.display=(level==='hard')?'flex':'none';
+  toast('Type IA : '+{easy:'Aléatoire',medium:'Apprenante',hard:'Minimax'}[level]);
 }
 function highlightLevel(level){
   ['easy','medium','hard'].forEach(l=>{
     const btn=document.getElementById('lvl-'+l);
     if(btn) btn.className='tb-btn'+(l===level?' active-'+l:'');
   });
-  updateDepthUI();
-}
-function updateDepthUI(){
-  const show=aiLevel==='hard';
-  document.getElementById('depth-group').style.display=show?'flex':'none';
-  document.getElementById('depth-counter').textContent=minimaxDepth;
 }
 function changeDepth(delta){
   minimaxDepth=Math.max(1,Math.min(8,minimaxDepth+delta));
@@ -1011,166 +875,45 @@ function changeDepth(delta){
   toast('Profondeur Minimax : '+minimaxDepth);
 }
 
-// ── HINT ──
-function requestHint(){
-  if(gameStatus!=='playing') return;
-  const btn=document.getElementById('hint-btn');
-  btn.disabled=true;
-  document.getElementById('hint-indicator').classList.add('show');
-  clearHint();
-  const player=(gameMode==='local'||gameMode==='aiai')?liveCurrent:myColor;
-  getAIHintFast(liveBoard,player,aiLevel,'').then(col=>{
-    document.getElementById('hint-indicator').classList.remove('show');
-    btn.disabled=false;
-    if(col!==null&&col!==-1){showHintOnBoard(col);toast('💡 Conseil : colonne '+(col+1));}
-    else toast('Aucun conseil disponible');
-  });
-}
-async function getAIHintFast(board,player,level,seq){
-  try{
-    const proto=location.protocol==='https:'?'wss':'ws';
-    return await new Promise((resolve)=>{
-      const hws=new WebSocket(`${proto}://${location.host}/ws`);
-      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve(null);},3000);
-      hws.onopen=()=>hws.send(JSON.stringify({action:'ai_hint',board:[...board],player,ai_level:level,sequence:seq}));
-      hws.onmessage=e=>{
-        clearTimeout(t);
-        const msg=JSON.parse(e.data);
-        try{hws.close();}catch(e){}
-        resolve(msg.type==='ai_hint'?msg.col:null);
-      };
-      hws.onerror=()=>{clearTimeout(t);resolve(null);};
-    });
-  }catch(e){return null;}
-}
-function showHintOnBoard(col){
-  clearHint();
-  hintCol=col;
-  let targetRow=-1;
-  for(let r=ROWS-1;r>=0;r--){if(liveBoard[r*COLS+col]===0){targetRow=r;break;}}
-  if(targetRow===-1) return;
-  const cell=document.querySelectorAll('.cell')[targetRow*COLS+col];
-  if(cell) cell.classList.add('hint-cell');
-  if(hintTimeout) clearTimeout(hintTimeout);
-  hintTimeout=setTimeout(()=>clearHint(),3000);
-}
-function clearHint(){
-  document.querySelectorAll('.hint-cell').forEach(c=>c.classList.remove('hint-cell'));
-  hintCol=null;
-  if(hintTimeout){clearTimeout(hintTimeout);hintTimeout=null;}
-}
-
-// ── DRAW MODE ──
-function openDrawMode(){
-  drawBoardState=new Array(ROWS*COLS).fill(0);
-  drawMode=true; drawColor='red';
-  liveBoard=[...drawBoardState];
-  liveHistory=[];liveCurrent=RED;
-  gameStatus='drawing';myColor=RED;gameMode='draw';
-  showPage('game-page');
-  buildBoard();
-  document.getElementById('main-toolbar').style.display='none';
-  document.getElementById('draw-toolbar').classList.add('show');
-  document.getElementById('turn-pill').style.display='none';
-  renderDrawBoard();
-  selectDrawColor('red');
-}
-function exitDrawMode(){
-  drawMode=false;
-  document.getElementById('main-toolbar').style.display='';
-  document.getElementById('draw-toolbar').classList.remove('show');
-  document.getElementById('turn-pill').style.display='';
-  goHome();
-}
-function selectDrawColor(c){
-  drawColor=c;
-  document.getElementById('draw-red-btn').className='color-sel-btn'+(c==='red'?' sel-red':'');
-  document.getElementById('draw-yellow-btn').className='color-sel-btn'+(c==='yellow'?' sel-yellow':'');
-}
-function handleDrawClick(col,row){
-  if(!drawMode) return;
-  const idx=row*COLS+col;
-  const cv=drawColor==='red'?RED:YELLOW;
-  drawBoardState[idx]=(drawBoardState[idx]===cv)?0:cv;
-  liveBoard=[...drawBoardState];
-  renderDrawBoard();
-}
-function renderDrawBoard(){
-  document.querySelectorAll('.cell').forEach(cell=>{
-    const r=parseInt(cell.dataset.r),c=parseInt(cell.dataset.c);
-    const v=drawBoardState[r*COLS+c];
-    cell.className='cell draw-mode';
-    if(v===RED) cell.classList.add('draw-red');
-    else if(v===YELLOW) cell.classList.add('draw-yellow');
-  });
-}
-function clearDrawBoard(){
-  drawBoardState=new Array(ROWS*COLS).fill(0);
-  liveBoard=[...drawBoardState];
-  renderDrawBoard();
-}
-function openDrawModeChooser(){document.getElementById('draw-chooser').classList.add('show');}
-function launchFromDraw(mode,level){
-  closeDMC();
-  drawMode=false;
-  document.getElementById('draw-toolbar').classList.remove('show');
-  document.getElementById('main-toolbar').style.display='';
-  document.getElementById('turn-pill').style.display='';
-  if(ws){ws.close();ws=null;}
-  stopAIAI();
-  const savedBoard=[...drawBoardState];
-  initLocalGame(mode,level||'hard',savedBoard);
-}
-
-// ── REPLAY ──
-function navTo(idx){
-  if(idx===-1) idx=liveHistory.length;
-  reviewCursor=Math.max(0,Math.min(liveHistory.length,idx));
-  reviewMode=reviewCursor<liveHistory.length;
-  if(gameMode==='local'||gameMode==='aiai'||gameMode==='ai') renderLocalBoard(true);
-  else renderFromHistory();
-  updateNavUI();
-  if(!reviewMode) updateTurn();
-}
-function navStep(delta){navTo(reviewCursor+delta);}
-function exitReview(){
-  reviewMode=false;reviewCursor=liveHistory.length;
-  if(gameMode==='local'||gameMode==='aiai'||gameMode==='ai') renderLocalBoard(false);
-  else renderFromHistory();
-  updateNavUI();updateTurn();
-}
-function updateNavUI(){
-  const total=liveHistory.length;
-  document.getElementById('move-counter').textContent=`${reviewCursor} / ${total}`;
-  document.getElementById('nav-start').disabled=reviewCursor===0;
-  document.getElementById('nav-prev').disabled=reviewCursor===0;
-  document.getElementById('nav-next').disabled=reviewCursor===total;
-  document.getElementById('nav-end').disabled=reviewCursor===total;
-}
-
-// ── TURN / NAMES ──
-function updateTurn(){
+// ════════════════════════════════════════════════════════════
+// TURN PILL
+// ════════════════════════════════════════════════════════════
+function updateTurnPill(){
   const pill=document.getElementById('turn-pill'),
         dot=document.getElementById('pill-dot'),
         txt=document.getElementById('turn-text');
-  pill.classList.remove('my-turn');dot.className='pill-dot';
+  pill.classList.remove('my-turn'); dot.className='pill-dot';
   if(gameStatus==='drawing'){dot.classList.add('gray');txt.textContent='Mode dessin — place les pions';return;}
   if(gameStatus==='waiting'){dot.classList.add('gray');txt.textContent='En attente...';return;}
-  if(gameStatus==='finished'){dot.classList.add('gray');txt.textContent='Partie terminée';return;}
+  if(gameStatus==='finished'){dot.classList.add('gray');txt.textContent='Partie terminée';
+    hideAIMsg(); return;}
   dot.classList.add(liveCurrent===RED?'red':'yellow');
-  if(gameMode==='aiai'){txt.textContent='IA '+(liveCurrent===RED?'Rouge':'Jaune')+' réfléchit...';return;}
-  if(gameMode==='local'){txt.textContent=(liveCurrent===RED?'Rouge':'Jaune')+' — à vous !';pill.classList.add('my-turn');return;}
+  if(gameMode==='aiai'){
+    txt.textContent='IA '+(liveCurrent===RED?'Rouge':'Jaune')+' réfléchit...';
+    if(aiLevel==='hard') showAIMsg('♟ Minimax prof.'+minimaxDepth+' — calcul en cours...',true);
+    return;
+  }
+  if(gameMode==='local'){
+    txt.textContent=(liveCurrent===RED?'Rouge':'Jaune')+' — à vous !';
+    pill.classList.add('my-turn'); hideAIMsg(); return;
+  }
   const mine=liveCurrent===myColor;
-  if(mine){pill.classList.add('my-turn');txt.textContent='Ton tour !';}
-  else{
+  if(mine){
+    pill.classList.add('my-turn'); txt.textContent='Ton tour !'; hideAIMsg();
+  } else {
     const labels={easy:'Aléatoire',medium:'Apprenante',hard:'Minimax'};
     txt.textContent=gameMode==='ai'?`IA ${labels[aiLevel]} réfléchit...`:"Tour de l'adversaire...";
+    if(gameMode==='ai'&&aiLevel==='hard') showAIMsg('♟ Minimax prof.'+minimaxDepth+' — calcul en cours...',true);
   }
 }
+
+// ════════════════════════════════════════════════════════════
+// SCORE NAMES
+// ════════════════════════════════════════════════════════════
 function updateScoreNames(){
+  const labels={easy:'Aléatoire',medium:'Apprenante',hard:'Minimax'};
   if(gameMode==='ai'){
-    const ps=myColor===RED?'red':'yellow',as=myColor===RED?'yellow':'red';
-    const labels={easy:'Aléatoire',medium:'Apprenante',hard:'Minimax'};
+    const ps=myColor===RED?'red':'yellow', as=myColor===RED?'yellow':'red';
     document.getElementById('sc-'+ps+'-name').innerHTML=(myColor===RED?'Rouge':'Jaune')+' <span class="my-badge">moi</span>';
     document.getElementById('sc-'+as+'-name').innerHTML='IA <span style="font-size:.65rem;color:var(--muted)">('+labels[aiLevel]+')</span>';
   } else if(gameMode==='aiai'){
@@ -1188,7 +931,24 @@ function updateScoreNames(){
   }
 }
 
-// ── RESULT (WS) ──
+// ════════════════════════════════════════════════════════════
+// RESULT
+// ════════════════════════════════════════════════════════════
+function showResultLocal(winner){
+  const emoji=document.getElementById('res-emoji'),
+        title=document.getElementById('res-title'),
+        sub=document.getElementById('res-sub');
+  title.style.color='var(--text)';
+  if(winner==='draw'){emoji.textContent='🤝';title.textContent='Match nul';sub.textContent='Égalité parfaite';}
+  else{
+    const col=winner==='red'?'Rouge':'Jaune';
+    emoji.textContent='🏆';title.textContent=col+' gagne !';
+    title.style.color=winner==='red'?'var(--red)':'var(--yellow)';
+    sub.textContent=gameMode==='aiai'?'L\'IA '+col.toLowerCase()+' a dominé':col+' remporte la partie !';
+  }
+  document.getElementById('result-overlay').classList.add('show');
+}
+
 function showResult(msg){
   const emoji=document.getElementById('res-emoji'),
         title=document.getElementById('res-title'),
@@ -1197,40 +957,189 @@ function showResult(msg){
   if(msg.winner==='draw'){emoji.textContent='🤝';title.textContent='Match nul';sub.textContent='Personne ne gagne';}
   else{
     const iWon=(msg.winner==='red'&&myColor===RED)||(msg.winner==='yellow'&&myColor===YELLOW);
+    const labels={easy:'Aléatoire',medium:'Apprenante',hard:'Minimax'};
     if(iWon){emoji.innerHTML='🏆';title.textContent='Victoire !';sub.textContent='Tu les as écrasés !';title.style.color=myColor===RED?'var(--red)':'var(--yellow)';}
-    else{emoji.innerHTML='😔';title.textContent='Défaite';
-      const labels={easy:'Aléatoire',medium:'Apprenante',hard:'Minimax'};
-      sub.textContent=gameMode==='ai'?`L'IA ${labels[aiLevel]} t'a eu...`:"L'adversaire a été plus fort";title.style.color='var(--muted)';}
-    scores[msg.winner]=(scores[msg.winner]||0)+1;
+    else{emoji.innerHTML='😔';title.textContent='Défaite';sub.textContent=gameMode==='ai'?`L'IA ${labels[aiLevel]} t'a eu...`:"L'adversaire a été plus fort";title.style.color='var(--muted)';}
+    winScores[msg.winner]=(winScores[msg.winner]||0)+1;
   }
-  document.getElementById('sc-red-score').textContent=scores.red||0;
-  document.getElementById('sc-yellow-score').textContent=scores.yellow||0;
+  document.getElementById('sc-red-score').textContent=winScores.red||0;
+  document.getElementById('sc-yellow-score').textContent=winScores.yellow||0;
   document.getElementById('result-overlay').classList.add('show');
 }
 
-// ── RESTART ──
 function sendRestart(){
   document.getElementById('result-overlay').classList.remove('show');
-  stopAIAI();exitReview();
+  stopAIAI(); exitReview(); hideAIMsg();
   if(gameMode==='local'||gameMode==='ai'||gameMode==='aiai'){
-    liveBoard=new Array(ROWS*COLS).fill(0);localBoard=[...liveBoard];
-    liveCurrent=RED;liveHistory=[];gameStatus='playing';
-    renderLocalBoard(false);updateTurn();updateNavUI();
+    liveBoard=new Array(ROWS*COLS).fill(0);
+    liveCurrent=RED; liveHistory=[]; gameStatus='playing';
+    renderBoard(); updateTurnPill(); updateNavUI();
     if(gameMode==='aiai') runAIAILoop();
-    else if(gameMode==='ai'&&liveCurrent!==myColor) setTimeout(()=>doLocalAIMove(),600);
+    else if(gameMode==='ai'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
     return;
   }
   updateScoreNames();
   if(ws) ws.send(JSON.stringify({type:'restart'}));
 }
 
-// ── HOVER ──
+// ════════════════════════════════════════════════════════════
+// REPLAY NAV
+// ════════════════════════════════════════════════════════════
+function navTo(idx){
+  if(idx===-1) idx=liveHistory.length;
+  reviewCursor=Math.max(0,Math.min(liveHistory.length,idx));
+  reviewMode=reviewCursor<liveHistory.length;
+  renderBoard(); updateNavUI();
+  if(!reviewMode) updateTurnPill();
+}
+function navStep(delta){navTo(reviewCursor+delta);}
+function exitReview(){
+  reviewMode=false; reviewCursor=liveHistory.length;
+  renderBoard(); updateNavUI(); updateTurnPill();
+}
+function updateNavUI(){
+  const total=liveHistory.length;
+  document.getElementById('move-counter').textContent=`${reviewCursor} / ${total}`;
+  document.getElementById('nav-start').disabled=reviewCursor===0;
+  document.getElementById('nav-prev').disabled=reviewCursor===0;
+  document.getElementById('nav-next').disabled=reviewCursor===total;
+  document.getElementById('nav-end').disabled=reviewCursor===total;
+}
+
+// ════════════════════════════════════════════════════════════
+// HINT
+// ════════════════════════════════════════════════════════════
+function updateHintBtnVisibility(){
+  document.getElementById('hint-btn').style.display=(gameMode!=='aiai'&&gameStatus!=='drawing')?'':'none';
+}
+function requestHint(){
+  if(gameStatus!=='playing') return;
+  const btn=document.getElementById('hint-btn');
+  btn.disabled=true;
+  document.getElementById('hint-indicator').classList.add('show');
+  clearHint();
+  const player=gameMode==='local'?liveCurrent:myColor;
+  getAIHintFast(liveBoard,player,aiLevel,'').then(col=>{
+    document.getElementById('hint-indicator').classList.remove('show');
+    btn.disabled=false;
+    if(col!==null&&col!==-1){showHintOnBoard(col);toast('💡 Conseil : colonne '+(col+1));}
+    else toast('Aucun conseil disponible');
+  });
+}
+async function getAIHintFast(board,player,level,seq){
+  try{
+    const proto=location.protocol==='https:'?'wss':'ws';
+    return await new Promise(resolve=>{
+      const hws=new WebSocket(`${proto}://${location.host}/ws`);
+      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve(null);},3000);
+      hws.onopen=()=>hws.send(JSON.stringify({action:'ai_hint',board:[...board],player,ai_level:level,sequence:seq,minimax_depth:minimaxDepth}));
+      hws.onmessage=e=>{clearTimeout(t);const m=JSON.parse(e.data);try{hws.close();}catch(e){}resolve(m.type==='ai_hint'?m.col:null);};
+      hws.onerror=()=>{clearTimeout(t);resolve(null);};
+    });
+  }catch(e){return null;}
+}
+function showHintOnBoard(col){
+  clearHint(); hintCol=col;
+  let targetRow=-1;
+  for(let r=ROWS-1;r>=0;r--){if(liveBoard[r*COLS+col]===0){targetRow=r;break;}}
+  if(targetRow===-1) return;
+  const cell=document.querySelectorAll('.cell')[targetRow*COLS+col];
+  if(cell) cell.classList.add('hint-cell');
+  if(hintTimeout) clearTimeout(hintTimeout);
+  hintTimeout=setTimeout(()=>clearHint(),3000);
+}
+function clearHint(){
+  document.querySelectorAll('.hint-cell').forEach(c=>c.classList.remove('hint-cell'));
+  hintCol=null;
+  if(hintTimeout){clearTimeout(hintTimeout);hintTimeout=null;}
+}
+
+// ════════════════════════════════════════════════════════════
+// AI MESSAGE
+// ════════════════════════════════════════════════════════════
+function showAIMsg(text,persist=false){
+  const el=document.getElementById('ai-msg');
+  document.getElementById('ai-msg-text').textContent=text;
+  el.classList.add('show');
+  if(!persist){
+    if(aiMsgTimer) clearTimeout(aiMsgTimer);
+    aiMsgTimer=setTimeout(()=>el.classList.remove('show'),3500);
+  }
+}
+function hideAIMsg(){
+  document.getElementById('ai-msg').classList.remove('show');
+  if(aiMsgTimer){clearTimeout(aiMsgTimer);aiMsgTimer=null;}
+}
+
+// ════════════════════════════════════════════════════════════
+// MINIMAX COL SCORES
+// ════════════════════════════════════════════════════════════
+function updateMinimaxScores(){
+  const show=aiLevel==='hard'&&(gameMode==='ai'||gameMode==='aiai')&&gameStatus==='playing'&&!reviewMode;
+  const el=document.getElementById('col-scores');
+  if(!show){el.classList.remove('show');return;}
+  el.classList.add('show');
+  const player=liveCurrent;
+  const valid=getValidColsFlat(liveBoard);
+  const smap={};
+  for(let c=0;c<COLS;c++){
+    smap[c]=valid.includes(c)?quickEval(liveBoard,c,player):null;
+  }
+  const vals=Object.values(smap).filter(v=>v!==null);
+  const minV=Math.min(...vals),maxV=Math.max(...vals),range=maxV-minV||1;
+  const bestCol=valid.reduce((b,c)=>smap[c]>smap[b]?c:b,valid[0]);
+  for(let c=0;c<COLS;c++){
+    const bar=document.getElementById('csb-'+c),val=document.getElementById('csv-'+c),v=smap[c];
+    if(v===null){bar.style.height='0%';bar.style.background='var(--border)';val.textContent='✕';val.style.color='var(--muted)';continue;}
+    const pct=Math.max(8,Math.round(((v-minV)/range)*100));
+    bar.style.height=pct+'%';
+    const best=c===bestCol;
+    bar.style.background=best?'var(--accent)':v>=0?'rgba(48,209,88,.5)':'rgba(255,45,85,.5)';
+    val.textContent=v>9999?'WIN':v<-9999?'LOSE':v;
+    val.style.color=best?'var(--accent)':v>=0?'var(--green)':'var(--red)';
+  }
+}
+function quickEval(flat,col,player){
+  const nb=[...flat];
+  for(let r=ROWS-1;r>=0;r--){if(nb[r*COLS+col]===0){nb[r*COLS+col]=player;break;}}
+  if(checkWinnerFlat(nb,player)) return 1000000;
+  return scoreFlat(nb,player)-scoreFlat(nb,player===RED?YELLOW:RED);
+}
+function scoreFlat(flat,player){
+  const b=[];for(let r=0;r<ROWS;r++)b.push(flat.slice(r*COLS,(r+1)*COLS));
+  let s=0,opp=player===RED?YELLOW:RED;
+  const sw=w=>{
+    const mp=w.filter(v=>v===player).length,mo=w.filter(v=>v===opp).length,me=w.filter(v=>v===0).length;
+    if(mp===4)s+=100;else if(mp===3&&me===1)s+=5;else if(mp===2&&me===2)s+=2;
+    if(mo===3&&me===1)s-=4;
+  };
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS-3;c++)sw([b[r][c],b[r][c+1],b[r][c+2],b[r][c+3]]);
+  for(let r=0;r<ROWS-3;r++)for(let c=0;c<COLS;c++)sw([b[r][c],b[r+1][c],b[r+2][c],b[r+3][c]]);
+  return s;
+}
+
+// ════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════
+function checkWinnerFlat(flat,player){
+  const b=[];for(let r=0;r<ROWS;r++)b.push(flat.slice(r*COLS,(r+1)*COLS));
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS-3;c++)if([0,1,2,3].every(i=>b[r][c+i]===player))return true;
+  for(let r=0;r<ROWS-3;r++)for(let c=0;c<COLS;c++)if([0,1,2,3].every(i=>b[r+i][c]===player))return true;
+  for(let r=3;r<ROWS;r++)for(let c=0;c<COLS-3;c++)if([0,1,2,3].every(i=>b[r-i][c+i]===player))return true;
+  for(let r=0;r<ROWS-3;r++)for(let c=0;c<COLS-3;c++)if([0,1,2,3].every(i=>b[r+i][c+i]===player))return true;
+  return false;
+}
+function getValidColsFlat(flat){return Array.from({length:COLS},(_,c)=>c).filter(c=>flat[c]===0);}
+
+// ════════════════════════════════════════════════════════════
+// HOVER
+// ════════════════════════════════════════════════════════════
 function hoverCol(col){
   if(drawMode||gameMode==='aiai') return;
-  let canPlay=false;
-  if(gameMode==='local') canPlay=gameStatus==='playing'&&!reviewMode;
-  else if(gameMode==='ai'&&!ws) canPlay=gameStatus==='playing'&&liveCurrent===myColor&&!reviewMode;
-  else canPlay=liveCurrent===myColor&&gameStatus==='playing'&&!reviewMode;
+  const canPlay=gameStatus==='playing'&&!reviewMode&&(
+    gameMode==='local'||(gameMode==='ai'&&!ws&&liveCurrent===myColor)||
+    (gameMode==='pvp'&&liveCurrent===myColor)
+  );
   if(!canPlay) return;
   const cls=liveCurrent===RED?'red-hover':'yellow-hover';
   document.querySelectorAll('.cell').forEach(cell=>{
@@ -1245,249 +1154,133 @@ function clearHover(){
   document.querySelectorAll('.cell').forEach(c=>c.classList.remove('col-hover','red-hover','yellow-hover'));
 }
 
-// ── HINT BTN VISIBILITY ──
-function updateHintBtnVisibility(){
-  // Masquer en IA vs IA (inutile) et en mode dessin
-  const show = gameMode!=='aiai' && gameStatus!=='drawing';
-  document.getElementById('hint-btn').style.display = show ? '' : 'none';
+// ════════════════════════════════════════════════════════════
+// DRAW MODE
+// ════════════════════════════════════════════════════════════
+function openDrawMode(){
+  drawBoardState=new Array(ROWS*COLS).fill(0); drawMode=true; drawColor='red';
+  liveBoard=[...drawBoardState]; liveHistory=[]; liveCurrent=RED;
+  gameStatus='drawing'; myColor=RED; gameMode='draw';
+  showPage('game-page'); buildBoard();
+  document.getElementById('main-toolbar').style.display='none';
+  document.getElementById('draw-toolbar').classList.add('show');
+  document.getElementById('turn-pill').style.display='none';
+  renderDrawBoard(); selectDrawColor('red');
 }
-
-// ── AI MESSAGE ──
-function showAIMsg(text, persist=false){
-  const el=document.getElementById('ai-msg');
-  const txt=document.getElementById('ai-msg-text');
-  txt.textContent=text;
-  el.classList.add('show');
-  if(!persist){
-    if(showAIMsg._t) clearTimeout(showAIMsg._t);
-    showAIMsg._t=setTimeout(()=>el.classList.remove('show'),3500);
-  }
+function exitDrawMode(){
+  drawMode=false;
+  document.getElementById('main-toolbar').style.display='';
+  document.getElementById('draw-toolbar').classList.remove('show');
+  document.getElementById('turn-pill').style.display='';
+  goHome();
 }
-function hideAIMsg(){
-  document.getElementById('ai-msg').classList.remove('show');
-  if(showAIMsg._t){clearTimeout(showAIMsg._t);showAIMsg._t=null;}
+function selectDrawColor(c){
+  drawColor=c;
+  document.getElementById('draw-red-btn').className='color-sel-btn'+(c==='red'?' sel-red':'');
+  document.getElementById('draw-yellow-btn').className='color-sel-btn'+(c==='yellow'?' sel-yellow':'');
 }
-
-// ── MINIMAX COLUMN SCORES ──
-function updateMinimaxScores(){
-  const show = (aiLevel==='hard') && (gameMode==='ai'||gameMode==='aiai') && gameStatus==='playing' && !reviewMode;
-  const el=document.getElementById('col-scores');
-  if(!show){el.classList.remove('show');return;}
-  el.classList.add('show');
-
-  // Compute scores for each valid col via minimax depth=2 locally (lightweight)
-  const player = liveCurrent;
-  const scores_map = {};
-  const valid = getValidColsFlat(liveBoard);
-
-  for(const col of Array.from({length:COLS},(_,i)=>i)){
-    if(!valid.includes(col)){
-      scores_map[col]=null;
-      continue;
-    }
-    scores_map[col] = quickEval(liveBoard, col, player);
-  }
-
-  const vals = Object.values(scores_map).filter(v=>v!==null);
-  const minV = Math.min(...vals), maxV = Math.max(...vals);
-  const range = maxV - minV || 1;
-  const bestCol = valid.reduce((b,c)=>scores_map[c]>scores_map[b]?c:b, valid[0]);
-
-  for(let c=0;c<COLS;c++){
-    const bar=document.getElementById('csb-'+c);
-    const val=document.getElementById('csv-'+c);
-    const v=scores_map[c];
-    if(v===null){
-      bar.style.height='0%';bar.style.background='var(--border)';
-      val.textContent='✕';val.style.color='var(--muted)';
-      continue;
-    }
-    const pct=Math.max(8,Math.round(((v-minV)/range)*100));
-    bar.style.height=pct+'%';
-    const isBest=c===bestCol;
-    bar.style.background=isBest?'var(--accent)':v>=0?'rgba(48,209,88,.5)':'rgba(255,45,85,.5)';
-    val.textContent=v>9999?'WIN':v<-9999?'LOSE':v;
-    val.style.color=isBest?'var(--accent)':v>=0?'var(--green)':'var(--red)';
-  }
+function handleDrawClick(col,row){
+  if(!drawMode) return;
+  const idx=row*COLS+col, cv=drawColor==='red'?RED:YELLOW;
+  drawBoardState[idx]=(drawBoardState[idx]===cv)?0:cv;
+  liveBoard=[...drawBoardState]; renderDrawBoard();
 }
-
-function quickEval(flat, col, player){
-  // Drop piece
-  const nb=[...flat];
-  for(let r=ROWS-1;r>=0;r--){
-    if(nb[r*COLS+col]===0){nb[r*COLS+col]=player;break;}
-  }
-  if(checkWinnerFlat(nb,player)) return 1000000;
-  // Shallow heuristic: count threats
-  return scoreFlat(nb,player) - scoreFlat(nb, player===RED?YELLOW:RED);
+function renderDrawBoard(){
+  document.querySelectorAll('.cell').forEach(cell=>{
+    const r=parseInt(cell.dataset.r),c=parseInt(cell.dataset.c),v=drawBoardState[r*COLS+c];
+    cell.className='cell draw-mode';
+    if(v===RED)cell.classList.add('draw-red');
+    else if(v===YELLOW)cell.classList.add('draw-yellow');
+  });
 }
-
-function scoreFlat(flat,player){
-  const b=[];for(let r=0;r<ROWS;r++)b.push(flat.slice(r*COLS,(r+1)*COLS));
-  let s=0,opp=player===RED?YELLOW:RED;
-  const sw=w=>{
-    if(w.filter(v=>v===player).length===4) s+=100;
-    else if(w.filter(v=>v===player).length===3&&w.filter(v=>v===0).length===1) s+=5;
-    else if(w.filter(v=>v===player).length===2&&w.filter(v=>v===0).length===2) s+=2;
-    if(w.filter(v=>v===opp).length===3&&w.filter(v=>v===0).length===1) s-=4;
-  };
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS-3;c++)sw([b[r][c],b[r][c+1],b[r][c+2],b[r][c+3]]);
-  for(let r=0;r<ROWS-3;r++)for(let c=0;c<COLS;c++)sw([b[r][c],b[r+1][c],b[r+2][c],b[r+3][c]]);
-  return s;
+function clearDrawBoard(){
+  drawBoardState=new Array(ROWS*COLS).fill(0); liveBoard=[...drawBoardState]; renderDrawBoard();
 }
-
-// Hook into existing functions to show minimax scores & AI messages
-const _origRenderLocal = renderLocalBoard;
-function renderLocalBoard(isRev){
-  _origRenderLocal(isRev);
-  updateMinimaxScores();
-  updateHintBtnVisibility();
-}
-const _origSetupMode = setupModeUI;
-function setupModeUI(){
-  _origSetupMode();
-  updateHintBtnVisibility();
-  updateMinimaxScores();
-}
-
-// Override do_ai_move feedback — patch updateTurn to show AI msg
-const _origUpdateTurn = updateTurn;
-function updateTurn(){
-  _origUpdateTurn();
-  // Show AI message when it's AI's turn in minimax mode
-  if(gameStatus==='playing'&&aiLevel==='hard'&&(gameMode==='ai'||gameMode==='aiai')){
-    const aiTurn = gameMode==='aiai' || liveCurrent!==myColor;
-    if(aiTurn) showAIMsg('♟ Minimax prof.'+minimaxDepth+' — calcul en cours...', true);
-    else hideAIMsg();
-  } else {
-    hideAIMsg();
-  }
-  updateMinimaxScores();
-}
-
-// After AI move completes, show best col message
-const _origApplyLocal = applyLocalMove;
-function applyLocalMove(col){
-  _origApplyLocal(col);
-  if(aiLevel==='hard'&&(gameMode==='ai'||gameMode==='aiai')){
-    showAIMsg('♟ Minimax joue colonne '+(col+1));
-  }
+function openDrawModeChooser(){document.getElementById('draw-chooser').classList.add('show');}
+function launchFromDraw(mode,level){
+  closeDMC(); drawMode=false;
+  document.getElementById('draw-toolbar').classList.remove('show');
+  document.getElementById('main-toolbar').style.display='';
+  document.getElementById('turn-pill').style.display='';
+  if(ws){ws.close();ws=null;} stopAIAI();
+  initLocalGame(mode,level||'hard',[...drawBoardState]);
 }
 
 // ════════════════════════════════════════════════════════════
 // DB VIEWER
 // ════════════════════════════════════════════════════════════
-let dbGames=[], dbFiltered=[], dbSelected=null, dbCursor=0;
-
-function openDBViewer(){
-  showPage('db-page');
-  loadDBGames();
-}
-
+function openDBViewer(){showPage('db-page');loadDBGames();}
 async function loadDBGames(){
   document.getElementById('db-count').textContent='Chargement...';
   try{
     const r=await fetch('/api/parties');
     if(!r.ok) throw new Error('HTTP '+r.status);
-    dbGames=await r.json();
-    dbFiltered=[...dbGames];
-    renderDBList();
-  } catch(e){
-    document.getElementById('db-count').textContent='Erreur chargement: '+e.message;
-  }
+    dbGames=await r.json(); dbFiltered=[...dbGames]; renderDBList();
+  }catch(e){document.getElementById('db-count').textContent='Erreur : '+e.message;}
 }
-
 function renderDBList(){
-  const list=document.getElementById('db-list');
-  list.innerHTML='';
+  const list=document.getElementById('db-list'); list.innerHTML='';
   document.getElementById('db-count').textContent=dbFiltered.length+' partie(s)';
-  dbFiltered.forEach((g,i)=>{
+  dbFiltered.forEach(g=>{
     const div=document.createElement('div');
     div.className='db-item'+(dbSelected&&dbSelected.id===g.id?' active':'');
-    const modeLabel={0:'IA/IA',1:'Humain/IA',2:'Humain/Humain'}[g.mode_jeu]||'Mode '+g.mode_jeu;
-    div.innerHTML=`<div><span class="db-item-id">#${g.id}</span>${modeLabel} — ${g.dimensions}</div>
+    const ml={0:'IA/IA',1:'Humain/IA',2:'Humain/Humain'}[g.mode_jeu]||'Mode '+g.mode_jeu;
+    div.innerHTML=`<div><span class="db-item-id">#${g.id}</span>${ml} — ${g.dimensions}</div>
       <div class="db-item-tags">
         <span class="db-tag">${g.statut}</span>
         <span class="db-tag win-${(g.vainqueur||'').toLowerCase().replace('_','-')}">${g.vainqueur||'—'}</span>
         <span class="db-tag">${g.source}</span>
         <span class="db-tag">${g.sequence_coups?.length||0} coups</span>
       </div>`;
-    div.onclick=()=>dbSelectGame(g);
-    list.appendChild(div);
+    div.onclick=()=>dbSelectGame(g); list.appendChild(div);
   });
 }
-
 function dbFilter(){
   const q=document.getElementById('db-search').value.toLowerCase();
   dbFiltered=dbGames.filter(g=>{
-    const modeLabel={0:'ia/ia',1:'humain/ia',2:'humain/humain'}[g.mode_jeu]||'';
-    return !q||
-      String(g.id).includes(q)||
-      (g.vainqueur||'').toLowerCase().includes(q)||
-      (g.statut||'').toLowerCase().includes(q)||
-      (g.source||'').toLowerCase().includes(q)||
-      modeLabel.includes(q)||
-      (g.sequence_coups||'').includes(q);
+    const ml={0:'ia/ia',1:'humain/ia',2:'humain/humain'}[g.mode_jeu]||'';
+    return !q||String(g.id).includes(q)||(g.vainqueur||'').toLowerCase().includes(q)||
+      (g.statut||'').toLowerCase().includes(q)||(g.source||'').toLowerCase().includes(q)||
+      ml.includes(q)||(g.sequence_coups||'').includes(q);
   });
   renderDBList();
 }
-
 function dbSelectGame(g){
-  dbSelected=g;
-  dbCursor=0;
-  // highlight
-  document.querySelectorAll('.db-item').forEach(el=>{
-    el.classList.toggle('active', el.querySelector('.db-item-id')?.textContent==='#'+g.id);
-  });
-  // show info
-  const modeLabel={0:'IA vs IA',1:'Humain vs IA',2:'Humain vs Humain'}[g.mode_jeu]||'Mode '+g.mode_jeu;
+  dbSelected=g; dbCursor=0;
+  document.querySelectorAll('.db-item').forEach(el=>
+    el.classList.toggle('active',el.querySelector('.db-item-id')?.textContent==='#'+g.id));
+  const ml={0:'IA vs IA',1:'Humain vs IA',2:'Humain vs Humain'}[g.mode_jeu]||'Mode '+g.mode_jeu;
   document.getElementById('db-info').style.display='';
   document.getElementById('db-info').innerHTML=
-    `<b>#${g.id}</b> &nbsp;|&nbsp; <span>${modeLabel}</span> &nbsp;|&nbsp;
-     <span>${g.dimensions}</span> &nbsp;|&nbsp;
-     <span>${g.statut}</span> &nbsp;|&nbsp;
-     Vainqueur : <span>${g.vainqueur||'—'}</span> &nbsp;|&nbsp;
-     <span>${g.source}</span><br>
+    `<b>#${g.id}</b> | <span>${ml}</span> | <span>${g.dimensions}</span> | <span>${g.statut}</span> | Vainqueur : <span>${g.vainqueur||'—'}</span> | <span>${g.source}</span><br>
      Séquence : <span style="font-family:monospace;font-size:.75rem">${g.sequence_coups||''}</span>`;
   document.getElementById('db-board').style.display='';
   document.getElementById('db-nav').style.display='';
   document.getElementById('db-empty').style.display='none';
-  dbBuildGrid();
+  // Build grid
+  const grid=document.getElementById('db-board-grid'); grid.innerHTML='';
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+    const d=document.createElement('div');d.className='db-cell';d.id=`dbc-${r}-${c}`;grid.appendChild(d);
+  }
   dbDraw();
 }
-
-function dbBuildGrid(){
-  const g=document.getElementById('db-board-grid');
-  g.innerHTML='';
-  for(let r=0;r<9;r++)for(let c=0;c<9;c++){
-    const d=document.createElement('div');
-    d.className='db-cell';d.id=`dbc-${r}-${c}`;
-    g.appendChild(d);
-  }
-}
-
 function dbDraw(){
   if(!dbSelected) return;
   const seq=dbSelected.sequence_coups||'';
-  const grid=Array.from({length:9},()=>Array(9).fill(0));
+  const board=Array.from({length:9},()=>Array(9).fill(0));
   let lastR=-1,lastC=-1;
   for(let i=0;i<dbCursor;i++){
     const col=parseInt(seq[i])-1;
     for(let r=8;r>=0;r--){
-      if(grid[r][col]===0){
-        grid[r][col]=i%2===0?1:2;
-        if(i===dbCursor-1){lastR=r;lastC=col;}
-        break;
-      }
+      if(board[r][col]===0){board[r][col]=i%2===0?1:2;if(i===dbCursor-1){lastR=r;lastC=col;}break;}
     }
   }
   for(let r=0;r<9;r++)for(let c=0;c<9;c++){
-    const cell=document.getElementById(`dbc-${r}-${c}`);
-    if(!cell) continue;
+    const cell=document.getElementById(`dbc-${r}-${c}`);if(!cell)continue;
     cell.className='db-cell';
-    if(grid[r][c]===1) cell.classList.add('red');
-    else if(grid[r][c]===2) cell.classList.add('yellow');
-    if(r===lastR&&c===lastC) cell.classList.add('last');
+    if(board[r][c]===1)cell.classList.add('red');
+    else if(board[r][c]===2)cell.classList.add('yellow');
+    if(r===lastR&&c===lastC)cell.classList.add('last');
   }
   const total=seq.length;
   document.getElementById('db-move-ctr').textContent=`${dbCursor} / ${total}`;
@@ -1496,17 +1289,17 @@ function dbDraw(){
   document.getElementById('db-next').disabled=dbCursor===total;
   document.getElementById('db-end').disabled=dbCursor===total;
 }
-
 function dbNavTo(idx){
-  if(!dbSelected) return;
+  if(!dbSelected)return;
   const total=(dbSelected.sequence_coups||'').length;
-  if(idx===-1) idx=total;
-  dbCursor=Math.max(0,Math.min(total,idx));
-  dbDraw();
+  if(idx===-1)idx=total;
+  dbCursor=Math.max(0,Math.min(total,idx)); dbDraw();
 }
 function dbNavStep(d){dbNavTo(dbCursor+d);}
 
-// ── MISC ──
+// ════════════════════════════════════════════════════════════
+// MISC
+// ════════════════════════════════════════════════════════════
 function copyInvite(){
   navigator.clipboard.writeText(document.getElementById('invite-link').textContent).then(()=>toast('Lien copié !'));
 }
