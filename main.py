@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-import json, random, string, asyncio
+from fastapi.responses import FileResponse, JSONResponse
+import json, random, string, asyncio, psycopg2, os
 from game_logic import (
     create_board, drop_piece, check_winner, is_draw,
     get_valid_cols, ai_easy, ai_medium_with_seq, ai_hard,
@@ -12,6 +12,58 @@ app = FastAPI()
 
 rooms = {}
 queue = []
+
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://connect4_18kp_user:gJ1FHKiAWyitRTqYWXbnTqrxuO3SQmyQ@dpg-d6tshpmuk2gs7391efs0-a.frankfurt-postgres.render.com/connect4_18kp"
+)
+
+def get_con():
+    url = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    return psycopg2.connect(url)
+
+def init_db():
+    con = get_con()
+    cur = con.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS parties (
+            id SERIAL PRIMARY KEY,
+            mode_jeu INTEGER,
+            dimensions TEXT,
+            statut TEXT,
+            vainqueur TEXT,
+            source TEXT,
+            sequence_coups TEXT
+        )
+    """)
+    con.commit()
+    con.close()
+
+def save_party(room):
+    mode_map = {"ai": 1, "pvp": 2, "aiai": 0}
+    winner_map = {"red": "rouge", "yellow": "jaune", "draw": "nul", None: None}
+    try:
+        con = get_con()
+        cur = con.cursor()
+        cur.execute(
+            "INSERT INTO parties (mode_jeu, dimensions, statut, vainqueur, source, sequence_coups) VALUES (%s,%s,%s,%s,%s,%s)",
+            (
+                mode_map.get(room.mode, 2),
+                f"{ROWS}x{COLS}",
+                room.status,
+                winner_map.get(room.winner),
+                room.ai_level if room.mode == "ai" else room.mode,
+                room.sequence
+            )
+        )
+        con.commit()
+        con.close()
+    except Exception as e:
+        print(f"Erreur save_party: {e}")
+
+init_db()
+
+# ────────────────────────────────────────────────────────────
 
 def gen_id(n=6):
     while True:
@@ -95,9 +147,11 @@ async def do_ai_move(room):
     if check_winner(room.board, ai_val):
         room.status = "finished"
         room.winner = ai_str
+        save_party(room)
     elif is_draw(room.board):
         room.status = "finished"
         room.winner = "draw"
+        save_party(room)
     else:
         room.current = RED if room.current == YELLOW else YELLOW
 
@@ -242,9 +296,11 @@ async def handle_game(websocket, room, color):
                 if check_winner(room.board, player_val):
                     room.status = "finished"
                     room.winner = color
+                    save_party(room)
                 elif is_draw(room.board):
                     room.status = "finished"
                     room.winner = "draw"
+                    save_party(room)
                 else:
                     room.current = YELLOW if room.current == RED else RED
 
@@ -276,9 +332,27 @@ async def handle_game(websocket, room, color):
         if room.status == "playing" and room.mode == "pvp":
             room.status = "finished"
             room.winner = "yellow" if color == "red" else "red"
+            save_party(room)
             await broadcast(room)
         if not room.players:
             rooms.pop(room.id, None)
+
+@app.get("/api/parties")
+async def get_parties():
+    try:
+        con = get_con()
+        cur = con.cursor()
+        cur.execute("""
+            SELECT id, mode_jeu, dimensions, statut, vainqueur, source, sequence_coups
+            FROM parties
+            ORDER BY id DESC
+        """)
+        rows = cur.fetchall()
+        con.close()
+        keys = ["id", "mode_jeu", "dimensions", "statut", "vainqueur", "source", "sequence_coups"]
+        return JSONResponse([dict(zip(keys, r)) for r in rows])
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
