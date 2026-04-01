@@ -1,7 +1,10 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
-import json, random, string, asyncio, psycopg2, os
+from fastapi.responses import FileResponse
+import json, random, string, asyncio
+import os
+from datetime import datetime
+import psycopg2
 from game_logic import (
     create_board, drop_piece, check_winner, is_draw,
     get_valid_cols, ai_easy, ai_medium_with_seq, ai_hard,
@@ -13,57 +16,94 @@ app = FastAPI()
 rooms = {}
 queue = []
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql://connect4_18kp_user:gJ1FHKiAWyitRTqYWXbnTqrxuO3SQmyQ@dpg-d6tshpmuk2gs7391efs0-a.frankfurt-postgres.render.com/connect4_18kp"
-)
 
-def get_con():
-    url = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    return psycopg2.connect(url)
+def get_db_connection():
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        if "sslmode=" in database_url:
+            return psycopg2.connect(database_url)
+        return psycopg2.connect(database_url, sslmode=os.getenv("DB_SSLMODE", "require"))
 
-def init_db():
-    con = get_con()
-    cur = con.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS parties (
-            id SERIAL PRIMARY KEY,
-            mode_jeu INTEGER,
-            dimensions TEXT,
-            statut TEXT,
-            vainqueur TEXT,
-            source TEXT,
-            sequence_coups TEXT
-        )
-    """)
-    con.commit()
-    con.close()
+    return psycopg2.connect(
+        dbname=os.getenv("DB_NAME", "postgres"),
+        user=os.getenv("DB_USER", "postgres"),
+        password=os.getenv("DB_PASSWORD", "12082004"),
+        host=os.getenv("DB_HOST", "localhost"),
+        port=os.getenv("DB_PORT", "5432"),
+    )
 
-def save_party(room):
-    mode_map = {"ai": 1, "pvp": 2, "aiai": 0}
-    winner_map = {"red": "rouge", "yellow": "jaune", "draw": "nul", None: None}
+
+def mirror_sequence(sequence, cols=9):
+    return "".join(str(cols + 1 - int(c)) for c in sequence)
+
+
+def _save_room_to_db_sync(room):
+    if not room.sequence:
+        return False
+
+    winner_map = {
+        "red": "ROUGE",
+        "yellow": "JAUNE",
+        "draw": "MATCH_NUL",
+    }
+    mode_map = {
+        "ai": 1,
+        "pvp": 2,
+    }
+
+    vainqueur = winner_map.get(room.winner)
+    mode_jeu = mode_map.get(room.mode, 2)
+    dimensions = f"{ROWS}x{COLS}"
+    sequence = room.sequence
+    sequence_miroir = mirror_sequence(sequence, COLS)
+
+    conn = None
+    cur = None
     try:
-        con = get_con()
-        cur = con.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor()
         cur.execute(
-            "INSERT INTO parties (mode_jeu, dimensions, statut, vainqueur, source, sequence_coups) VALUES (%s,%s,%s,%s,%s,%s)",
-            (
-                mode_map.get(room.mode, 2),
-                f"{ROWS}x{COLS}",
-                room.status,
-                winner_map.get(room.winner),
-                room.ai_level if room.mode == "ai" else room.mode,
-                room.sequence
+            """
+            INSERT INTO parties (
+                date_fin, sequence_coups, sequence_miroir,
+                mode_jeu, dimensions, statut, vainqueur, source
             )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (sequence_coups) DO NOTHING
+            """,
+            (
+                datetime.utcnow(),
+                sequence,
+                sequence_miroir,
+                mode_jeu,
+                dimensions,
+                "TERMINEE",
+                vainqueur,
+                "SITE",
+            ),
         )
-        con.commit()
-        con.close()
+        conn.commit()
+        return True
     except Exception as e:
-        print(f"Erreur save_party: {e}")
+        print(f"DB save error for room {room.id}: {e}")
+        return False
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
-init_db()
 
-# ────────────────────────────────────────────────────────────
+async def persist_finished_room(room):
+    if room.status != "finished" or room.saved_to_db:
+        return
+
+    async with room.save_lock:
+        if room.status != "finished" or room.saved_to_db:
+            return
+        ok = await asyncio.to_thread(_save_room_to_db_sync, room)
+        if ok:
+            room.saved_to_db = True
 
 def gen_id(n=6):
     while True:
@@ -84,6 +124,8 @@ class RoomState:
         self.winner = None
         self.history = []
         self.sequence = ""
+        self.saved_to_db = False
+        self.save_lock = asyncio.Lock()
 
     def flat(self):
         out = []
@@ -147,15 +189,15 @@ async def do_ai_move(room):
     if check_winner(room.board, ai_val):
         room.status = "finished"
         room.winner = ai_str
-        save_party(room)
     elif is_draw(room.board):
         room.status = "finished"
         room.winner = "draw"
-        save_party(room)
     else:
         room.current = RED if room.current == YELLOW else YELLOW
 
     await broadcast(room)
+    if room.status == "finished":
+        await persist_finished_room(room)
 
 async def handle_hint(websocket: WebSocket, init: dict):
     flat = init.get("board", [])
@@ -296,15 +338,15 @@ async def handle_game(websocket, room, color):
                 if check_winner(room.board, player_val):
                     room.status = "finished"
                     room.winner = color
-                    save_party(room)
                 elif is_draw(room.board):
                     room.status = "finished"
                     room.winner = "draw"
-                    save_party(room)
                 else:
                     room.current = YELLOW if room.current == RED else RED
 
                 await broadcast(room)
+                if room.status == "finished":
+                    await persist_finished_room(room)
 
                 ai_v, _ = get_ai_color(room)
                 print(f"après coup: mode={room.mode} status={room.status} current={room.current} ai_v={ai_v}")
@@ -320,6 +362,7 @@ async def handle_game(websocket, room, color):
                 room.winner = None
                 room.history = []
                 room.sequence = ""
+                room.saved_to_db = False
                 await broadcast(room)
 
             elif msg.get("type") == "set_ai_level" and room.mode == "ai":
@@ -332,27 +375,10 @@ async def handle_game(websocket, room, color):
         if room.status == "playing" and room.mode == "pvp":
             room.status = "finished"
             room.winner = "yellow" if color == "red" else "red"
-            save_party(room)
             await broadcast(room)
+            await persist_finished_room(room)
         if not room.players:
             rooms.pop(room.id, None)
-
-@app.get("/api/parties")
-async def get_parties():
-    try:
-        con = get_con()
-        cur = con.cursor()
-        cur.execute("""
-            SELECT id, mode_jeu, dimensions, statut, vainqueur, source, sequence_coups
-            FROM parties
-            ORDER BY id DESC
-        """)
-        rows = cur.fetchall()
-        con.close()
-        keys = ["id", "mode_jeu", "dimensions", "statut", "vainqueur", "source", "sequence_coups"]
-        return JSONResponse([dict(zip(keys, r)) for r in rows])
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
