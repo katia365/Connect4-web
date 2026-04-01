@@ -813,25 +813,17 @@ async function doLocalAIMove(){
 // SEND RESTART
 // ════════════════════════════════════════════════════════════
 function sendRestart() {
-    // 1. Envoyer l'ordre au serveur Python
-    socket.send(JSON.stringify({ type: "restart" }));
+  document.getElementById('result-overlay').classList.remove('show');
 
-    // 2. NETTOYAGE VISUEL IMMÉDIAT
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach(cell => {
-        // On enlève toutes les classes de pions et de victoire
-        cell.classList.remove('red', 'yellow', 'winner-cell', 'last-move', 'hint-cell');
-    });
+  if (ws) {
+    ws.send(JSON.stringify({ type: 'restart' }));
+    return;
+  }
 
-    // 3. RÉINITIALISATION DES VARIABLES LOCALES
-    // Assure-toi que ces variables sont bien remises à zéro dans ton JS
-    gameActive = true;
-    currentBoard = Array(81).fill(0); // Si tu stockes le plateau en JS (9x9 = 81)
-    
-    // Fermer l'overlay de résultat si il est ouvert
-    document.getElementById('result-overlay').classList.remove('show');
-    
-    console.log("Plateau réinitialisé localement");
+  stopAIAI();
+  reviewMode = false;
+  reviewCursor = 0;
+  initLocalGame(gameMode, aiLevel);
 }
 
 // ════════════════════════════════════════════════════════════
