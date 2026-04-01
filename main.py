@@ -386,6 +386,48 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def root():
     return FileResponse("static/index.html")
 
+
+@app.get("/api/parties")
+async def api_parties():
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT id, mode_jeu, dimensions, statut, vainqueur, source, sequence_coups, date_fin
+            FROM parties
+            ORDER BY id DESC
+            LIMIT 1000
+            """
+        )
+        rows = cur.fetchall()
+
+        items = []
+        for row in rows:
+            items.append(
+                {
+                    "id": row[0],
+                    "mode_jeu": row[1],
+                    "dimensions": row[2],
+                    "statut": row[3],
+                    "vainqueur": row[4],
+                    "source": row[5],
+                    "sequence_coups": row[6],
+                    "date_fin": row[7].isoformat() if row[7] else None,
+                }
+            )
+        return items
+    except Exception as e:
+        print(f"DB read error /api/parties: {e}")
+        return []
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
 @app.get("/{path:path}")
 async def catch_all(path: str):
     return FileResponse("static/index.html")
