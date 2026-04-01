@@ -512,7 +512,6 @@ let drawBoardState=new Array(ROWS*COLS).fill(0);
 let hintCol=null, hintTimeout=null;
 let aiaiTimer=null, aiaiRunning=false;
 let aiMsgTimer=null;
-// DB viewer
 let dbGames=[], dbFiltered=[], dbSelected=null, dbCursor=0;
 
 // ════════════════════════════════════════════════════════════
@@ -583,15 +582,21 @@ function startAI(level){
 }
 function startLocalPvP(){
   stopAIAI(); if(ws){ws.close();ws=null;}
+  myColor=RED;
   initLocalGame('local','hard');
 }
 function startAIvsAI(){
   stopAIAI(); if(ws){ws.close();ws=null;}
+  myColor=RED;
   initLocalGame('aiai','hard');
 }
 
+// ════════════════════════════════════════════════════════════
+// INIT LOCAL GAME
+// myColor doit être défini AVANT d'appeler cette fonction
+// ════════════════════════════════════════════════════════════
 function initLocalGame(mode, level, board){
-  gameMode=mode; myColor=RED; aiLevel=level;
+  gameMode=mode; aiLevel=level;
   liveBoard=board?[...board]:new Array(ROWS*COLS).fill(0);
   const reds=liveBoard.filter(v=>v===RED).length;
   const yellows=liveBoard.filter(v=>v===YELLOW).length;
@@ -674,9 +679,7 @@ function onColClick(col){
 // ════════════════════════════════════════════════════════════
 function renderBoard(){
   if(drawMode){renderDrawBoard();return;}
-
   let displayBoard, lastR=-1, lastC=-1, isReview=false;
-
   if(reviewCursor<liveHistory.length){
     isReview=true;
     displayBoard=new Array(ROWS*COLS).fill(0);
@@ -695,19 +698,16 @@ function renderBoard(){
   } else {
     displayBoard=[...liveBoard];
   }
-
   const isMyTurn=!isReview&&gameStatus==='playing'&&(
     gameMode==='local'||(gameMode==='ai'&&!ws&&liveCurrent===myColor)||
     (gameMode!=='aiai'&&liveCurrent===myColor)
   );
   const colorCls=liveCurrent===RED?'show-red':'show-yellow';
-
   document.querySelectorAll('.ch').forEach(h=>{
     h.className='ch'+((isMyTurn&&gameMode==='local')||
       (isMyTurn&&gameMode!=='aiai'&&gameMode!=='pvp')||
       (isMyTurn&&gameMode==='pvp')?' '+colorCls:'');
   });
-
   document.querySelectorAll('.cell').forEach(cell=>{
     const r=parseInt(cell.dataset.r),c=parseInt(cell.dataset.c);
     const v=displayBoard[r*COLS+c];
@@ -717,13 +717,9 @@ function renderBoard(){
     else if(isMyTurn&&gameMode!=='aiai') cell.classList.add('playable');
     if(isReview&&r===lastR&&c===lastC) cell.classList.add('last-move');
   });
-
   const notReview=!isReview&&gameStatus==='playing';
-  document.getElementById('sc-red').className=
-    'score-card'+(notReview&&liveCurrent===RED?' active-red':'');
-  document.getElementById('sc-yellow').className=
-    'score-card'+(notReview&&liveCurrent===YELLOW?' active-yellow':'');
-
+  document.getElementById('sc-red').className='score-card'+(notReview&&liveCurrent===RED?' active-red':'');
+  document.getElementById('sc-yellow').className='score-card'+(notReview&&liveCurrent===YELLOW?' active-yellow':'');
   updateMinimaxScores();
   updateHintBtnVisibility();
 }
@@ -736,7 +732,6 @@ function play(col){
   if(!ws||gameStatus!=='playing'||liveCurrent!==myColor) return;
   ws.send(JSON.stringify({type:'move',col}));
 }
-
 function playLocal(col){
   if(reviewMode){toast('Reviens au coup actuel pour jouer');return;}
   if(gameStatus!=='playing'||gameMode==='aiai') return;
@@ -746,7 +741,6 @@ function playLocal(col){
   reviewCursor=liveHistory.length;
   renderBoard(); updateTurnPill(); updateNavUI();
 }
-
 function playLocalAI(col){
   if(reviewMode){toast('Reviens au coup actuel pour jouer');return;}
   if(gameStatus!=='playing') return;
@@ -757,7 +751,6 @@ function playLocalAI(col){
   renderBoard(); updateTurnPill(); updateNavUI();
   if(gameStatus==='playing'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
 }
-
 function applyLocalMove(col){
   let row=-1;
   for(let r=ROWS-1;r>=0;r--){if(liveBoard[r*COLS+col]===0){row=r;break;}}
@@ -789,7 +782,6 @@ function stopAIAI(){
   aiaiRunning=false;
   if(aiaiTimer){clearTimeout(aiaiTimer);aiaiTimer=null;}
 }
-
 async function runAIAILoop(){
   aiaiRunning=true;
   while(aiaiRunning&&gameStatus==='playing'&&gameMode==='aiai'){
@@ -804,13 +796,10 @@ async function runAIAILoop(){
   }
   aiaiRunning=false;
 }
-
 async function doLocalAIMove(){
-  // ← CORRECTION : guards stricts pour éviter de rejouer après fin de partie
   if(gameStatus!=='playing'||gameMode!=='ai') return;
   if(aiLevel==='hard') showAIMsg('♟ Minimax prof.'+minimaxDepth+' — calcul en cours...',true);
   const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,'');
-  // Vérifier à nouveau après l'attente async
   if(gameStatus!=='playing'||gameMode!=='ai') return;
   const valid=getValidColsFlat(liveBoard);
   if(!valid.length) return;
@@ -821,37 +810,22 @@ async function doLocalAIMove(){
 }
 
 // ════════════════════════════════════════════════════════════
-// SEND RESTART — CORRIGÉ
+// SEND RESTART
 // ════════════════════════════════════════════════════════════
 function sendRestart(){
   document.getElementById('result-overlay').classList.remove('show');
-  stopAIAI();
-  hideAIMsg();
-  clearHint();
-
+  stopAIAI(); hideAIMsg(); clearHint();
   if(gameMode==='local'||gameMode==='ai'||gameMode==='aiai'){
-    // Reset complet et propre de tout l'état
     liveBoard=new Array(ROWS*COLS).fill(0);
-    liveHistory=[];
-    liveCurrent=RED;
-    gameStatus='playing';
-    reviewMode=false;
-    reviewCursor=0;
-
-    renderBoard();
-    updateTurnPill();
-    updateNavUI();
-    updateScoreNames();
-
-    if(gameMode==='aiai'){
-      runAIAILoop();
-    } else if(gameMode==='ai'&&liveCurrent!==myColor){
-      setTimeout(doLocalAIMove,600);
-    }
+    liveHistory=[]; liveCurrent=RED;
+    gameStatus='playing'; reviewMode=false; reviewCursor=0;
+    // En mode AI depuis menu normal, le joueur reprend rouge au restart
+    if(gameMode==='ai') myColor=RED;
+    renderBoard(); updateTurnPill(); updateNavUI(); updateScoreNames();
+    if(gameMode==='aiai') runAIAILoop();
+    else if(gameMode==='ai'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
     return;
   }
-
-  // Mode PvP en ligne
   updateScoreNames();
   if(ws) ws.send(JSON.stringify({type:'restart'}));
 }
@@ -870,7 +844,6 @@ function switchMode(newMode){
   else if(newMode==='ai'&&gameStatus==='playing'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
   toast('Mode : '+{aiai:'IA vs IA',ai:'Vs IA',local:'Local PvP'}[newMode]+' (partie conservée)');
 }
-
 function setupModeUI(){
   ['aiai','ai','local'].forEach(m=>{
     const btn=document.getElementById('mode-'+m);
@@ -885,7 +858,6 @@ function setupModeUI(){
   document.getElementById('mode-switcher').style.display=gameMode==='pvp'?'none':'';
   updateHintBtnVisibility();
 }
-
 function setLevel(level){
   aiLevel=level;
   if(ws) ws.send(JSON.stringify({type:'set_ai_level',level,minimax_depth:minimaxDepth}));
@@ -916,8 +888,7 @@ function updateTurnPill(){
   pill.classList.remove('my-turn'); dot.className='pill-dot';
   if(gameStatus==='drawing'){dot.classList.add('gray');txt.textContent='Mode dessin — place les pions';return;}
   if(gameStatus==='waiting'){dot.classList.add('gray');txt.textContent='En attente...';return;}
-  if(gameStatus==='finished'){dot.classList.add('gray');txt.textContent='Partie terminée';
-    hideAIMsg(); return;}
+  if(gameStatus==='finished'){dot.classList.add('gray');txt.textContent='Partie terminée';hideAIMsg();return;}
   dot.classList.add(liveCurrent===RED?'red':'yellow');
   if(gameMode==='aiai'){
     txt.textContent='IA '+(liveCurrent===RED?'Rouge':'Jaune')+' réfléchit...';
@@ -979,7 +950,6 @@ function showResultLocal(winner){
   }
   document.getElementById('result-overlay').classList.add('show');
 }
-
 function showResult(msg){
   const emoji=document.getElementById('res-emoji'),
         title=document.getElementById('res-title'),
@@ -1213,13 +1183,32 @@ function clearDrawBoard(){
   drawBoardState=new Array(ROWS*COLS).fill(0); liveBoard=[...drawBoardState]; renderDrawBoard();
 }
 function openDrawModeChooser(){document.getElementById('draw-chooser').classList.add('show');}
-function launchFromDraw(mode,level){
+
+// ════════════════════════════════════════════════════════════
+// LAUNCH FROM DRAW — CORRIGÉ
+// En mode AI : l'IA prend la couleur du prochain coup,
+// le joueur humain prend l'autre couleur.
+// ════════════════════════════════════════════════════════════
+function launchFromDraw(mode, level){
   closeDMC(); drawMode=false;
   document.getElementById('draw-toolbar').classList.remove('show');
   document.getElementById('main-toolbar').style.display='';
   document.getElementById('turn-pill').style.display='';
   if(ws){ws.close();ws=null;} stopAIAI();
-  initLocalGame(mode,level||'hard',[...drawBoardState]);
+
+  // Déterminer la couleur du prochain coup
+  const reds=drawBoardState.filter(v=>v===RED).length;
+  const yellows=drawBoardState.filter(v=>v===YELLOW).length;
+  const nextColor=reds<=yellows?RED:YELLOW;
+
+  if(mode==='ai'){
+    // L'IA joue le prochain coup → le joueur humain prend l'autre couleur
+    myColor=nextColor===RED?YELLOW:RED;
+  } else {
+    myColor=RED;
+  }
+
+  initLocalGame(mode, level||'hard', [...drawBoardState]);
 }
 
 // ════════════════════════════════════════════════════════════
