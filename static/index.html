@@ -597,12 +597,10 @@ function initLocalGame(mode, level, board){
   const yellows=liveBoard.filter(v=>v===YELLOW).length;
   liveCurrent=reds<=yellows?RED:YELLOW;
   liveHistory=[]; gameStatus='playing';
-  winScores={red:0,yellow:0};
+  reviewMode=false; reviewCursor=0;
   showPage('game-page');
   buildBoard(); updateScoreNames(); setupModeUI();
   renderBoard(); updateTurnPill(); updateNavUI();
-  document.getElementById('sc-red-score').textContent='0';
-  document.getElementById('sc-yellow-score').textContent='0';
   if(mode==='aiai') runAIAILoop();
   else if(mode==='ai'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
 }
@@ -632,7 +630,7 @@ function handleMsg(msg){
       document.getElementById('sc-red-score').textContent='0';
       document.getElementById('sc-yellow-score').textContent='0';
     }
-    if(msg.move_count===0) exitReview();
+    if(msg.move_count===0){exitReview();}
     if(!reviewMode){reviewCursor=liveHistory.length;renderBoard();updateTurnPill();}
     updateNavUI();
     if(msg.status==='finished') setTimeout(()=>showResult(msg),500);
@@ -672,12 +670,11 @@ function onColClick(col){
 }
 
 // ════════════════════════════════════════════════════════════
-// RENDER — single function, no redefinition
+// RENDER
 // ════════════════════════════════════════════════════════════
 function renderBoard(){
   if(drawMode){renderDrawBoard();return;}
 
-  // Build display board from history if in review, else use liveBoard
   let displayBoard, lastR=-1, lastC=-1, isReview=false;
 
   if(reviewCursor<liveHistory.length){
@@ -719,19 +716,14 @@ function renderBoard(){
     else if(v===YELLOW){cell.classList.add('yellow');if(isReview)cell.classList.add('static');}
     else if(isMyTurn&&gameMode!=='aiai') cell.classList.add('playable');
     if(isReview&&r===lastR&&c===lastC) cell.classList.add('last-move');
-    if(hintCol!==null&&!isReview){
-      // will be set by showHintOnBoard
-    }
   });
 
-  // Score cards active state
   const notReview=!isReview&&gameStatus==='playing';
   document.getElementById('sc-red').className=
     'score-card'+(notReview&&liveCurrent===RED?' active-red':'');
   document.getElementById('sc-yellow').className=
     'score-card'+(notReview&&liveCurrent===YELLOW?' active-yellow':'');
 
-  // Update minimax scores and hint visibility
   updateMinimaxScores();
   updateHintBtnVisibility();
 }
@@ -785,7 +777,6 @@ function applyLocalMove(col){
   } else {
     liveCurrent=liveCurrent===RED?YELLOW:RED;
   }
-  // AI msg after move
   if(aiLevel==='hard'&&(gameMode==='ai'||gameMode==='aiai')){
     showAIMsg('♟ Minimax joue colonne '+(col+1));
   }
@@ -798,6 +789,7 @@ function stopAIAI(){
   aiaiRunning=false;
   if(aiaiTimer){clearTimeout(aiaiTimer);aiaiTimer=null;}
 }
+
 async function runAIAILoop(){
   aiaiRunning=true;
   while(aiaiRunning&&gameStatus==='playing'&&gameMode==='aiai'){
@@ -814,15 +806,54 @@ async function runAIAILoop(){
 }
 
 async function doLocalAIMove(){
-  if(gameStatus!=='playing') return;
+  // ← CORRECTION : guards stricts pour éviter de rejouer après fin de partie
+  if(gameStatus!=='playing'||gameMode!=='ai') return;
   if(aiLevel==='hard') showAIMsg('♟ Minimax prof.'+minimaxDepth+' — calcul en cours...',true);
   const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,'');
+  // Vérifier à nouveau après l'attente async
+  if(gameStatus!=='playing'||gameMode!=='ai') return;
   const valid=getValidColsFlat(liveBoard);
   if(!valid.length) return;
   applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
   reviewCursor=liveHistory.length;
   renderBoard(); updateTurnPill(); updateNavUI();
   if(gameStatus==='playing'&&gameMode==='ai'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
+}
+
+// ════════════════════════════════════════════════════════════
+// SEND RESTART — CORRIGÉ
+// ════════════════════════════════════════════════════════════
+function sendRestart(){
+  document.getElementById('result-overlay').classList.remove('show');
+  stopAIAI();
+  hideAIMsg();
+  clearHint();
+
+  if(gameMode==='local'||gameMode==='ai'||gameMode==='aiai'){
+    // Reset complet et propre de tout l'état
+    liveBoard=new Array(ROWS*COLS).fill(0);
+    liveHistory=[];
+    liveCurrent=RED;
+    gameStatus='playing';
+    reviewMode=false;
+    reviewCursor=0;
+
+    renderBoard();
+    updateTurnPill();
+    updateNavUI();
+    updateScoreNames();
+
+    if(gameMode==='aiai'){
+      runAIAILoop();
+    } else if(gameMode==='ai'&&liveCurrent!==myColor){
+      setTimeout(doLocalAIMove,600);
+    }
+    return;
+  }
+
+  // Mode PvP en ligne
+  updateScoreNames();
+  if(ws) ws.send(JSON.stringify({type:'restart'}));
 }
 
 // ════════════════════════════════════════════════════════════
@@ -965,21 +996,6 @@ function showResult(msg){
   document.getElementById('sc-red-score').textContent=winScores.red||0;
   document.getElementById('sc-yellow-score').textContent=winScores.yellow||0;
   document.getElementById('result-overlay').classList.add('show');
-}
-
-function sendRestart(){
-  document.getElementById('result-overlay').classList.remove('show');
-  stopAIAI(); exitReview(); hideAIMsg();
-  if(gameMode==='local'||gameMode==='ai'||gameMode==='aiai'){
-    liveBoard=new Array(ROWS*COLS).fill(0);
-    liveCurrent=RED; liveHistory=[]; gameStatus='playing';
-    renderBoard(); updateTurnPill(); updateNavUI();
-    if(gameMode==='aiai') runAIAILoop();
-    else if(gameMode==='ai'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
-    return;
-  }
-  updateScoreNames();
-  if(ws) ws.send(JSON.stringify({type:'restart'}));
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1257,7 +1273,6 @@ function dbSelectGame(g){
   document.getElementById('db-board').style.display='';
   document.getElementById('db-nav').style.display='';
   document.getElementById('db-empty').style.display='none';
-  // Build grid
   const grid=document.getElementById('db-board-grid'); grid.innerHTML='';
   for(let r=0;r<9;r++)for(let c=0;c<9;c++){
     const d=document.createElement('div');d.className='db-cell';d.id=`dbc-${r}-${c}`;grid.appendChild(d);
