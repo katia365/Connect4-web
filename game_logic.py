@@ -93,7 +93,7 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
 
     # 3) Chercher dans la BDD le coup qui mène à une victoire
     #    le plus tôt possible parmi les parties connues
-    winner_label = RED if ai_player == RED else YELLOW
+    winner_label = "ROUGE" if ai_player == RED else "JAUNE"
 
     conn = None
     best_col = None
@@ -104,7 +104,7 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
         cur = conn.cursor()
 
         for col in valid:
-            next_seq = sequence + str(col)  # +1 car colonnes stockées en 1-indexé
+            next_seq = sequence + str(col + 1)  # colonnes stockées en 1-indexé
 
             # Parties en base qui commencent par cette séquence et que l'IA gagne
             cur.execute("""
@@ -118,13 +118,16 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
 
             row = cur.fetchone()
             if row:
-                win_in = len(row[0])  # plus court = victoire plus rapide
+                # On minimise le nombre de coups restants après next_seq.
+                win_in = len(row[0]) - len(next_seq)
                 if win_in < best_win_in:
                     best_win_in = win_in
                     best_col = col
     except Exception as e:
         print(f"Erreur BDD dans ai_medium_with_seq: {e}")
     finally:
+        if 'cur' in locals() and cur:
+            cur.close()
         if conn:
             conn.close()
 
