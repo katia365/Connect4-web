@@ -1,5 +1,6 @@
 import math
 import random
+import psycopg2
 
 ROWS = 9
 COLS = 9
@@ -91,16 +92,49 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
         if check_winner(tmp, opp):
             return col
 
-    # 3) Prefer center-ish columns, with deterministic tie-break from sequence
-    preferred = _order_cols(valid)
-    if len(preferred) == 1:
-        return preferred[0]
+    # 3) Chercher dans la BDD le coup qui mène à une victoire
+    #    le plus tôt possible parmi les parties connues
+    conn = psycopg2.connect(
+        dbname="postgres",
+        user="postgres",
+        password="12082004",
+        host="localhost"
+    )
+    cur = conn.cursor()
 
+    best_col = None
+    best_win_in = float('inf')
+
+    for col in valid:
+        next_seq = sequence + str(col + 1)  # +1 car colonnes stockées en 1-indexé
+        
+        # Parties en base qui commencent par cette séquence et que l'IA gagne
+        cur.execute("""
+            SELECT sequence_coups
+            FROM parties
+            WHERE sequence_coups LIKE %s
+              AND vainqueur = %s
+            ORDER BY LENGTH(sequence_coups) ASC
+            LIMIT 1
+        """, (next_seq + '%', str(ai_player)))
+        
+        row = cur.fetchone()
+        if row:
+            win_in = len(row[0])  # plus court = victoire plus rapide
+            if win_in < best_win_in:
+                best_win_in = win_in
+                best_col = col
+
+    conn.close()
+
+    if best_col is not None:
+        return best_col
+
+    # 4) Fallback : colonnes centrales
+    preferred = _order_cols(valid)
     seed = sum(ord(ch) for ch in sequence) if sequence else 0
     rnd = random.Random(seed)
-    best_band = preferred[: min(3, len(preferred))]
-    return rnd.choice(best_band)
-
+    return rnd.choice(preferred[:min(3, len(preferred))])
 
 def _evaluate_window(window, player):
     opp = RED if player == YELLOW else YELLOW
