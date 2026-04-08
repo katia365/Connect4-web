@@ -1,6 +1,5 @@
 import math
 import random
-import psycopg2
 
 ROWS = 9
 COLS = 9
@@ -94,38 +93,40 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
 
     # 3) Chercher dans la BDD le coup qui mène à une victoire
     #    le plus tôt possible parmi les parties connues
-    conn = psycopg2.connect(
-        dbname="postgres",
-        user="postgres",
-        password="12082004",
-        host="localhost"
-    )
-    cur = conn.cursor()
+    winner_label = RED if ai_player == RED else YELLOW
 
+    conn = None
     best_col = None
     best_win_in = float('inf')
 
-    for col in valid:
-        next_seq = sequence + str(col + 1)  # +1 car colonnes stockées en 1-indexé
-        
-        # Parties en base qui commencent par cette séquence et que l'IA gagne
-        cur.execute("""
-            SELECT sequence_coups
-            FROM parties
-            WHERE sequence_coups LIKE %s
-              AND vainqueur = %s
-            ORDER BY LENGTH(sequence_coups) ASC
-            LIMIT 1
-        """, (next_seq + '%', str(ai_player)))
-        
-        row = cur.fetchone()
-        if row:
-            win_in = len(row[0])  # plus court = victoire plus rapide
-            if win_in < best_win_in:
-                best_win_in = win_in
-                best_col = col
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-    conn.close()
+        for col in valid:
+            next_seq = sequence + str(col)  # +1 car colonnes stockées en 1-indexé
+
+            # Parties en base qui commencent par cette séquence et que l'IA gagne
+            cur.execute("""
+                SELECT sequence_coups
+                FROM parties
+                WHERE sequence_coups LIKE %s
+                  AND vainqueur = %s
+                ORDER BY LENGTH(sequence_coups) ASC
+                LIMIT 1
+            """, (next_seq + '%', winner_label))
+
+            row = cur.fetchone()
+            if row:
+                win_in = len(row[0])  # plus court = victoire plus rapide
+                if win_in < best_win_in:
+                    best_win_in = win_in
+                    best_col = col
+    except Exception as e:
+        print(f"Erreur BDD dans ai_medium_with_seq: {e}")
+    finally:
+        if conn:
+            conn.close()
 
     if best_col is not None:
         return best_col
