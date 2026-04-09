@@ -528,6 +528,7 @@ let hintCol=null, hintTimeout=null;
 let aiaiTimer=null, aiaiRunning=false;
 let aiMsgTimer=null;
 let dbGames=[], dbFiltered=[], dbSelected=null, dbCursor=0;
+let predictionReqId=0;
 
 // ════════════════════════════════════════════════════════════
 // NAVIGATION
@@ -546,6 +547,7 @@ function goHome(){
   document.getElementById('main-toolbar').style.display='';
   document.getElementById('draw-toolbar').classList.remove('show');
   document.getElementById('turn-pill').style.display='';
+  resetAdvicePanel();
   hideAIMsg();
   showPage('home-page');
   try{history.replaceState({},'','/');}catch(e){}
@@ -619,6 +621,7 @@ function initLocalGame(mode, level, board){
   liveHistory=[]; gameStatus='playing';
   reviewMode=false; reviewCursor=0;
   showPage('game-page');
+  resetAdvicePanel();
   buildBoard(); updateScoreNames(); setupModeUI();
   renderBoard(); updateTurnPill(); updateNavUI();
   if(mode==='aiai') runAIAILoop();
@@ -653,6 +656,7 @@ function handleMsg(msg){
     if(msg.move_count===0){exitReview();}
     if(!reviewMode){reviewCursor=liveHistory.length;renderBoard();updateTurnPill();}
     updateNavUI();
+    refreshPredictionAuto();
     if(msg.status==='finished') setTimeout(()=>showResult(msg),500);
   }
 }
@@ -788,6 +792,7 @@ function applyLocalMove(col){
   if(aiLevel==='hard'&&(gameMode==='ai'||gameMode==='aiai')){
     showAIMsg('♟ Minimax joue colonne '+(col+1));
   }
+  refreshPredictionAuto();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -838,6 +843,7 @@ function sendRestart() {
   stopAIAI();
   reviewMode = false;
   reviewCursor = 0;
+  resetAdvicePanel();
   initLocalGame(gameMode, aiLevel);
 }
 
@@ -1019,7 +1025,6 @@ function requestHint(){
   getBddHintFast(liveBoard,player,getCurrentSequence()).then(res=>{
     document.getElementById('hint-indicator').classList.remove('show');
     btn.disabled=false;
-    updateAdvicePanel(res&&res.messages?res.messages:[]);
     const col=res?res.col:null;
     if(col!==null&&col!==-1){showHintOnBoard(col);toast('💡 Conseil BDD : colonne '+(col+1));}
     else toast('Aucun conseil BDD disponible');
@@ -1055,6 +1060,27 @@ function updateAdvicePanel(messages){
   l1.className='advice-line'+(a?'':' muted');
   l2.className='advice-line'+(b?'':' muted');
   l3.className='advice-line'+(c?'':' muted');
+}
+
+function resetAdvicePanel(){
+  updateAdvicePanel(['Aucune analyse demandée','','']);
+}
+
+function refreshPredictionAuto(){
+  if(drawMode || gameStatus==='drawing') return;
+
+  if(!Array.isArray(liveHistory) || liveHistory.length===0){
+    resetAdvicePanel();
+    return;
+  }
+
+  const reqId=++predictionReqId;
+  const player=liveCurrent;
+  const seq=getCurrentSequence();
+  getBddHintFast(liveBoard,player,seq).then(res=>{
+    if(reqId!==predictionReqId) return;
+    updateAdvicePanel(res&&res.messages?res.messages:[]);
+  });
 }
 async function getAIHintFast(board,player,level,seq){
   try{
