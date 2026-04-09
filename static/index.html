@@ -787,7 +787,7 @@ async function runAIAILoop(){
   while(aiaiRunning&&gameStatus==='playing'&&gameMode==='aiai'){
     await new Promise(r=>{aiaiTimer=setTimeout(r,700);});
     if(!aiaiRunning||gameStatus!=='playing'||gameMode!=='aiai') break;
-    const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,'');
+    const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,getCurrentSequence());
     const valid=getValidColsFlat(liveBoard);
     if(!valid.length) break;
     applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
@@ -799,7 +799,7 @@ async function runAIAILoop(){
 async function doLocalAIMove(){
   if(gameStatus!=='playing'||gameMode!=='ai') return;
   if(aiLevel==='hard') showAIMsg('♟ Minimax prof.'+minimaxDepth+' — calcul en cours...',true);
-  const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,'');
+  const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,getCurrentSequence());
   if(gameStatus!=='playing'||gameMode!=='ai') return;
   const valid=getValidColsFlat(liveBoard);
   if(!valid.length) return;
@@ -1001,7 +1001,7 @@ function requestHint(){
   document.getElementById('hint-indicator').classList.add('show');
   clearHint();
   const player=gameMode==='local'?liveCurrent:myColor;
-  getAIHintFast(liveBoard,player,aiLevel,'').then(col=>{
+  getAIHintFast(liveBoard,player,aiLevel,getCurrentSequence()).then(col=>{
     document.getElementById('hint-indicator').classList.remove('show');
     btn.disabled=false;
     if(col!==null&&col!==-1){showHintOnBoard(col);toast('💡 Conseil : colonne '+(col+1));}
@@ -1112,6 +1112,11 @@ function checkWinnerFlat(flat,player){
   return false;
 }
 function getValidColsFlat(flat){return Array.from({length:COLS},(_,c)=>c).filter(c=>flat[c]===0);}
+
+function getCurrentSequence(){
+  if(!liveHistory || !liveHistory.length) return '';
+  return liveHistory.map(c=>String(c+1)).join('');
+}
 
 // ════════════════════════════════════════════════════════════
 // HOVER
