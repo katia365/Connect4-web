@@ -142,6 +142,12 @@ header{display:flex;align-items:center;justify-content:space-between;
 /* BOARD */
 .board-outer{background:var(--s1);border:1px solid var(--border);border-radius:18px;
   padding:12px;box-shadow:0 24px 60px rgba(0,0,0,.6);}
+.board-and-advice{display:flex;align-items:flex-start;gap:12px;max-width:100%}
+.advice-panel{width:280px;min-height:120px;background:var(--s1);border:1px solid var(--border);
+  border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:7px}
+.advice-title{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.advice-line{font-size:.8rem;line-height:1.4;color:var(--text)}
+.advice-line.muted{color:var(--muted)}
 .col-hints{display:grid;grid-template-columns:repeat(9,var(--cell));gap:4px;height:16px;margin-bottom:4px;}
 .ch{display:flex;align-items:center;justify-content:center;font-size:10px;
   opacity:0;transition:opacity .15s;cursor:pointer;color:var(--muted);}
@@ -259,6 +265,7 @@ header{display:flex;align-items:center;justify-content:space-between;
 .db-move-ctr{font-family:'Bebas Neue';font-size:1rem;letter-spacing:.05em;color:var(--muted);min-width:60px;text-align:center;}
 .db-count{font-size:.78rem;color:var(--muted);text-align:center;}
 @media(max-width:700px){#db-page{flex-direction:column;}.db-sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);padding-right:0;padding-bottom:12px;max-height:200px;}}
+@media(max-width:980px){.board-and-advice{flex-direction:column;align-items:center}.advice-panel{width:min(92vw,560px)}}
 /* TOAST */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(12px);
   background:var(--s2);border:1px solid var(--border);border-radius:10px;
@@ -413,15 +420,23 @@ header{display:flex;align-items:center;justify-content:space-between;
     <button class="draw-clear-btn" onclick="clearDrawBoard()">✕ Effacer</button>
     <button class="back-btn" onclick="exitDrawMode()">↩ Annuler</button>
   </div>
-  <div class="board-outer">
-    <div class="col-hints" id="col-hints">
-      <div class="ch" data-col="0">▼</div><div class="ch" data-col="1">▼</div>
-      <div class="ch" data-col="2">▼</div><div class="ch" data-col="3">▼</div>
-      <div class="ch" data-col="4">▼</div><div class="ch" data-col="5">▼</div>
-      <div class="ch" data-col="6">▼</div><div class="ch" data-col="7">▼</div>
-      <div class="ch" data-col="8">▼</div>
+  <div class="board-and-advice">
+    <div class="board-outer">
+      <div class="col-hints" id="col-hints">
+        <div class="ch" data-col="0">▼</div><div class="ch" data-col="1">▼</div>
+        <div class="ch" data-col="2">▼</div><div class="ch" data-col="3">▼</div>
+        <div class="ch" data-col="4">▼</div><div class="ch" data-col="5">▼</div>
+        <div class="ch" data-col="6">▼</div><div class="ch" data-col="7">▼</div>
+        <div class="ch" data-col="8">▼</div>
+      </div>
+      <div class="board-grid" id="board-grid"></div>
     </div>
-    <div class="board-grid" id="board-grid"></div>
+    <div class="advice-panel" id="advice-panel">
+      <div class="advice-title">Prédiction IA (BDD)</div>
+      <div class="advice-line muted" id="advice-line-1">Aucune analyse demandée</div>
+      <div class="advice-line muted" id="advice-line-2"></div>
+      <div class="advice-line muted" id="advice-line-3"></div>
+    </div>
   </div>
   <div class="ai-msg" id="ai-msg"><div class="ai-msg-dot"></div><span id="ai-msg-text">L'IA réfléchit...</span></div>
   <div class="col-scores" id="col-scores">
@@ -992,7 +1007,7 @@ function updateNavUI(){
 // HINT
 // ════════════════════════════════════════════════════════════
 function updateHintBtnVisibility(){
-  document.getElementById('hint-btn').style.display=(gameMode!=='aiai'&&gameStatus!=='drawing')?'':'none';
+  document.getElementById('hint-btn').style.display=(gameStatus!=='drawing')?'':'none';
 }
 function requestHint(){
   if(gameStatus!=='playing') return;
@@ -1000,13 +1015,46 @@ function requestHint(){
   btn.disabled=true;
   document.getElementById('hint-indicator').classList.add('show');
   clearHint();
-  const player=gameMode==='local'?liveCurrent:myColor;
-  getAIHintFast(liveBoard,player,aiLevel,getCurrentSequence()).then(col=>{
+  const player=liveCurrent;
+  getBddHintFast(liveBoard,player,getCurrentSequence()).then(res=>{
     document.getElementById('hint-indicator').classList.remove('show');
     btn.disabled=false;
-    if(col!==null&&col!==-1){showHintOnBoard(col);toast('💡 Conseil : colonne '+(col+1));}
-    else toast('Aucun conseil disponible');
+    updateAdvicePanel(res&&res.messages?res.messages:[]);
+    const col=res?res.col:null;
+    if(col!==null&&col!==-1){showHintOnBoard(col);toast('💡 Conseil BDD : colonne '+(col+1));}
+    else toast('Aucun conseil BDD disponible');
   });
+}
+async function getBddHintFast(board,player,seq){
+  try{
+    const proto=location.protocol==='https:'?'wss':'ws';
+    return await new Promise(resolve=>{
+      const hws=new WebSocket(`${proto}://${location.host}/ws`);
+      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve({col:null,messages:[]});},3500);
+      hws.onopen=()=>hws.send(JSON.stringify({action:'ai_bdd_hint',board:[...board],player,sequence:seq}));
+      hws.onmessage=e=>{
+        clearTimeout(t);
+        const m=JSON.parse(e.data);
+        try{hws.close();}catch(e){}
+        if(m.type==='ai_bdd_hint') resolve({col:m.col,messages:m.messages||[]});
+        else resolve({col:null,messages:[]});
+      };
+      hws.onerror=()=>{clearTimeout(t);resolve({col:null,messages:[]});};
+    });
+  }catch(e){return {col:null,messages:[]};}
+}
+function updateAdvicePanel(messages){
+  const l1=document.getElementById('advice-line-1');
+  const l2=document.getElementById('advice-line-2');
+  const l3=document.getElementById('advice-line-3');
+  const lines=Array.isArray(messages)?messages:[];
+  const a=lines[0]||'Aucune analyse BDD disponible';
+  const b=lines[1]||'';
+  const c=lines[2]||'';
+  l1.textContent=a; l2.textContent=b; l3.textContent=c;
+  l1.className='advice-line'+(a?'':' muted');
+  l2.className='advice-line'+(b?'':' muted');
+  l3.className='advice-line'+(c?'':' muted');
 }
 async function getAIHintFast(board,player,level,seq){
   try{
