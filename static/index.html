@@ -624,6 +624,7 @@ function initLocalGame(mode, level, board){
   resetAdvicePanel();
   buildBoard(); updateScoreNames(); setupModeUI();
   renderBoard(); updateTurnPill(); updateNavUI();
+  refreshPredictionAuto();
   if(mode==='aiai') runAIAILoop();
   else if(mode==='ai'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
 }
@@ -1069,7 +1070,9 @@ function resetAdvicePanel(){
 function refreshPredictionAuto(){
   if(drawMode || gameStatus==='drawing') return;
 
-  if(!Array.isArray(liveHistory) || liveHistory.length===0){
+  const hasHistory = Array.isArray(liveHistory) && liveHistory.length > 0;
+  const hasBoardPieces = Array.isArray(liveBoard) && liveBoard.some(v => v !== 0);
+  if(!hasHistory && !hasBoardPieces){
     resetAdvicePanel();
     return;
   }
