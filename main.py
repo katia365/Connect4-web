@@ -7,7 +7,7 @@ from datetime import datetime
 import psycopg2
 from game_logic import (
     create_board, drop_piece, check_winner, is_draw,
-    get_valid_cols, ai_easy, ai_medium_with_seq, ai_hard,
+    get_valid_cols, ai_easy, ai_medium_with_seq, ai_hard, bdd_hint_with_messages,
     RED, YELLOW, EMPTY, ROWS, COLS
 )
 
@@ -231,6 +231,40 @@ async def handle_hint(websocket: WebSocket, init: dict):
 
     await websocket.send_text(json.dumps({"type": "ai_hint", "col": col}))
 
+
+async def handle_bdd_hint(websocket: WebSocket, init: dict):
+    flat = init.get("board", [])
+    player_val = init.get("player", RED)
+    sequence = init.get("sequence", "")
+
+    if not isinstance(flat, list) or len(flat) != ROWS * COLS:
+        await websocket.send_text(json.dumps({"type": "ai_bdd_hint", "col": -1, "messages": []}))
+        return
+
+    board = []
+    for r in range(ROWS):
+        board.append(flat[r * COLS:(r + 1) * COLS])
+
+    try:
+        info = bdd_hint_with_messages(board, player_val, sequence)
+    except Exception as e:
+        print(f"BDD hint error: {e}")
+        await websocket.send_text(json.dumps({"type": "ai_bdd_hint", "col": -1, "messages": []}))
+        return
+
+    col = info.get("col")
+    await websocket.send_text(
+        json.dumps(
+            {
+                "type": "ai_bdd_hint",
+                "col": col if col is not None else -1,
+                "messages": info.get("messages", []),
+                "source": info.get("source", "none"),
+                "sequence": info.get("sequence", sequence),
+            }
+        )
+    )
+
 @app.websocket("/ws")
 async def ws_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -242,6 +276,10 @@ async def ws_endpoint(websocket: WebSocket):
 
         if action == "ai_hint":
             await handle_hint(websocket, init)
+            return
+
+        if action == "ai_bdd_hint":
+            await handle_bdd_hint(websocket, init)
             return
 
         if action == "ai":
