@@ -155,14 +155,187 @@ def _mirror_col(col):
     return COLS - 1 - col
 
 
+def _normalize_sequence_for_board(board, sequence):
+    if sequence:
+        return sequence
+    return _reconstruct_sequence_from_board(board)
+
+
+def _winner_label(player):
+    return "ROUGE" if player == RED else "JAUNE"
+
+
+def _safe_columns(board, player):
+    valid = get_valid_cols(board)
+    opp = RED if player == YELLOW else YELLOW
+
+    safe = []
+    for col in valid:
+        tmp = _copy_board(board)
+        drop_piece(tmp, col, player)
+
+        opp_can_win_next = False
+        for opp_col in get_valid_cols(tmp):
+            tmp_opp = _copy_board(tmp)
+            drop_piece(tmp_opp, opp_col, opp)
+            if check_winner(tmp_opp, opp):
+                opp_can_win_next = True
+                break
+
+        if not opp_can_win_next:
+            safe.append(col)
+
+    return safe if safe else valid
+
+
+def _db_candidates_for_next_move(sequence, winner_label):
+    conn = None
+    cur = None
+    out = []
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT sequence_coups, sequence_miroir
+            FROM parties
+            WHERE vainqueur = %s
+              AND (sequence_coups LIKE %s OR sequence_miroir LIKE %s)
+            ORDER BY LENGTH(sequence_coups) ASC, sequence_coups ASC
+            """,
+            (winner_label, sequence + '%', sequence + '%')
+        )
+
+        for seq_coups, seq_miroir in cur.fetchall():
+            if seq_coups and seq_coups.startswith(sequence) and len(seq_coups) > len(sequence):
+                candidate_col = int(seq_coups[len(sequence)]) - 1
+                win_in = len(seq_coups) - len(sequence)
+                out.append((candidate_col, win_in, "db_direct"))
+            elif seq_miroir and seq_miroir.startswith(sequence) and len(seq_miroir) > len(sequence):
+                mirror_next_col = int(seq_miroir[len(sequence)]) - 1
+                candidate_col = _mirror_col(mirror_next_col)
+                win_in = len(seq_miroir) - len(sequence)
+                out.append((candidate_col, win_in, "db_mirror"))
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+    return out
+
+
+def _db_min_remaining_moves(sequence, winner_label):
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT sequence_coups, sequence_miroir
+            FROM parties
+            WHERE vainqueur = %s
+              AND (sequence_coups LIKE %s OR sequence_miroir LIKE %s)
+            ORDER BY LENGTH(sequence_coups) ASC, sequence_coups ASC
+            LIMIT 1
+            """,
+            (winner_label, sequence + '%', sequence + '%')
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+
+        seq_coups, seq_miroir = row
+        if seq_coups and seq_coups.startswith(sequence):
+            return len(seq_coups) - len(sequence)
+        if seq_miroir and seq_miroir.startswith(sequence):
+            return len(seq_miroir) - len(sequence)
+        return None
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def bdd_hint_with_messages(board, player, sequence=""):
+    sequence = _normalize_sequence_for_board(board, sequence)
+    valid = get_valid_cols(board)
+
+    red_in = _db_min_remaining_moves(sequence, "ROUGE")
+    yellow_in = _db_min_remaining_moves(sequence, "JAUNE")
+
+    messages = []
+    if red_in is None:
+        messages.append("Rouge : aucune ligne gagnante trouvée en BDD depuis cette position")
+    else:
+        messages.append(f"Rouge gagne en {red_in} coup(s) selon la BDD")
+
+    if yellow_in is None:
+        messages.append("Jaune : aucune ligne gagnante trouvée en BDD depuis cette position")
+    else:
+        messages.append(f"Jaune gagne en {yellow_in} coup(s) selon la BDD")
+
+    if not valid:
+        return {
+            "col": None,
+            "messages": messages,
+            "sequence": sequence,
+            "source": "none",
+        }
+
+    search_cols = _safe_columns(board, player)
+    candidates = _db_candidates_for_next_move(sequence, _winner_label(player))
+
+    best_col = None
+    best_win_in = float('inf')
+    best_source = None
+    seen = set()
+
+    for candidate_col, win_in, source in candidates:
+        if candidate_col not in search_cols:
+            continue
+        if candidate_col in seen:
+            continue
+        seen.add(candidate_col)
+
+        if win_in < best_win_in:
+            best_win_in = win_in
+            best_col = candidate_col
+            best_source = source
+        elif win_in == best_win_in and best_col is not None:
+            center = (COLS - 1) / 2
+            if abs(candidate_col - center) < abs(best_col - center):
+                best_col = candidate_col
+                best_source = source
+
+    if best_col is not None:
+        messages.append(
+            f"Conseil BDD: jouer colonne {best_col + 1} (victoire estimée en {best_win_in} coup(s))"
+        )
+        return {
+            "col": best_col,
+            "messages": messages,
+            "sequence": sequence,
+            "source": best_source or "db",
+        }
+
+    messages.append("Conseil BDD: aucun coup trouvé pour ce préfixe")
+    return {
+        "col": None,
+        "messages": messages,
+        "sequence": sequence,
+        "source": "fallback_none",
+    }
+
+
 def ai_medium_with_seq(board, ai_player, sequence=""):
-    if not sequence:
-        reconstructed = _reconstruct_sequence_from_board(board)
-        if reconstructed:
-            sequence = reconstructed
-            _ai_medium_log(f"sequence_reconstructed seq='{sequence}'")
-        else:
-            _ai_medium_log("sequence_missing_and_not_reconstructable")
+    sequence = _normalize_sequence_for_board(board, sequence)
+    if sequence:
+        _ai_medium_log(f"sequence_used seq='{sequence}'")
+    else:
+        _ai_medium_log("sequence_missing_and_not_reconstructable")
 
     valid = get_valid_cols(board)
     if not valid:
@@ -193,67 +366,21 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
 
     # Ne considérer en priorité que les coups qui ne donnent pas
     # une victoire immédiate à l'adversaire au coup suivant.
-    safe_valid = []
-    for col in valid:
-        tmp = _copy_board(board)
-        drop_piece(tmp, col, ai_player)
-
-        opp_can_win_next = False
-        for opp_col in get_valid_cols(tmp):
-            tmp_opp = _copy_board(tmp)
-            drop_piece(tmp_opp, opp_col, opp)
-            if check_winner(tmp_opp, opp):
-                opp_can_win_next = True
-                break
-
-        if not opp_can_win_next:
-            safe_valid.append(col)
-
-    search_cols = safe_valid if safe_valid else valid
+    search_cols = _safe_columns(board, ai_player)
+    safe_valid = search_cols[:]
 
     # 3) Chercher dans la BDD le coup qui mène à une victoire
     #    le plus tôt possible parmi les parties connues
-    winner_label = "ROUGE" if ai_player == RED else "JAUNE"
+    winner_label = _winner_label(ai_player)
 
-    conn = None
-    cur = None
     best_col = None
     best_win_in = float('inf')
     best_source = None
 
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-
-        cur.execute(
-            """
-            SELECT sequence_coups, sequence_miroir
-            FROM parties
-            WHERE vainqueur = %s
-              AND (sequence_coups LIKE %s OR sequence_miroir LIKE %s)
-            ORDER BY LENGTH(sequence_coups) ASC, sequence_coups ASC
-            """,
-            (winner_label, sequence + '%', sequence + '%')
-        )
-
+        candidates = _db_candidates_for_next_move(sequence, winner_label)
         seen_candidates = set()
-        for seq_coups, seq_miroir in cur.fetchall():
-            candidate_col = None
-            matched_seq = None
-            source = None
-
-            if seq_coups and seq_coups.startswith(sequence) and len(seq_coups) > len(sequence):
-                candidate_col = int(seq_coups[len(sequence)]) - 1
-                matched_seq = seq_coups
-                source = "db_direct"
-            elif seq_miroir and seq_miroir.startswith(sequence) and len(seq_miroir) > len(sequence):
-                mirror_next_col = int(seq_miroir[len(sequence)]) - 1
-                candidate_col = _mirror_col(mirror_next_col)
-                matched_seq = seq_miroir
-                source = "db_mirror"
-
-            if candidate_col is None:
-                continue
+        for candidate_col, win_in, source in candidates:
             if candidate_col not in search_cols:
                 continue
 
@@ -261,7 +388,6 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
                 continue
             seen_candidates.add(candidate_col)
 
-            win_in = len(matched_seq) - len(sequence)
             if win_in < best_win_in:
                 best_win_in = win_in
                 best_col = candidate_col
@@ -273,11 +399,6 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
                     best_source = source
     except Exception as e:
         print(f"Erreur BDD dans ai_medium_with_seq: {e}")
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
 
     if best_col is not None:
         _ai_medium_log(
