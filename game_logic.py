@@ -165,6 +165,33 @@ def _winner_label(player):
     return "ROUGE" if player == RED else "JAUNE"
 
 
+@lru_cache(maxsize=100000)
+def _infer_winner_label_from_sequence(sequence):
+    if not sequence:
+        return None
+
+    board = create_board()
+    current = RED
+
+    for ch in sequence:
+        if ch < '1' or ch > str(COLS):
+            return None
+        col = int(ch) - 1
+        if col < 0 or col >= COLS:
+            return None
+
+        row = drop_piece(board, col, current)
+        if row is None:
+            return None
+
+        if check_winner(board, current):
+            return _winner_label(current)
+
+        current = YELLOW if current == RED else RED
+
+    return None
+
+
 def _safe_columns(board, player):
     valid = get_valid_cols(board)
     opp = RED if player == YELLOW else YELLOW
@@ -197,16 +224,20 @@ def _db_candidates_for_next_move(sequence, winner_label):
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT sequence_coups, sequence_miroir
+            SELECT sequence_coups, sequence_miroir, vainqueur
             FROM parties
-            WHERE vainqueur = %s
-              AND (sequence_coups LIKE %s OR sequence_miroir LIKE %s)
+            WHERE (sequence_coups LIKE %s OR sequence_miroir LIKE %s)
+              AND (vainqueur = %s OR vainqueur IS NULL)
             ORDER BY LENGTH(sequence_coups) ASC, sequence_coups ASC
             """,
-            (winner_label, sequence + '%', sequence + '%')
+            (sequence + '%', sequence + '%', winner_label)
         )
 
-        for seq_coups, seq_miroir in cur.fetchall():
+        for seq_coups, seq_miroir, stored_winner in cur.fetchall():
+            resolved_winner = stored_winner or _infer_winner_label_from_sequence(seq_coups or "")
+            if resolved_winner != winner_label:
+                continue
+
             if seq_coups and seq_coups.startswith(sequence) and len(seq_coups) > len(sequence):
                 candidate_col = int(seq_coups[len(sequence)]) - 1
                 win_in = len(seq_coups) - len(sequence)
@@ -233,24 +264,25 @@ def _db_min_remaining_moves(sequence, winner_label):
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT sequence_coups, sequence_miroir
+            SELECT sequence_coups, sequence_miroir, vainqueur
             FROM parties
-            WHERE vainqueur = %s
-              AND (sequence_coups LIKE %s OR sequence_miroir LIKE %s)
+            WHERE (sequence_coups LIKE %s OR sequence_miroir LIKE %s)
+              AND (vainqueur = %s OR vainqueur IS NULL)
             ORDER BY LENGTH(sequence_coups) ASC, sequence_coups ASC
-            LIMIT 1
             """,
-            (winner_label, sequence + '%', sequence + '%')
+            (sequence + '%', sequence + '%', winner_label)
         )
-        row = cur.fetchone()
-        if not row:
-            return None
 
-        seq_coups, seq_miroir = row
-        if seq_coups and seq_coups.startswith(sequence):
-            return len(seq_coups) - len(sequence)
-        if seq_miroir and seq_miroir.startswith(sequence):
-            return len(seq_miroir) - len(sequence)
+        for seq_coups, seq_miroir, stored_winner in cur.fetchall():
+            resolved_winner = stored_winner or _infer_winner_label_from_sequence(seq_coups or "")
+            if resolved_winner != winner_label:
+                continue
+
+            if seq_coups and seq_coups.startswith(sequence):
+                return len(seq_coups) - len(sequence)
+            if seq_miroir and seq_miroir.startswith(sequence):
+                return len(seq_miroir) - len(sequence)
+
         return None
     finally:
         if cur:
