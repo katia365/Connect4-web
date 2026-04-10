@@ -530,6 +530,7 @@ let aiaiTimer=null, aiaiRunning=false;
 let aiMsgTimer=null;
 let dbGames=[], dbFiltered=[], dbSelected=null, dbCursor=0;
 let predictionReqId=0;
+const WS_MAX_RETRIES=2;
 
 // ════════════════════════════════════════════════════════════
 // NAVIGATION
@@ -579,13 +580,53 @@ function selectColor(c){
 // ════════════════════════════════════════════════════════════
 // WEBSOCKET
 // ════════════════════════════════════════════════════════════
+async function wakeServer(){
+  try{
+    const ctrl=new AbortController();
+    const t=setTimeout(()=>ctrl.abort(),5000);
+    await fetch('/api/parties', { method:'GET', signal:ctrl.signal });
+    clearTimeout(t);
+  }catch(e){
+    // On continue quand même: la connexion WS peut réussir au retry.
+  }
+}
+
 function openWS(msg){
   const proto=location.protocol==='https:'?'wss':'ws';
-  ws=new WebSocket(`${proto}://${location.host}/ws`);
-  ws.onopen=()=>ws.send(JSON.stringify(msg));
-  ws.onmessage=e=>handleMsg(JSON.parse(e.data));
-  ws.onerror=()=>toast('Erreur réseau');
-  ws.onclose=()=>{if(gameStatus==='playing'&&gameMode==='pvp')toast('Connexion perdue');};
+  let attempts=0;
+
+  const connect=()=>{
+    attempts++;
+    let opened=false;
+    ws=new WebSocket(`${proto}://${location.host}/ws`);
+
+    ws.onopen=()=>{
+      opened=true;
+      ws.send(JSON.stringify(msg));
+    };
+
+    ws.onmessage=e=>handleMsg(JSON.parse(e.data));
+
+    ws.onerror=()=>{
+      // Laisser onclose gérer les retries et le message final.
+    };
+
+    ws.onclose=()=>{
+      if(!opened && attempts<=WS_MAX_RETRIES){
+        setTimeout(connect, 600 * attempts);
+        return;
+      }
+
+      if(!opened){
+        toast('Erreur réseau');
+        return;
+      }
+
+      if(gameStatus==='playing'&&gameMode==='pvp') toast('Connexion perdue');
+    };
+  };
+
+  wakeServer().finally(connect);
 }
 
 // ════════════════════════════════════════════════════════════
