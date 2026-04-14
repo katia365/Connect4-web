@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import json, random, string, asyncio
@@ -426,7 +426,10 @@ async def root():
 
 
 @app.get("/api/parties")
-async def api_parties():
+async def api_parties(
+    limit: int = Query(default=1000, ge=1, le=5000),
+    offset: int = Query(default=0, ge=0),
+):
     conn = None
     cur = None
     try:
@@ -434,11 +437,13 @@ async def api_parties():
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT id, mode_jeu, dimensions, statut, vainqueur, source, sequence_coups, date_fin
+            SELECT id, mode_jeu, dimensions, statut, vainqueur, source, sequence_coups, sequence_miroir, date_fin
             FROM parties
             ORDER BY id DESC
-            LIMIT 1000
+            LIMIT %s OFFSET %s
             """
+            ,
+            (limit, offset)
         )
         rows = cur.fetchall()
 
@@ -453,7 +458,8 @@ async def api_parties():
                     "vainqueur": row[4],
                     "source": row[5],
                     "sequence_coups": row[6],
-                    "date_fin": row[7].isoformat() if row[7] else None,
+                    "sequence_miroir": row[7],
+                    "date_fin": row[8].isoformat() if row[8] else None,
                 }
             )
         return items
