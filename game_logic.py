@@ -28,6 +28,10 @@ def drop_piece(board, col, player):
     return None
 
 
+def _undo_piece(board, col, row):
+    board[row][col] = EMPTY
+
+
 def is_draw(board):
     return len(get_valid_cols(board)) == 0
 
@@ -519,34 +523,54 @@ def _terminal_value(board, ai_player, depth):
     return None
 
 
-def _minimax(board, depth, alpha, beta, maximizing, ai_player):
+def _board_key(board):
+    return tuple(tuple(row) for row in board)
+
+
+def _minimax(board, depth, alpha, beta, maximizing, ai_player, tt=None):
+    if tt is None:
+        tt = {}
+
+    key = (_board_key(board), depth, maximizing, ai_player)
+    if key in tt:
+        return tt[key]
+
     terminal = _terminal_value(board, ai_player, depth)
     if terminal is not None:
+        tt[key] = terminal
         return terminal
     if depth == 0:
-        return _score_position(board, ai_player)
+        score = _score_position(board, ai_player)
+        tt[key] = score
+        return score
 
     valid = _order_cols(get_valid_cols(board))
     if maximizing:
         value = -math.inf
         for col in valid:
-            tmp = _copy_board(board)
-            drop_piece(tmp, col, ai_player)
-            value = max(value, _minimax(tmp, depth - 1, alpha, beta, False, ai_player))
+            row = drop_piece(board, col, ai_player)
+            if row is None:
+                continue
+            value = max(value, _minimax(board, depth - 1, alpha, beta, False, ai_player, tt))
+            _undo_piece(board, col, row)
             alpha = max(alpha, value)
             if alpha >= beta:
                 break
+        tt[key] = value
         return value
 
     opp = RED if ai_player == YELLOW else YELLOW
     value = math.inf
     for col in valid:
-        tmp = _copy_board(board)
-        drop_piece(tmp, col, opp)
-        value = min(value, _minimax(tmp, depth - 1, alpha, beta, True, ai_player))
+        row = drop_piece(board, col, opp)
+        if row is None:
+            continue
+        value = min(value, _minimax(board, depth, alpha, beta, True, ai_player, tt))
+        _undo_piece(board, col, row)
         beta = min(beta, value)
         if alpha >= beta:
             break
+    tt[key] = value
     return value
 
 
@@ -557,14 +581,23 @@ def ai_hard(board, ai_player, depth=4):
 
     depth = max(1, min(int(depth), 8))
     ordered = _order_cols(valid)
+    tt = {}
 
     best_col = ordered[0]
     best_val = -math.inf
 
     for col in ordered:
-        tmp = _copy_board(board)
-        drop_piece(tmp, col, ai_player)
-        val = _minimax(tmp, depth - 1, -math.inf, math.inf, False, ai_player)
+        row = drop_piece(board, col, ai_player)
+        if row is None:
+            continue
+
+        if check_winner(board, ai_player):
+            _undo_piece(board, col, row)
+            return col
+
+        val = _minimax(board, depth - 1, -math.inf, math.inf, False, ai_player, tt)
+        _undo_piece(board, col, row)
+
         if val > best_val:
             best_val = val
             best_col = col
