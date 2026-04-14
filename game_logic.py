@@ -260,6 +260,121 @@ def _db_candidates_for_next_move(sequence, winner_label):
     return out
 
 
+def _db_next_move_stats(sequence, winner_label):
+    conn = None
+    cur = None
+    stats = {}
+
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT sequence_coups, sequence_miroir, vainqueur
+            FROM parties
+            WHERE (sequence_coups LIKE %s OR sequence_miroir LIKE %s)
+            """,
+            (sequence + '%', sequence + '%'),
+        )
+
+        for seq_coups, seq_miroir, stored_winner in cur.fetchall():
+            next_col = None
+            remaining = None
+
+            if seq_coups and seq_coups.startswith(sequence) and len(seq_coups) > len(sequence):
+                ch = seq_coups[len(sequence)]
+                if ch.isdigit() and 1 <= int(ch) <= COLS:
+                    next_col = int(ch) - 1
+                    remaining = len(seq_coups) - len(sequence)
+            elif seq_miroir and seq_miroir.startswith(sequence) and len(seq_miroir) > len(sequence):
+                ch = seq_miroir[len(sequence)]
+                if ch.isdigit() and 1 <= int(ch) <= COLS:
+                    next_col = _mirror_col(int(ch) - 1)
+                    remaining = len(seq_miroir) - len(sequence)
+
+            if next_col is None or remaining is None:
+                continue
+
+            winner = stored_winner or _infer_winner_label_from_sequence(seq_coups or "")
+            item = stats.setdefault(
+                next_col,
+                {
+                    "samples": 0,
+                    "wins": 0,
+                    "win_in_sum": 0,
+                    "min_win_in": None,
+                },
+            )
+            item["samples"] += 1
+
+            if winner == winner_label:
+                item["wins"] += 1
+                item["win_in_sum"] += remaining
+                if item["min_win_in"] is None or remaining < item["min_win_in"]:
+                    item["min_win_in"] = remaining
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+    return stats
+
+
+def _pick_move_from_db_stats(stats, search_cols):
+    center = (COLS - 1) / 2
+    min_samples = 10
+    best_col = None
+    best_meta = None
+    best_metric = None
+    fallback_col = None
+    fallback_meta = None
+    fallback_metric = None
+
+    for col in search_cols:
+        meta = stats.get(col)
+        if not meta or meta["samples"] <= 0:
+            continue
+
+        samples = meta["samples"]
+        wins = meta["wins"]
+        win_rate = wins / samples
+        avg_win_in = (meta["win_in_sum"] / wins) if wins > 0 else float("inf")
+        min_win_in = meta["min_win_in"] if meta["min_win_in"] is not None else float("inf")
+
+        metric = (
+            win_rate,
+            wins,
+            samples,
+            -avg_win_in,
+            -min_win_in,
+            -abs(col - center),
+        )
+
+        candidate_meta = {
+            "samples": samples,
+            "wins": wins,
+            "win_rate": win_rate,
+            "avg_win_in": avg_win_in,
+            "min_win_in": meta["min_win_in"],
+        }
+
+        if samples >= min_samples and (best_metric is None or metric > best_metric):
+            best_metric = metric
+            best_col = col
+            best_meta = candidate_meta
+        elif fallback_metric is None or metric > fallback_metric:
+            fallback_metric = metric
+            fallback_col = col
+            fallback_meta = candidate_meta
+
+    if best_col is None:
+        best_col = fallback_col
+        best_meta = fallback_meta
+
+    return best_col, best_meta
+
+
 def _db_min_remaining_moves(sequence, winner_label):
     conn = None
     cur = None
@@ -322,33 +437,45 @@ def bdd_hint_with_messages(board, player, sequence=""):
         }
 
     search_cols = _safe_columns(board, player)
-    candidates = _db_candidates_for_next_move(sequence, _winner_label(player))
+    winner_label = _winner_label(player)
 
-    best_col = None
-    best_win_in = float('inf')
-    best_source = None
-    seen = set()
+    stats = _db_next_move_stats(sequence, winner_label)
+    best_col, best_meta = _pick_move_from_db_stats(stats, search_cols)
+    best_source = "db_stats" if best_col is not None else None
 
-    for candidate_col, win_in, source in candidates:
-        if candidate_col not in search_cols:
-            continue
-        if candidate_col in seen:
-            continue
-        seen.add(candidate_col)
+    if best_col is None:
+        candidates = _db_candidates_for_next_move(sequence, winner_label)
+        best_win_in = float('inf')
+        seen = set()
 
-        if win_in < best_win_in:
-            best_win_in = win_in
-            best_col = candidate_col
-            best_source = source
-        elif win_in == best_win_in and best_col is not None:
-            center = (COLS - 1) / 2
-            if abs(candidate_col - center) < abs(best_col - center):
+        for candidate_col, win_in, source in candidates:
+            if candidate_col not in search_cols:
+                continue
+            if candidate_col in seen:
+                continue
+            seen.add(candidate_col)
+
+            if win_in < best_win_in:
+                best_win_in = win_in
                 best_col = candidate_col
                 best_source = source
+            elif win_in == best_win_in and best_col is not None:
+                center = (COLS - 1) / 2
+                if abs(candidate_col - center) < abs(best_col - center):
+                    best_col = candidate_col
+                    best_source = source
 
     if best_col is not None:
+        if best_meta is not None:
+            messages.append(
+                f"Analyse BDD: coup le plus fiable = colonne {best_col + 1} "
+                f"({best_meta['wins']}/{best_meta['samples']} victoires, {round(best_meta['win_rate'] * 100)}%)"
+            )
+            estimated_in = best_meta["min_win_in"] if best_meta["min_win_in"] is not None else "?"
+        else:
+            estimated_in = "?"
         messages.append(
-            f"Conseil BDD: jouer colonne {best_col + 1} (victoire estimée en {best_win_in} coup(s))"
+            f"Conseil BDD: jouer colonne {best_col + 1} (victoire estimée en {estimated_in} coup(s))"
         )
         return {
             "col": best_col,
@@ -405,17 +532,32 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
     search_cols = _safe_columns(board, ai_player)
     safe_valid = search_cols[:]
 
-    # 3) Chercher dans la BDD le coup qui mène à une victoire
-    #    le plus tôt possible parmi les parties connues
+    # 3) Chercher dans la BDD le coup le plus fiable pour ce préfixe.
     winner_label = _winner_label(ai_player)
 
     best_col = None
-    best_win_in = float('inf')
-    best_source = None
+    best_meta = None
+    try:
+        stats = _db_next_move_stats(sequence, winner_label)
+        best_col, best_meta = _pick_move_from_db_stats(stats, search_cols)
+    except Exception as e:
+        print(f"Erreur BDD stats dans ai_medium_with_seq: {e}")
 
+    if best_col is not None and best_meta is not None and best_meta["wins"] > 0:
+        _ai_medium_log(
+            f"source=db_stats player={ai_player} seq='{sequence}' col={best_col + 1} "
+            f"win_rate={round(best_meta['win_rate'] * 100)}% wins={best_meta['wins']}/{best_meta['samples']} "
+            f"searched={len(search_cols)} safe={len(safe_valid)}"
+        )
+        return best_col
+
+    # 3b) Compat fallback: conserver l'ancien comportement si on n'a pas
+    # assez de signal statistique gagnant.
     try:
         candidates = _db_candidates_for_next_move(sequence, winner_label)
         seen_candidates = set()
+        best_win_in = float('inf')
+        best_source = None
         for candidate_col, win_in, source in candidates:
             if candidate_col not in search_cols:
                 continue
@@ -433,15 +575,15 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
                 if abs(candidate_col - center) < abs(best_col - center):
                     best_col = candidate_col
                     best_source = source
-    except Exception as e:
-        print(f"Erreur BDD dans ai_medium_with_seq: {e}")
 
-    if best_col is not None:
-        _ai_medium_log(
-            f"source={best_source or 'db'} player={ai_player} seq='{sequence}' col={best_col + 1} win_in={best_win_in} "
-            f"searched={len(search_cols)} safe={len(safe_valid)}"
-        )
-        return best_col
+        if best_col is not None:
+            _ai_medium_log(
+                f"source={best_source or 'db'} player={ai_player} seq='{sequence}' col={best_col + 1} win_in={best_win_in} "
+                f"searched={len(search_cols)} safe={len(safe_valid)}"
+            )
+            return best_col
+    except Exception as e:
+        print(f"Erreur BDD fallback dans ai_medium_with_seq: {e}")
 
     # 4) Fallback : colonnes centrales
     preferred = _order_cols(search_cols)
