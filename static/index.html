@@ -241,9 +241,17 @@ header{display:flex;align-items:center;justify-content:space-between;
 /* DB VIEWER */
 #db-page{padding:16px;gap:0;justify-content:flex-start;align-items:stretch;flex-direction:row;}
 .db-sidebar{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;padding-right:12px;border-right:1px solid var(--border);}
+.db-sidebar{min-height:0;max-height:calc(100vh - 88px);}
 .db-search{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.82rem;width:100%;outline:none;}
 .db-search::placeholder{color:var(--muted)}.db-search:focus{border-color:var(--accent)}
-.db-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
+.db-search-row{display:flex;gap:6px;align-items:center;}
+.db-search-mode{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.78rem;outline:none;min-width:110px;}
+.db-search-mode:focus{border-color:var(--accent)}
+.db-list{flex:1;min-height:0;overflow-y:scroll;display:flex;flex-direction:column;gap:4px;scrollbar-gutter:stable;}
+.db-list::-webkit-scrollbar{width:10px}
+.db-list::-webkit-scrollbar-track{background:transparent}
+.db-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:999px;border:2px solid transparent;background-clip:padding-box}
+.db-list::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.26);border:2px solid transparent;background-clip:padding-box}
 .db-item{padding:10px 12px;background:var(--s1);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .18s;font-size:.78rem;line-height:1.5;}
 .db-item:hover,.db-item.active{border-color:var(--accent);background:var(--accent-dim)}
 .db-item-id{font-family:'Bebas Neue';font-size:.9rem;color:var(--accent);margin-right:6px}
@@ -460,7 +468,13 @@ header{display:flex;align-items:center;justify-content:space-between;
 <!-- DB VIEWER PAGE -->
 <div class="page" id="db-page">
   <div class="db-sidebar">
-    <input class="db-search" id="db-search" placeholder="🔍 Rechercher..." oninput="dbFilter()">
+    <div class="db-search-row">
+      <input class="db-search" id="db-search" placeholder="🔍 Rechercher..." oninput="dbFilter()">
+      <select class="db-search-mode" id="db-search-mode" onchange="dbFilter()">
+        <option value="id">ID</option>
+        <option value="sequence" selected>Séquence</option>
+      </select>
+    </div>
     <div class="db-count" id="db-count">Chargement...</div>
     <div class="db-list" id="db-list"></div>
   </div>
@@ -1371,11 +1385,17 @@ function renderDBList(){
 }
 function dbFilter(){
   const q=document.getElementById('db-search').value.toLowerCase();
+  const mode=document.getElementById('db-search-mode').value;
   dbFiltered=dbGames.filter(g=>{
     const ml={0:'ia/ia',1:'humain/ia',2:'humain/humain'}[g.mode_jeu]||'';
-    return !q||String(g.id).includes(q)||(g.vainqueur||'').toLowerCase().includes(q)||
-      (g.statut||'').toLowerCase().includes(q)||(g.source||'').toLowerCase().includes(q)||
-      ml.includes(q)||(g.sequence_coups||'').includes(q);
+    if(!q) return true;
+    if(mode==='id'){
+      return String(g.id).includes(q);
+    }
+
+    const seq=(g.sequence_coups||'').toLowerCase();
+    const mir=(g.sequence_miroir||'').toLowerCase();
+    return seq.startsWith(q)||mir.startsWith(q);
   });
   renderDBList();
 }
