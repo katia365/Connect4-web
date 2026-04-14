@@ -24,14 +24,6 @@ def get_db_connection():
             return psycopg2.connect(database_url)
         return psycopg2.connect(database_url, sslmode=os.getenv("DB_SSLMODE", "require"))
 
-    return psycopg2.connect(
-        dbname=os.getenv("DB_NAME", "postgres"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD", "12082004"),
-        host=os.getenv("DB_HOST", "localhost"),
-        port=os.getenv("DB_PORT", "5432"),
-    )
-
 
 def mirror_sequence(sequence, cols=9):
     return "".join(str(cols + 1 - int(c)) for c in sequence)
