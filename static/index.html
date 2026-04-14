@@ -1361,9 +1361,26 @@ function openDBViewer(){showPage('db-page');loadDBGames();}
 async function loadDBGames(){
   document.getElementById('db-count').textContent='Chargement...';
   try{
-    const r=await fetch('/api/parties');
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    dbGames=await r.json(); dbFiltered=[...dbGames]; renderDBList();
+    const pageSize=2000;
+    let offset=0;
+    const all=[];
+
+    while(true){
+      const r=await fetch(`/api/parties?limit=${pageSize}&offset=${offset}`);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const batch=await r.json();
+      if(!Array.isArray(batch)) throw new Error('Réponse API invalide');
+
+      all.push(...batch);
+      document.getElementById('db-count').textContent=`Chargement... ${all.length} partie(s)`;
+
+      if(batch.length<pageSize) break;
+      offset+=pageSize;
+    }
+
+    dbGames=all;
+    dbFiltered=[...dbGames];
+    renderDBList();
   }catch(e){document.getElementById('db-count').textContent='Erreur : '+e.message;}
 }
 function renderDBList(){
