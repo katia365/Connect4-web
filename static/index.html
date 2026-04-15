@@ -973,15 +973,18 @@ async function runAIAILoop(){
     const seq=getCurrentSequence();
     let col=null;
     if(aiLevel==='hard'){
-      const res=await getMinimaxScoresFast(liveBoard,liveCurrent,minimaxDepth);
-      col=res&&res.best_col!==undefined&&res.best_col!==null?Number(res.best_col):null;
+      col=await getHardBestColFast(liveBoard,liveCurrent,minimaxDepth);
     } else {
       col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,seq);
     }
     const valid=getValidColsFlat(liveBoard);
     if(!valid.length) break;
-    if(aiLevel==='hard' && (col===null || col===-1 || !valid.includes(col))) break;
-    applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
+    if(aiLevel==='hard'){
+      if(col===null || col===-1 || !valid.includes(col)) break;
+      applyLocalMove(col);
+    } else {
+      applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
+    }
     if(!reviewMode){reviewCursor=liveHistory.length;renderBoard();updateTurnPill();updateNavUI();}
     if(gameStatus==='finished') break;
   }
@@ -993,16 +996,19 @@ async function doLocalAIMove(){
   const seq=getCurrentSequence();
   let col=null;
   if(aiLevel==='hard'){
-    const res=await getMinimaxScoresFast(liveBoard,liveCurrent,minimaxDepth);
-    col=res&&res.best_col!==undefined&&res.best_col!==null?Number(res.best_col):null;
+    col=await getHardBestColFast(liveBoard,liveCurrent,minimaxDepth);
   } else {
     col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,seq);
   }
   if(gameStatus!=='playing'||gameMode!=='ai') return;
   const valid=getValidColsFlat(liveBoard);
   if(!valid.length) return;
-  if(aiLevel==='hard' && (col===null || col===-1 || !valid.includes(col))) return;
-  applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
+  if(aiLevel==='hard'){
+    if(col===null || col===-1 || !valid.includes(col)) return;
+    applyLocalMove(col);
+  } else {
+    applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
+  }
   reviewCursor=liveHistory.length;
   renderBoard(); updateTurnPill(); updateNavUI();
   if(gameStatus==='playing'&&gameMode==='ai'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
@@ -1298,6 +1304,13 @@ async function getMinimaxScoresFast(board,player,depth){
       hws.onerror=()=>{clearTimeout(t);resolve(null);};
     });
   }catch(e){return null;}
+}
+
+async function getHardBestColFast(board,player,depth){
+  const res=await getMinimaxScoresFast(board,player,depth);
+  if(!res||res.best_col===undefined||res.best_col===null) return null;
+  const col=Number(res.best_col);
+  return Number.isInteger(col)?col:null;
 }
 function showHintOnBoard(col){
   clearHint(); hintCol=col;
