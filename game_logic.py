@@ -3,8 +3,11 @@ import os
 from functools import lru_cache
 
 import psycopg2
-from game_model import Connect4Model, PLAYER_RED, PLAYER_YELLOW, EMPTY as MODEL_EMPTY
 from minimax import best_move
+
+MODEL_EMPTY = " "
+MODEL_RED = "Rouge"
+MODEL_YELLOW = "Jaune"
 
 ROWS = 9
 COLS = 9
@@ -596,17 +599,93 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
 
 def _to_model_token(cell_value):
     if cell_value == RED:
-        return PLAYER_RED
+        return MODEL_RED
     if cell_value == YELLOW:
-        return PLAYER_YELLOW
+        return MODEL_YELLOW
     return MODEL_EMPTY
 
 
+class _ResultState:
+    def __init__(self):
+        self.winner = None
+        self.draw = False
+        self.finished = False
+
+
+class _MiniModelAdapter:
+    def __init__(self, grid, current_player):
+        self.grid = [row[:] for row in grid]
+        self.rows = len(self.grid)
+        self.cols = len(self.grid[0]) if self.rows else 0
+        self.current_player = current_player
+        self.result = _ResultState()
+        self.recompute_result()
+
+    def valid_cols(self):
+        return [c for c in range(self.cols) if self.grid[0][c] == MODEL_EMPTY]
+
+    def play(self, col):
+        for r in range(self.rows - 1, -1, -1):
+            if self.grid[r][col] == MODEL_EMPTY:
+                self.grid[r][col] = self.current_player
+                row = r
+                self.recompute_result()
+                self.current_player = MODEL_RED if self.current_player == MODEL_YELLOW else MODEL_YELLOW
+                return row
+        return None
+
+    def undo(self, col, row):
+        self.grid[row][col] = MODEL_EMPTY
+        self.current_player = MODEL_RED if self.current_player == MODEL_YELLOW else MODEL_YELLOW
+        self.recompute_result()
+
+    def copy(self):
+        model = _MiniModelAdapter(self.grid, self.current_player)
+        model.result.winner = self.result.winner
+        model.result.draw = self.result.draw
+        model.result.finished = self.result.finished
+        return model
+
+    def recompute_result(self):
+        self.result.winner = None
+        self.result.draw = True
+        self.result.finished = False
+
+        for r in range(self.rows):
+            for c in range(self.cols):
+                token = self.grid[r][c]
+                if token == MODEL_EMPTY:
+                    self.result.draw = False
+                    continue
+                if self._check_victory(r, c):
+                    self.result.winner = token
+                    self.result.finished = True
+                    return
+
+        if self.result.draw:
+            self.result.finished = True
+
+    def _check_victory(self, row, col):
+        token = self.grid[row][col]
+        directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
+        for dr, dc in directions:
+            count = 1
+            for sign in (1, -1):
+                r = row + dr * sign
+                c = col + dc * sign
+                while 0 <= r < self.rows and 0 <= c < self.cols and self.grid[r][c] == token:
+                    count += 1
+                    r += dr * sign
+                    c += dc * sign
+            if count >= 4:
+                return True
+        return False
+
+
 def _best_move_from_minimax(board, ai_player, depth):
-    model = Connect4Model(rows=ROWS, cols=COLS, starting=PLAYER_RED if ai_player == RED else PLAYER_YELLOW)
-    model.grid = [[_to_model_token(cell) for cell in row] for row in board]
-    model.current_player = PLAYER_RED if ai_player == RED else PLAYER_YELLOW
-    model.recompute_result()
+    model_player = MODEL_RED if ai_player == RED else MODEL_YELLOW
+    model_grid = [[_to_model_token(cell) for cell in row] for row in board]
+    model = _MiniModelAdapter(model_grid, model_player)
 
     col, _ = best_move(model, max(1, int(depth)), model.current_player)
     return col
