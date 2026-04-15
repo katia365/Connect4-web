@@ -7,7 +7,7 @@ from datetime import datetime
 import psycopg2
 from game_logic import (
     create_board, drop_piece, check_winner, is_draw,
-    get_valid_cols, ai_easy, ai_medium_with_seq, ai_hard, bdd_hint_with_messages,
+    get_valid_cols, ai_easy, ai_medium_with_seq, ai_hard, ai_hard_scores, bdd_hint_with_messages,
     RED, YELLOW, EMPTY, ROWS, COLS
 )
 
@@ -257,6 +257,44 @@ async def handle_bdd_hint(websocket: WebSocket, init: dict):
         )
     )
 
+
+async def handle_minimax_scores(websocket: WebSocket, init: dict):
+    flat = init.get("board", [])
+    player_val = init.get("player", RED)
+    depth = int(init.get("minimax_depth", 4))
+
+    if not isinstance(flat, list) or len(flat) != ROWS * COLS:
+        await websocket.send_text(json.dumps({"type": "ai_minimax_scores", "scores": {}, "best_col": None}))
+        return
+
+    board = []
+    for r in range(ROWS):
+        board.append(flat[r * COLS:(r + 1) * COLS])
+
+    try:
+        scores = ai_hard_scores(board, player_val, depth=depth)
+    except Exception as e:
+        print(f"Minimax score error: {e}")
+        await websocket.send_text(json.dumps({"type": "ai_minimax_scores", "scores": {}, "best_col": None}))
+        return
+
+    best_col = None
+    best_score = None
+    if scores:
+        best_col = max(scores, key=lambda c: scores[c])
+        best_score = scores[best_col]
+
+    await websocket.send_text(
+        json.dumps(
+            {
+                "type": "ai_minimax_scores",
+                "scores": scores,
+                "best_col": best_col,
+                "best_score": best_score,
+            }
+        )
+    )
+
 @app.websocket("/ws")
 async def ws_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -272,6 +310,10 @@ async def ws_endpoint(websocket: WebSocket):
 
         if action == "ai_bdd_hint":
             await handle_bdd_hint(websocket, init)
+            return
+
+        if action == "ai_minimax_scores":
+            await handle_minimax_scores(websocket, init)
             return
 
         if action == "ai":
