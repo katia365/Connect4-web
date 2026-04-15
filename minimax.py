@@ -9,7 +9,7 @@ except ModuleNotFoundError:
     EMPTY = " "
 
 # Longueur de séquence gagnante sur un plateau 9x9
-WIN_LEN = 5
+WIN_LEN = 4
 
 
 def _ordered_valid_cols(model):
