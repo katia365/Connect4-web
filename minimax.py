@@ -1,5 +1,4 @@
 import math
-import random
 
 try:
     from game_model import PLAYER_RED, PLAYER_YELLOW, EMPTY
@@ -28,8 +27,8 @@ def _ordered_valid_cols(model):
     cols = model.valid_cols()
     center = model.cols // 2
 
-    # priorité centre + léger random pour casser les égalités
-    return sorted(cols, key=lambda c: (abs(c - center), random.random()))
+    # Ordre déterministe: priorité centre, puis colonne.
+    return sorted(cols, key=lambda c: (abs(c - center), c))
 
 
 # =========================
@@ -228,6 +227,20 @@ def analyze_moves(model, depth, ai):
     work_model = model.copy()
     scores = {}
     tt = {}
+
+    # Même logique prioritaire que best_move pour éviter les écarts UI/coup joué.
+    win = immediate_win(work_model, ai)
+    if win is not None:
+        for col in work_model.valid_cols():
+            scores[col] = 1_000_000 if col == win else -1_000_000
+        return scores
+
+    opp = opponent(ai)
+    block = immediate_win(work_model, opp)
+    if block is not None:
+        for col in work_model.valid_cols():
+            scores[col] = 900_000 if col == block else -900_000
+        return scores
 
     for col in _ordered_valid_cols(work_model):
         row = work_model.play(col)
