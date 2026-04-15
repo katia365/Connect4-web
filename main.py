@@ -8,7 +8,7 @@ import psycopg2
 from game_logic import (
     create_board, drop_piece, check_winner, is_draw,
     get_valid_cols, ai_easy, ai_medium_with_seq, ai_hard, ai_hard_scores, bdd_hint_with_messages,
-    RED, YELLOW, EMPTY, ROWS, COLS
+    RED, YELLOW, ROWS, COLS
 )
 
 app = FastAPI()
@@ -285,11 +285,6 @@ async def handle_minimax_scores(websocket: WebSocket, init: dict):
     if best_col is None and scores:
         best_col = max(scores, key=lambda c: scores[c])
         best_score = scores[best_col]
-    elif best_col is not None and scores:
-        top_score = max(scores.values())
-        if scores.get(best_col, top_score) <= top_score:
-            scores[best_col] = top_score + 1
-            best_score = scores[best_col]
 
     await websocket.send_text(
         json.dumps(
