@@ -318,12 +318,19 @@ header{display:flex;align-items:center;justify-content:space-between;
       <div class="hcard-icon">✏️</div><div class="hcard-label">Dessiner une situation</div>
       <div class="hcard-desc">Pose les pions puis lance</div>
     </div>
+    <div class="hcard c-accent" onclick="triggerImportFile()">
+      <div class="hcard-icon">📂</div><div class="hcard-label">Importer une séquence</div>
+      <div class="hcard-desc">Charge une partie depuis un fichier .txt</div>
+    </div>
     <div class="hcard c-accent" onclick="openDBViewer()" style="grid-column:1/-1">
       <div class="hcard-icon">🗄️</div><div class="hcard-label">Visualiser la base de données</div>
       <div class="hcard-desc">Parcourir et rejouer toutes les parties enregistrées</div>
     </div>
   </div>
 </div>
+
+<!-- Hidden file input for importing sequences -->
+<input type="file" id="sequence-file-input" accept=".txt" style="display:none" onchange="handleImportFile(event)">
 
 <!-- AI MODAL -->
 <div class="overlay" id="ai-modal">
@@ -662,6 +669,68 @@ function startAIvsAI(){
   stopAIAI(); if(ws){ws.close();ws=null;}
   myColor=RED;
   initLocalGame('aiai','hard');
+}
+
+function triggerImportFile(){
+  document.getElementById('sequence-file-input').click();
+}
+
+function handleImportFile(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    const content=e.target.result.trim();
+    // Extraire la séquence: essayer d'abord le nom du fichier, sinon le contenu
+    let sequence=file.name.replace(/\.[^/.]+$/,"").trim();
+    if(!sequence.match(/^\d+$/)) sequence=content.match(/\d+/)?.[0]||"";
+    
+    if(!sequence.match(/^\d+$/)){
+      toast("❌ Fichier invalide. Format attendu: '5567.txt OU fichier contenant une séquence");
+      return;
+    }
+    
+    // Vérifier que la séquence est valide (colonnes entre 1 et 9)
+    if(![...sequence].every(c=>parseInt(c)>=1&&parseInt(c)<=COLS)){
+      toast("❌ Séquence invalide (colonnes doivent être entre 1 et "+COLS+")");
+      return;
+    }
+    
+    // Reconstituire le plateau à partir de la séquence
+    const board=reconstructBoardFromSequence(sequence);
+    
+    // Déterminer qui doit jouer (évaluer les reds/yellows)
+    const reds=board.filter(v=>v===RED).length;
+    const yellows=board.filter(v=>v===YELLOW).length;
+    myColor=reds<=yellows?RED:YELLOW;
+    
+    // Fermer les modales et lancer le jeu
+    showPage('game-page');
+    if(ws){ws.close();ws=null;}
+    initLocalGame('local','hard',board);
+    toast(`✅ Partie chargée: ${sequence.length} coups`);
+  };
+  
+  reader.readAsText(file);
+  event.target.value=""; // Reset l'input
+}
+
+function reconstructBoardFromSequence(sequence){
+  const board=new Array(ROWS*COLS).fill(0);
+  let cur=RED;
+  for(const ch of sequence){
+    const col=parseInt(ch)-1;
+    if(col<0||col>=COLS) continue;
+    for(let r=ROWS-1;r>=0;r--){
+      if(board[r*COLS+col]===0){
+        board[r*COLS+col]=cur;
+        break;
+      }
+    }
+    cur=cur===RED?YELLOW:RED;
+  }
+  return board;
 }
 
 // ════════════════════════════════════════════════════════════
