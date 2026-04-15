@@ -548,6 +548,8 @@ let aiaiTimer=null, aiaiRunning=false;
 let aiMsgTimer=null;
 let dbGames=[], dbFiltered=[], dbSelected=null, dbCursor=0;
 let predictionReqId=0;
+let minimaxScoreReqId=0;
+let drawImportedSequence='';
 const WS_MAX_RETRIES=2;
 
 // ════════════════════════════════════════════════════════════
@@ -668,6 +670,58 @@ function startAIvsAI(){
   initLocalGame('aiai','hard');
 }
 
+function parseImportedSequence(fileName, content){
+  const fromName=fileName.replace(/\.[^/.]+$/,'').trim();
+  const fromContent=(content.match(/[1-9]+/)||[''])[0].trim();
+  const candidates=[fromName, fromContent].filter(Boolean);
+  return candidates.find(seq=>/^[1-9]+$/.test(seq))||'';
+}
+
+function replaySequence(sequence){
+  const board=new Array(ROWS*COLS).fill(0);
+  let current=RED;
+
+  for(const ch of sequence){
+    const col=parseInt(ch,10)-1;
+    if(!Number.isInteger(col)||col<0||col>=COLS) return null;
+
+    let placed=false;
+    for(let r=ROWS-1;r>=0;r--){
+      if(board[r*COLS+col]===0){
+        board[r*COLS+col]=current;
+        placed=true;
+        break;
+      }
+    }
+
+    if(!placed) return null;
+    current=current===RED?YELLOW:RED;
+  }
+
+  return {board, nextPlayer: current};
+}
+
+function validateBoardGravity(board){
+  let reds=0, yellows=0;
+  for(let c=0;c<COLS;c++){
+    let seenEmpty=false;
+    for(let r=ROWS-1;r>=0;r--){
+      const value=board[r*COLS+c];
+      if(value===0){
+        seenEmpty=true;
+      } else {
+        if(seenEmpty) return null;
+        if(value===RED) reds++;
+        else if(value===YELLOW) yellows++;
+        else return null;
+      }
+    }
+  }
+
+  if(!(reds===yellows || reds===yellows+1)) return null;
+  return reds===yellows?RED:YELLOW;
+}
+
 function triggerImportFile(){
   document.getElementById('sequence-file-input').click();
 }
@@ -679,9 +733,7 @@ function handleImportFile(event){
   const reader=new FileReader();
   reader.onload=(e)=>{
     const content=e.target.result.trim();
-    // Extraire la séquence: essayer d'abord le nom du fichier, sinon le contenu
-    let sequence=file.name.replace(/\.[^/.]+$/,"").trim();
-    if(!sequence.match(/^\d+$/)) sequence=content.match(/\d+/)?.[0]||"";
+    const sequence=parseImportedSequence(file.name, content);
     
     if(!sequence.match(/^\d+$/)){
       toast("❌ Fichier invalide. Format attendu: '5567.txt' OU fichier contenant une séquence");
@@ -694,9 +746,15 @@ function handleImportFile(event){
       return;
     }
     
-    // Reconstituire le plateau à partir de la séquence
-    drawBoardState=reconstructBoardFromSequence(sequence);
-    liveBoard=[...drawBoardState];
+    const replay=replaySequence(sequence);
+    if(!replay){
+      toast("❌ Séquence illégale: colonne pleine ou coup impossible");
+      return;
+    }
+
+    drawBoardState=[...replay.board];
+    liveBoard=[...replay.board];
+    drawImportedSequence=sequence;
     renderDrawBoard();
     toast(`✅ Séquence chargée: ${sequence.length} coups - Modifie ou lance la partie`);
   };
@@ -706,34 +764,23 @@ function handleImportFile(event){
 }
 
 function reconstructBoardFromSequence(sequence){
-  const board=new Array(ROWS*COLS).fill(0);
-  let cur=RED;
-  for(const ch of sequence){
-    const col=parseInt(ch)-1;
-    if(col<0||col>=COLS) continue;
-    for(let r=ROWS-1;r>=0;r--){
-      if(board[r*COLS+col]===0){
-        board[r*COLS+col]=cur;
-        break;
-      }
-    }
-    cur=cur===RED?YELLOW:RED;
-  }
-  return board;
+  const replay=replaySequence(sequence);
+  return replay?replay.board:new Array(ROWS*COLS).fill(0);
 }
 
 // ════════════════════════════════════════════════════════════
 // INIT LOCAL GAME
 // myColor doit être défini AVANT d'appeler cette fonction
 // ════════════════════════════════════════════════════════════
-function initLocalGame(mode, level, board){
+function initLocalGame(mode, level, board, history=[]){
   gameMode=mode; aiLevel=level;
   liveBoard=board?[...board]:new Array(ROWS*COLS).fill(0);
+  liveHistory=Array.isArray(history)?[...history]:[];
   const reds=liveBoard.filter(v=>v===RED).length;
   const yellows=liveBoard.filter(v=>v===YELLOW).length;
   liveCurrent=reds<=yellows?RED:YELLOW;
-  liveHistory=[]; gameStatus='playing';
-  reviewMode=false; reviewCursor=0;
+  gameStatus='playing';
+  reviewMode=false; reviewCursor=liveHistory.length;
   showPage('game-page');
   resetAdvicePanel();
   setAdviceVisibility(true);
@@ -1218,6 +1265,24 @@ async function getAIHintFast(board,player,level,seq){
     });
   }catch(e){return null;}
 }
+
+async function getMinimaxScoresFast(board,player,depth){
+  try{
+    const proto=location.protocol==='https:'?'wss':'ws';
+    return await new Promise(resolve=>{
+      const hws=new WebSocket(`${proto}://${location.host}/ws`);
+      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve(null);},3500);
+      hws.onopen=()=>hws.send(JSON.stringify({action:'ai_minimax_scores',board:[...board],player,minimax_depth:depth}));
+      hws.onmessage=e=>{
+        clearTimeout(t);
+        const m=JSON.parse(e.data);
+        try{hws.close();}catch(e){}
+        resolve(m.type==='ai_minimax_scores'?m:null);
+      };
+      hws.onerror=()=>{clearTimeout(t);resolve(null);};
+    });
+  }catch(e){return null;}
+}
 function showHintOnBoard(col){
   clearHint(); hintCol=col;
   let targetRow=-1;
@@ -1259,25 +1324,33 @@ function updateMinimaxScores(){
   const el=document.getElementById('col-scores');
   if(!show){el.classList.remove('show');return;}
   el.classList.add('show');
-  const player=liveCurrent;
-  const valid=getValidColsFlat(liveBoard);
-  const smap={};
-  for(let c=0;c<COLS;c++){
-    smap[c]=valid.includes(c)?quickEval(liveBoard,c,player):null;
-  }
-  const vals=Object.values(smap).filter(v=>v!==null);
-  const minV=Math.min(...vals),maxV=Math.max(...vals),range=maxV-minV||1;
-  const bestCol=valid.reduce((b,c)=>smap[c]>smap[b]?c:b,valid[0]);
-  for(let c=0;c<COLS;c++){
-    const bar=document.getElementById('csb-'+c),val=document.getElementById('csv-'+c),v=smap[c];
-    if(v===null){bar.style.height='0%';bar.style.background='var(--border)';val.textContent='✕';val.style.color='var(--muted)';continue;}
-    const pct=Math.max(8,Math.round(((v-minV)/range)*100));
-    bar.style.height=pct+'%';
-    const best=c===bestCol;
-    bar.style.background=best?'var(--accent)':v>=0?'rgba(48,209,88,.5)':'rgba(255,45,85,.5)';
-    val.textContent=v>9999?'WIN':v<-9999?'LOSE':v;
-    val.style.color=best?'var(--accent)':v>=0?'var(--green)':'var(--red)';
-  }
+  const reqId=++minimaxScoreReqId;
+  getMinimaxScoresFast(liveBoard,liveCurrent,minimaxDepth).then(res=>{
+    if(reqId!==minimaxScoreReqId) return;
+    const scores=res&&res.scores?res.scores:{};
+    const bestCol=res&&res.best_col!==undefined&&res.best_col!==null?Number(res.best_col):null;
+    const vals=Object.values(scores).map(v=>Number(v)).filter(v=>Number.isFinite(v));
+    if(!vals.length){
+      for(let c=0;c<COLS;c++){
+        const bar=document.getElementById('csb-'+c),val=document.getElementById('csv-'+c);
+        bar.style.height='0%';bar.style.background='var(--border)';val.textContent='✕';val.style.color='var(--muted)';
+      }
+      return;
+    }
+    const minV=Math.min(...vals),maxV=Math.max(...vals),range=maxV-minV||1;
+    for(let c=0;c<COLS;c++){
+      const bar=document.getElementById('csb-'+c),val=document.getElementById('csv-'+c);
+      const raw=scores[c];
+      const v=raw===undefined||raw===null?null:Number(raw);
+      if(v===null||!Number.isFinite(v)){bar.style.height='0%';bar.style.background='var(--border)';val.textContent='✕';val.style.color='var(--muted)';continue;}
+      const pct=Math.max(8,Math.round(((v-minV)/range)*100));
+      bar.style.height=pct+'%';
+      const best=c===bestCol;
+      bar.style.background=best?'var(--accent)':v>=0?'rgba(48,209,88,.5)':'rgba(255,45,85,.5)';
+      val.textContent=Math.abs(v)>=1000000?(v>0?'WIN':'LOSE'):Math.round(v);
+      val.style.color=best?'var(--accent)':v>=0?'var(--green)':'var(--red)';
+    }
+  });
 }
 function quickEval(flat,col,player){
   const nb=[...flat];
@@ -1345,6 +1418,7 @@ function clearHover(){
 function openDrawMode(){
   drawBoardState=new Array(ROWS*COLS).fill(0); drawMode=true; drawColor='red';
   liveBoard=[...drawBoardState]; liveHistory=[]; liveCurrent=RED;
+  drawImportedSequence='';
   gameStatus='drawing'; myColor=RED; gameMode='draw';
   showPage('game-page'); buildBoard();
   document.getElementById('main-toolbar').style.display='none';
@@ -1368,6 +1442,7 @@ function selectDrawColor(c){
 }
 function handleDrawClick(col,row){
   if(!drawMode) return;
+  drawImportedSequence='';
   const idx=row*COLS+col, cv=drawColor==='red'?RED:YELLOW;
   drawBoardState[idx]=(drawBoardState[idx]===cv)?0:cv;
   liveBoard=[...drawBoardState]; renderDrawBoard();
@@ -1381,6 +1456,7 @@ function renderDrawBoard(){
   });
 }
 function clearDrawBoard(){
+  drawImportedSequence='';
   drawBoardState=new Array(ROWS*COLS).fill(0); liveBoard=[...drawBoardState]; renderDrawBoard();
 }
 function openDrawModeChooser(){document.getElementById('draw-chooser').classList.add('show');}
@@ -1397,10 +1473,12 @@ function launchFromDraw(mode, level){
   document.getElementById('turn-pill').style.display='';
   if(ws){ws.close();ws=null;} stopAIAI();
 
-  // Déterminer la couleur du prochain coup
-  const reds=drawBoardState.filter(v=>v===RED).length;
-  const yellows=drawBoardState.filter(v=>v===YELLOW).length;
-  const nextColor=reds<=yellows?RED:YELLOW;
+  // Déterminer la couleur du prochain coup en validant la position
+  const nextColor=validateBoardGravity(drawBoardState);
+  if(nextColor===null){
+    toast('❌ Position invalide: gravité cassée ou déséquilibre');
+    return;
+  }
 
   if(mode==='ai'){
     // L'IA joue le prochain coup → le joueur humain prend l'autre couleur
@@ -1409,7 +1487,8 @@ function launchFromDraw(mode, level){
     myColor=RED;
   }
 
-  initLocalGame(mode, level||'hard', [...drawBoardState]);
+  const history=drawImportedSequence?drawImportedSequence.split('').map(ch=>parseInt(ch,10)-1):[];
+  initLocalGame(mode, level||'hard', [...drawBoardState], history);
 }
 
 // ════════════════════════════════════════════════════════════
