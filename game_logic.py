@@ -3,7 +3,7 @@ import os
 from functools import lru_cache
 
 import psycopg2
-from minimax import best_move
+from minimax import best_move, analyze_moves
 
 MODEL_EMPTY = " "
 MODEL_RED = "Rouge"
@@ -700,5 +700,16 @@ def _best_move_from_minimax(board, ai_player, depth):
     return col
 
 
+def _minimax_scores_from_board(board, ai_player, depth):
+    model_player = MODEL_RED if ai_player == RED else MODEL_YELLOW
+    model_grid = [[_to_model_token(cell) for cell in row] for row in board]
+    model = _MiniModelAdapter(model_grid, model_player)
+    return analyze_moves(model, max(1, int(depth)), model_player)
+
+
 def ai_hard(board, ai_player, depth=4):
     return _best_move_from_minimax(board, ai_player, depth)
+
+
+def ai_hard_scores(board, ai_player, depth=4):
+    return _minimax_scores_from_board(board, ai_player, depth)
