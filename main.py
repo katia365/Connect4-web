@@ -271,15 +271,20 @@ async def handle_minimax_scores(websocket: WebSocket, init: dict):
     for r in range(ROWS):
         board.append(flat[r * COLS:(r + 1) * COLS])
 
+    # Source unique pour le coup joué: ai_hard -> best_move.
+    try:
+        best_col = ai_hard(board, player_val, depth=depth)
+    except Exception as e:
+        print(f"Minimax best_col error: {e}")
+        best_col = None
+
+    # Les scores servent à l'affichage; si ça casse on renvoie quand même best_col.
     try:
         scores = ai_hard_scores(board, player_val, depth=depth)
     except Exception as e:
         print(f"Minimax score error: {e}")
-        await websocket.send_text(json.dumps({"type": "ai_minimax_scores", "scores": {}, "best_col": None}))
-        return
+        scores = {}
 
-    # Source unique: même chemin que le coup effectivement joué (ai_hard -> best_move).
-    best_col = ai_hard(board, player_val, depth=depth)
     best_score = scores.get(best_col) if best_col is not None else None
 
     if best_col is None and scores:
