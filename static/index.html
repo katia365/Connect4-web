@@ -970,7 +970,14 @@ async function runAIAILoop(){
   while(aiaiRunning&&gameStatus==='playing'&&gameMode==='aiai'){
     await new Promise(r=>{aiaiTimer=setTimeout(r,700);});
     if(!aiaiRunning||gameStatus!=='playing'||gameMode!=='aiai') break;
-    const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,getCurrentSequence());
+    const seq=getCurrentSequence();
+    let col=null;
+    if(aiLevel==='hard'){
+      const res=await getMinimaxScoresFast(liveBoard,liveCurrent,minimaxDepth);
+      col=res&&res.best_col!==undefined&&res.best_col!==null?Number(res.best_col):null;
+    } else {
+      col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,seq);
+    }
     const valid=getValidColsFlat(liveBoard);
     if(!valid.length) break;
     applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
@@ -982,7 +989,14 @@ async function runAIAILoop(){
 async function doLocalAIMove(){
   if(gameStatus!=='playing'||gameMode!=='ai') return;
   if(aiLevel==='hard') showAIMsg('♟ Minimax prof.'+minimaxDepth+' — calcul en cours...',true);
-  const col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,getCurrentSequence());
+  const seq=getCurrentSequence();
+  let col=null;
+  if(aiLevel==='hard'){
+    const res=await getMinimaxScoresFast(liveBoard,liveCurrent,minimaxDepth);
+    col=res&&res.best_col!==undefined&&res.best_col!==null?Number(res.best_col):null;
+  } else {
+    col=await getAIHintFast(liveBoard,liveCurrent,aiLevel,seq);
+  }
   if(gameStatus!=='playing'||gameMode!=='ai') return;
   const valid=getValidColsFlat(liveBoard);
   if(!valid.length) return;
