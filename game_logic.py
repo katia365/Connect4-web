@@ -37,30 +37,22 @@ def is_draw(board):
 
 
 def check_winner(board, player):
-    # Horizontal
     for r in range(ROWS):
         for c in range(COLS - 3):
             if all(board[r][c + i] == player for i in range(4)):
                 return True
-
-    # Vertical
     for r in range(ROWS - 3):
         for c in range(COLS):
             if all(board[r + i][c] == player for i in range(4)):
                 return True
-
-    # Diagonal down-right
     for r in range(ROWS - 3):
         for c in range(COLS - 3):
             if all(board[r + i][c + i] == player for i in range(4)):
                 return True
-
-    # Diagonal up-right
     for r in range(3, ROWS):
         for c in range(COLS - 3):
             if all(board[r - i][c + i] == player for i in range(4)):
                 return True
-
     return False
 
 
@@ -100,8 +92,6 @@ def _ai_medium_log(message):
 
 
 def _reconstruct_sequence_from_board(board):
-    # Reconstruct one valid 1-indexed move sequence for the current board,
-    # assuming RED starts and gravity is respected.
     reds = 0
     yellows = 0
     col_stacks = []
@@ -138,7 +128,6 @@ def _reconstruct_sequence_from_board(board):
     def dfs(filled, current):
         if filled == target_heights:
             return ""
-
         next_player = YELLOW if current == RED else RED
         for c in range(COLS):
             idx = filled[c]
@@ -219,6 +208,13 @@ def _safe_columns(board, player):
     return safe if safe else valid
 
 
+def _resolve_winner(stored_winner, seq_coups):
+    """Résout le vainqueur, que ce soit stocké en BDD ou inféré depuis la séquence."""
+    if stored_winner:
+        return stored_winner
+    return _infer_winner_label_from_sequence(seq_coups or "")
+
+
 def _db_candidates_for_next_move(sequence, winner_label):
     conn = None
     cur = None
@@ -231,14 +227,13 @@ def _db_candidates_for_next_move(sequence, winner_label):
             SELECT sequence_coups, sequence_miroir, vainqueur
             FROM parties
             WHERE (sequence_coups LIKE %s OR sequence_miroir LIKE %s)
-              AND (vainqueur = %s OR vainqueur IS NULL)
             ORDER BY LENGTH(sequence_coups) ASC, sequence_coups ASC
             """,
-            (sequence + '%', sequence + '%', winner_label)
+            (sequence + '%', sequence + '%')
         )
 
         for seq_coups, seq_miroir, stored_winner in cur.fetchall():
-            resolved_winner = stored_winner or _infer_winner_label_from_sequence(seq_coups or "")
+            resolved_winner = _resolve_winner(stored_winner, seq_coups)
             if resolved_winner != winner_label:
                 continue
 
@@ -280,22 +275,27 @@ def _db_next_move_stats(sequence, winner_label):
         for seq_coups, seq_miroir, stored_winner in cur.fetchall():
             next_col = None
             remaining = None
+            used_seq = None
 
             if seq_coups and seq_coups.startswith(sequence) and len(seq_coups) > len(sequence):
                 ch = seq_coups[len(sequence)]
                 if ch.isdigit() and 1 <= int(ch) <= COLS:
                     next_col = int(ch) - 1
                     remaining = len(seq_coups) - len(sequence)
+                    used_seq = seq_coups
             elif seq_miroir and seq_miroir.startswith(sequence) and len(seq_miroir) > len(sequence):
                 ch = seq_miroir[len(sequence)]
                 if ch.isdigit() and 1 <= int(ch) <= COLS:
                     next_col = _mirror_col(int(ch) - 1)
                     remaining = len(seq_miroir) - len(sequence)
+                    used_seq = seq_coups  # on infère depuis la séquence originale
 
             if next_col is None or remaining is None:
                 continue
 
-            winner = stored_winner or _infer_winner_label_from_sequence(seq_coups or "")
+            # Résolution robuste du vainqueur
+            winner = _resolve_winner(stored_winner, used_seq)
+
             item = stats.setdefault(
                 next_col,
                 {
@@ -386,14 +386,13 @@ def _db_min_remaining_moves(sequence, winner_label):
             SELECT sequence_coups, sequence_miroir, vainqueur
             FROM parties
             WHERE (sequence_coups LIKE %s OR sequence_miroir LIKE %s)
-              AND (vainqueur = %s OR vainqueur IS NULL)
             ORDER BY LENGTH(sequence_coups) ASC, sequence_coups ASC
             """,
-            (sequence + '%', sequence + '%', winner_label)
+            (sequence + '%', sequence + '%')
         )
 
         for seq_coups, seq_miroir, stored_winner in cur.fetchall():
-            resolved_winner = stored_winner or _infer_winner_label_from_sequence(seq_coups or "")
+            resolved_winner = _resolve_winner(stored_winner, seq_coups)
             if resolved_winner != winner_label:
                 continue
 
@@ -512,9 +511,7 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
         tmp = _copy_board(board)
         drop_piece(tmp, col, ai_player)
         if check_winner(tmp, ai_player):
-            _ai_medium_log(
-                f"source=immediate_win player={ai_player} seq='{sequence}' col={col + 1}"
-            )
+            _ai_medium_log(f"source=immediate_win player={ai_player} seq='{sequence}' col={col + 1}")
             return col
 
     # 2) Block immediate opponent win
@@ -522,17 +519,12 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
         tmp = _copy_board(board)
         drop_piece(tmp, col, opp)
         if check_winner(tmp, opp):
-            _ai_medium_log(
-                f"source=block player={ai_player} seq='{sequence}' col={col + 1}"
-            )
+            _ai_medium_log(f"source=block player={ai_player} seq='{sequence}' col={col + 1}")
             return col
 
-    # Ne considérer en priorité que les coups qui ne donnent pas
-    # une victoire immédiate à l'adversaire au coup suivant.
     search_cols = _safe_columns(board, ai_player)
     safe_valid = search_cols[:]
 
-    # 3) Chercher dans la BDD le coup le plus fiable pour ce préfixe.
     winner_label = _winner_label(ai_player)
 
     best_col = None
@@ -551,8 +543,6 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
         )
         return best_col
 
-    # 3b) Compat fallback: conserver l'ancien comportement si on n'a pas
-    # assez de signal statistique gagnant.
     try:
         candidates = _db_candidates_for_next_move(sequence, winner_label)
         seen_candidates = set()
@@ -561,7 +551,6 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
         for candidate_col, win_in, source in candidates:
             if candidate_col not in search_cols:
                 continue
-
             if candidate_col in seen_candidates:
                 continue
             seen_candidates.add(candidate_col)
@@ -585,7 +574,6 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
     except Exception as e:
         print(f"Erreur BDD fallback dans ai_medium_with_seq: {e}")
 
-    # 4) Fallback : colonnes centrales
     preferred = _order_cols(search_cols)
     seed = sum(ord(ch) for ch in sequence) if sequence else 0
     rnd = random.Random(seed)
@@ -629,18 +617,26 @@ class _MiniModelAdapter:
             if self.grid[r][col] == MODEL_EMPTY:
                 self.grid[r][col] = self.current_player
                 row = r
-                self.recompute_result()
+                # Alterner le joueur AVANT de recalculer le résultat
                 self.current_player = MODEL_RED if self.current_player == MODEL_YELLOW else MODEL_YELLOW
+                self.recompute_result()
                 return row
         return None
 
     def undo(self, col, row):
         self.grid[row][col] = MODEL_EMPTY
+        # Revenir au joueur précédent
         self.current_player = MODEL_RED if self.current_player == MODEL_YELLOW else MODEL_YELLOW
         self.recompute_result()
 
     def copy(self):
-        model = _MiniModelAdapter(self.grid, self.current_player)
+        """Copie profonde complète de l'état."""
+        model = _MiniModelAdapter.__new__(_MiniModelAdapter)
+        model.grid = [row[:] for row in self.grid]
+        model.rows = self.rows
+        model.cols = self.cols
+        model.current_player = self.current_player
+        model.result = _ResultState()
         model.result.winner = self.result.winner
         model.result.draw = self.result.draw
         model.result.finished = self.result.finished
@@ -648,25 +644,28 @@ class _MiniModelAdapter:
 
     def recompute_result(self):
         self.result.winner = None
-        self.result.draw = True
+        self.result.draw = False
         self.result.finished = False
 
+        has_empty = False
         for r in range(self.rows):
             for c in range(self.cols):
-                token = self.grid[r][c]
-                if token == MODEL_EMPTY:
-                    self.result.draw = False
+                if self.grid[r][c] == MODEL_EMPTY:
+                    has_empty = True
                     continue
                 if self._check_victory(r, c):
-                    self.result.winner = token
+                    self.result.winner = self.grid[r][c]
                     self.result.finished = True
                     return
 
-        if self.result.draw:
+        if not has_empty:
+            self.result.draw = True
             self.result.finished = True
 
     def _check_victory(self, row, col):
         token = self.grid[row][col]
+        if token == MODEL_EMPTY:
+            return False
         directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
         for dr, dc in directions:
             count = 1
@@ -687,7 +686,17 @@ def _best_move_from_minimax(board, ai_player, depth):
     model_grid = [[_to_model_token(cell) for cell in row] for row in board]
     model = _MiniModelAdapter(model_grid, model_player)
 
-    col, _ = best_move(model, max(1, int(depth)), model.current_player)
+    # Vérifier que le modèle est dans l'état correct (pas déjà terminé)
+    if model.result.finished:
+        valid = get_valid_cols(board)
+        return valid[0] if valid else None
+
+    col, score = best_move(model, max(1, int(depth)), model_player)
+
+    if col is None:
+        valid = get_valid_cols(board)
+        return valid[0] if valid else None
+
     return col
 
 
