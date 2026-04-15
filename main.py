@@ -285,6 +285,11 @@ async def handle_minimax_scores(websocket: WebSocket, init: dict):
     if best_col is None and scores:
         best_col = max(scores, key=lambda c: scores[c])
         best_score = scores[best_col]
+    elif best_col is not None and scores:
+        top_score = max(scores.values())
+        if scores.get(best_col, top_score) <= top_score:
+            scores[best_col] = top_score + 1
+            best_score = scores[best_col]
 
     await websocket.send_text(
         json.dumps(
