@@ -278,9 +278,11 @@ async def handle_minimax_scores(websocket: WebSocket, init: dict):
         await websocket.send_text(json.dumps({"type": "ai_minimax_scores", "scores": {}, "best_col": None}))
         return
 
-    best_col = None
-    best_score = None
-    if scores:
+    # Source unique: même chemin que le coup effectivement joué (ai_hard -> best_move).
+    best_col = ai_hard(board, player_val, depth=depth)
+    best_score = scores.get(best_col) if best_col is not None else None
+
+    if best_col is None and scores:
         best_col = max(scores, key=lambda c: scores[c])
         best_score = scores[best_col]
 
