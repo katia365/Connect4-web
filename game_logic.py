@@ -1,9 +1,10 @@
-import math
 import random
 import os
 from functools import lru_cache
 
 import psycopg2
+from game_model import Connect4Model, PLAYER_RED, PLAYER_YELLOW, EMPTY as MODEL_EMPTY
+from minimax import best_move
 
 ROWS = 9
 COLS = 9
@@ -26,10 +27,6 @@ def drop_piece(board, col, player):
             board[r][col] = player
             return r
     return None
-
-
-def _undo_piece(board, col, row):
-    board[row][col] = EMPTY
 
 
 def is_draw(board):
@@ -597,151 +594,23 @@ def ai_medium_with_seq(board, ai_player, sequence=""):
     return choice
 
 
-def _evaluate_window(window, player):
-    opp = RED if player == YELLOW else YELLOW
-    mine = window.count(player)
-    theirs = window.count(opp)
-    empties = window.count(EMPTY)
-
-    score = 0
-    if mine == 4:
-        score += 100000
-    elif mine == 3 and empties == 1:
-        score += 120
-    elif mine == 2 and empties == 2:
-        score += 12
-
-    if theirs == 3 and empties == 1:
-        score -= 150
-    elif theirs == 2 and empties == 2:
-        score -= 10
-
-    return score
+def _to_model_token(cell_value):
+    if cell_value == RED:
+        return PLAYER_RED
+    if cell_value == YELLOW:
+        return PLAYER_YELLOW
+    return MODEL_EMPTY
 
 
-def _score_position(board, player):
-    score = 0
+def _best_move_from_minimax(board, ai_player, depth):
+    model = Connect4Model(rows=ROWS, cols=COLS, starting=PLAYER_RED if ai_player == RED else PLAYER_YELLOW)
+    model.grid = [[_to_model_token(cell) for cell in row] for row in board]
+    model.current_player = PLAYER_RED if ai_player == RED else PLAYER_YELLOW
+    model.recompute_result()
 
-    # Slight center bias for stronger play and faster tie-breaks
-    center_col = COLS // 2
-    center_count = sum(1 for r in range(ROWS) if board[r][center_col] == player)
-    score += center_count * 8
-
-    # Horizontal windows
-    for r in range(ROWS):
-        for c in range(COLS - 3):
-            window = [board[r][c + i] for i in range(4)]
-            score += _evaluate_window(window, player)
-
-    # Vertical windows
-    for c in range(COLS):
-        for r in range(ROWS - 3):
-            window = [board[r + i][c] for i in range(4)]
-            score += _evaluate_window(window, player)
-
-    # Diagonal down-right windows
-    for r in range(ROWS - 3):
-        for c in range(COLS - 3):
-            window = [board[r + i][c + i] for i in range(4)]
-            score += _evaluate_window(window, player)
-
-    # Diagonal up-right windows
-    for r in range(3, ROWS):
-        for c in range(COLS - 3):
-            window = [board[r - i][c + i] for i in range(4)]
-            score += _evaluate_window(window, player)
-
-    return score
-
-
-def _terminal_value(board, ai_player, depth):
-    opp = RED if ai_player == YELLOW else YELLOW
-    if check_winner(board, ai_player):
-        return 1_000_000 + depth
-    if check_winner(board, opp):
-        return -1_000_000 - depth
-    if is_draw(board):
-        return 0
-    return None
-
-
-def _board_key(board):
-    return tuple(tuple(row) for row in board)
-
-
-def _minimax(board, depth, alpha, beta, maximizing, ai_player, tt=None):
-    if tt is None:
-        tt = {}
-
-    key = (_board_key(board), depth, maximizing, ai_player)
-    if key in tt:
-        return tt[key]
-
-    terminal = _terminal_value(board, ai_player, depth)
-    if terminal is not None:
-        tt[key] = terminal
-        return terminal
-    if depth == 0:
-        score = _score_position(board, ai_player)
-        tt[key] = score
-        return score
-
-    valid = _order_cols(get_valid_cols(board))
-    if maximizing:
-        value = -math.inf
-        for col in valid:
-            row = drop_piece(board, col, ai_player)
-            if row is None:
-                continue
-            value = max(value, _minimax(board, depth - 1, alpha, beta, False, ai_player, tt))
-            _undo_piece(board, col, row)
-            alpha = max(alpha, value)
-            if alpha >= beta:
-                break
-        tt[key] = value
-        return value
-
-    opp = RED if ai_player == YELLOW else YELLOW
-    value = math.inf
-    for col in valid:
-        row = drop_piece(board, col, opp)
-        if row is None:
-            continue
-        value = min(value, _minimax(board, depth, alpha, beta, True, ai_player, tt))
-        _undo_piece(board, col, row)
-        beta = min(beta, value)
-        if alpha >= beta:
-            break
-    tt[key] = value
-    return value
+    col, _ = best_move(model, max(1, int(depth)), model.current_player)
+    return col
 
 
 def ai_hard(board, ai_player, depth=4):
-    valid = get_valid_cols(board)
-    if not valid:
-        return None
-
-    depth = max(1, min(int(depth), 8))
-    ordered = _order_cols(valid)
-    tt = {}
-
-    best_col = ordered[0]
-    best_val = -math.inf
-
-    for col in ordered:
-        row = drop_piece(board, col, ai_player)
-        if row is None:
-            continue
-
-        if check_winner(board, ai_player):
-            _undo_piece(board, col, row)
-            return col
-
-        val = _minimax(board, depth - 1, -math.inf, math.inf, False, ai_player, tt)
-        _undo_piece(board, col, row)
-
-        if val > best_val:
-            best_val = val
-            best_col = col
-
-    return best_col
+    return _best_move_from_minimax(board, ai_player, depth)
