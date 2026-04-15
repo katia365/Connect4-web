@@ -302,6 +302,32 @@ async def handle_minimax_scores(websocket: WebSocket, init: dict):
         )
     )
 
+
+async def handle_best_col(websocket: WebSocket, init: dict):
+    flat = init.get("board", [])
+    player_val = init.get("player", RED)
+    depth = int(init.get("minimax_depth", 4))
+
+    if not isinstance(flat, list) or len(flat) != ROWS * COLS:
+        await websocket.send_text(json.dumps({"type": "ai_best_col", "best_col": None}))
+        return
+
+    board = []
+    for r in range(ROWS):
+        board.append(flat[r * COLS:(r + 1) * COLS])
+
+    try:
+        best_col = ai_hard(board, player_val, depth=depth)
+    except Exception as e:
+        print(f"Best col error: {e}")
+        best_col = None
+
+    valid = get_valid_cols(board)
+    if best_col is None or best_col not in valid:
+        best_col = valid[0] if valid else None
+
+    await websocket.send_text(json.dumps({"type": "ai_best_col", "best_col": best_col}))
+
 @app.websocket("/ws")
 async def ws_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -321,6 +347,10 @@ async def ws_endpoint(websocket: WebSocket):
 
         if action == "ai_minimax_scores":
             await handle_minimax_scores(websocket, init)
+            return
+
+        if action == "ai_best_col":
+            await handle_best_col(websocket, init)
             return
 
         if action == "ai":
