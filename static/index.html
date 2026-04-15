@@ -1307,10 +1307,25 @@ async function getMinimaxScoresFast(board,player,depth){
 }
 
 async function getHardBestColFast(board,player,depth){
-  const res=await getMinimaxScoresFast(board,player,depth);
-  if(!res||res.best_col===undefined||res.best_col===null) return null;
-  const col=Number(res.best_col);
-  return Number.isInteger(col)?col:null;
+  try{
+    const proto=location.protocol==='https:'?'wss':'ws';
+    return await new Promise(resolve=>{
+      const hws=new WebSocket(`${proto}://${location.host}/ws`);
+      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve(null);},3000);
+      hws.onopen=()=>hws.send(JSON.stringify({action:'ai_best_col',board:[...board],player,minimax_depth:depth}));
+      hws.onmessage=e=>{
+        clearTimeout(t);
+        const m=JSON.parse(e.data);
+        try{hws.close();}catch(e){}
+        if(m.type!=='ai_best_col') return resolve(null);
+        const col=m.best_col;
+        if(col===undefined||col===null) return resolve(null);
+        const n=Number(col);
+        resolve(Number.isInteger(n)?n:null);
+      };
+      hws.onerror=()=>{clearTimeout(t);resolve(null);};
+    });
+  }catch(e){return null;}
 }
 function showHintOnBoard(col){
   clearHint(); hintCol=col;
