@@ -980,6 +980,7 @@ async function runAIAILoop(){
     }
     const valid=getValidColsFlat(liveBoard);
     if(!valid.length) break;
+    if(aiLevel==='hard' && (col===null || col===-1 || !valid.includes(col))) break;
     applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
     if(!reviewMode){reviewCursor=liveHistory.length;renderBoard();updateTurnPill();updateNavUI();}
     if(gameStatus==='finished') break;
@@ -1000,6 +1001,7 @@ async function doLocalAIMove(){
   if(gameStatus!=='playing'||gameMode!=='ai') return;
   const valid=getValidColsFlat(liveBoard);
   if(!valid.length) return;
+  if(aiLevel==='hard' && (col===null || col===-1 || !valid.includes(col))) return;
   applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
   reviewCursor=liveHistory.length;
   renderBoard(); updateTurnPill(); updateNavUI();
