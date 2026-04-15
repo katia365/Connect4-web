@@ -193,12 +193,12 @@ def minimax(model, depth, alpha, beta, maximizing, ai, tt):
 
 def best_move(model, depth, ai):
 
-    # 🔥 1. coup gagnant immédiat
+    #coup gagnant immédiat
     win = immediate_win(model, ai)
     if win is not None:
         return win, 1_000_000
 
-    # 🔥 2. bloquer adversaire
+    # bloquer adversaire
     opp = opponent(ai)
     block = immediate_win(model, opp)
     if block is not None:
