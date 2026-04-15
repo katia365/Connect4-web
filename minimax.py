@@ -193,12 +193,12 @@ def minimax(model, depth, alpha, beta, maximizing, ai, tt):
 
 def best_move(model, depth, ai):
 
-    #coup gagnant immédiat
+    # 🔥 1. coup gagnant immédiat
     win = immediate_win(model, ai)
     if win is not None:
         return win, 1_000_000
 
-    # bloquer adversaire
+    # 🔥 2. bloquer adversaire
     opp = opponent(ai)
     block = immediate_win(model, opp)
     if block is not None:
@@ -221,3 +221,25 @@ def best_move(model, depth, ai):
             best_col = col
 
     return best_col, best_val
+
+
+def analyze_moves(model, depth, ai):
+    """Retourne un dictionnaire {colonne: score} pour tous les coups valides."""
+    work_model = model.copy()
+    scores = {}
+    tt = {}
+
+    for col in _ordered_valid_cols(work_model):
+        row = work_model.play(col)
+        if row is None:
+            continue
+
+        if work_model.result.finished and work_model.result.winner == ai:
+            score = 1_000_000
+        else:
+            score = minimax(work_model, max(0, depth - 1), -math.inf, math.inf, False, ai, tt)
+
+        work_model.undo(col, row)
+        scores[col] = score
+
+    return scores
