@@ -1,6 +1,12 @@
 import math
 import random
-from game_model import PLAYER_RED, PLAYER_YELLOW, EMPTY
+try:
+    from game_model import PLAYER_RED, PLAYER_YELLOW, EMPTY
+except ModuleNotFoundError:
+    # Fallback for deployments where desktop modules are not shipped.
+    PLAYER_RED = "Rouge"
+    PLAYER_YELLOW = "Jaune"
+    EMPTY = " "
 
 # Longueur de séquence gagnante sur un plateau 9x9
 WIN_LEN = 5
