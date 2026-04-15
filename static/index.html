@@ -551,6 +551,8 @@ let predictionReqId=0;
 let minimaxScoreReqId=0;
 let drawImportedSequence='';
 const WS_MAX_RETRIES=2;
+// Délai en ms pour les appels WS minimax (profondeur élevée peut prendre du temps)
+const MINIMAX_WS_TIMEOUT=12000;
 
 // ════════════════════════════════════════════════════════════
 // NAVIGATION
@@ -606,9 +608,7 @@ async function wakeServer(){
     const t=setTimeout(()=>ctrl.abort(),5000);
     await fetch('/api/parties', { method:'GET', signal:ctrl.signal });
     clearTimeout(t);
-  }catch(e){
-    // On continue quand même: la connexion WS peut réussir au retry.
-  }
+  }catch(e){}
 }
 
 function openWS(msg){
@@ -626,22 +626,14 @@ function openWS(msg){
     };
 
     ws.onmessage=e=>handleMsg(JSON.parse(e.data));
-
-    ws.onerror=()=>{
-      // Laisser onclose gérer les retries et le message final.
-    };
+    ws.onerror=()=>{};
 
     ws.onclose=()=>{
       if(!opened && attempts<=WS_MAX_RETRIES){
         setTimeout(connect, 600 * attempts);
         return;
       }
-
-      if(!opened){
-        toast('Erreur réseau');
-        return;
-      }
-
+      if(!opened){toast('Erreur réseau');return;}
       if(gameStatus==='playing'&&gameMode==='pvp') toast('Connexion perdue');
     };
   };
@@ -729,23 +721,22 @@ function triggerImportFile(){
 function handleImportFile(event){
   const file=event.target.files[0];
   if(!file) return;
-  
+
   const reader=new FileReader();
   reader.onload=(e)=>{
     const content=e.target.result.trim();
     const sequence=parseImportedSequence(file.name, content);
-    
+
     if(!sequence.match(/^\d+$/)){
       toast("❌ Fichier invalide. Format attendu: '5567.txt' OU fichier contenant une séquence");
       return;
     }
-    
-    // Vérifier que la séquence est valide (colonnes entre 1 et 9)
+
     if(![...sequence].every(c=>parseInt(c)>=1&&parseInt(c)<=COLS)){
       toast("❌ Séquence invalide (colonnes doivent être entre 1 et "+COLS+")");
       return;
     }
-    
+
     const replay=replaySequence(sequence);
     if(!replay){
       toast("❌ Séquence illégale: colonne pleine ou coup impossible");
@@ -758,9 +749,9 @@ function handleImportFile(event){
     renderDrawBoard();
     toast(`✅ Séquence chargée: ${sequence.length} coups - Modifie ou lance la partie`);
   };
-  
+
   reader.readAsText(file);
-  event.target.value=""; // Reset l'input
+  event.target.value="";
 }
 
 function reconstructBoardFromSequence(sequence){
@@ -770,7 +761,6 @@ function reconstructBoardFromSequence(sequence){
 
 // ════════════════════════════════════════════════════════════
 // INIT LOCAL GAME
-// myColor doit être défini AVANT d'appeler cette fonction
 // ════════════════════════════════════════════════════════════
 function initLocalGame(mode, level, board, history=[]){
   gameMode=mode; aiLevel=level;
@@ -788,7 +778,9 @@ function initLocalGame(mode, level, board, history=[]){
   renderBoard(); updateTurnPill(); updateNavUI();
   refreshPredictionAuto();
   if(mode==='aiai') runAIAILoop();
-  else if(mode==='ai'&&liveCurrent!==myColor) setTimeout(doLocalAIMove,600);
+  // NB: pour mode==='ai', le premier coup IA est géré par launchFromDraw
+  // afin d'éviter le double-appel. Pour les autres entrées (startAI via WS),
+  // l'IA répond via le serveur.
 }
 
 // ════════════════════════════════════════════════════════════
@@ -990,6 +982,7 @@ async function runAIAILoop(){
   }
   aiaiRunning=false;
 }
+
 async function doLocalAIMove(){
   if(gameStatus!=='playing'||gameMode!=='ai') return;
   if(aiLevel==='hard') showAIMsg('♟ Minimax prof.'+minimaxDepth+' — calcul en cours...',true);
@@ -1004,7 +997,10 @@ async function doLocalAIMove(){
   const valid=getValidColsFlat(liveBoard);
   if(!valid.length) return;
   if(aiLevel==='hard'){
-    if(col===null || col===-1 || !valid.includes(col)) return;
+    if(col===null || col===-1 || !valid.includes(col)){
+      // fallback aléatoire si minimax échoue
+      col=valid[Math.floor(Math.random()*valid.length)];
+    }
     applyLocalMove(col);
   } else {
     applyLocalMove(col!==null&&col!==-1&&valid.includes(col)?col:valid[Math.floor(Math.random()*valid.length)]);
@@ -1220,7 +1216,7 @@ async function getBddHintFast(board,player,seq){
     const proto=location.protocol==='https:'?'wss':'ws';
     return await new Promise(resolve=>{
       const hws=new WebSocket(`${proto}://${location.host}/ws`);
-      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve({col:null,messages:[]});},3500);
+      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve({col:null,messages:[]});},5000);
       hws.onopen=()=>hws.send(JSON.stringify({action:'ai_bdd_hint',board:[...board],player,sequence:seq}));
       hws.onmessage=e=>{
         clearTimeout(t);
@@ -1280,7 +1276,7 @@ async function getAIHintFast(board,player,level,seq){
     const proto=location.protocol==='https:'?'wss':'ws';
     return await new Promise(resolve=>{
       const hws=new WebSocket(`${proto}://${location.host}/ws`);
-      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve(null);},3000);
+      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve(null);},5000);
       hws.onopen=()=>hws.send(JSON.stringify({action:'ai_hint',board:[...board],player,ai_level:level,sequence:seq,minimax_depth:minimaxDepth}));
       hws.onmessage=e=>{clearTimeout(t);const m=JSON.parse(e.data);try{hws.close();}catch(e){}resolve(m.type==='ai_hint'?m.col:null);};
       hws.onerror=()=>{clearTimeout(t);resolve(null);};
@@ -1288,12 +1284,15 @@ async function getAIHintFast(board,player,level,seq){
   }catch(e){return null;}
 }
 
+// ════════════════════════════════════════════════════════════
+// MINIMAX SCORES — timeout augmenté + fallback aléatoire
+// ════════════════════════════════════════════════════════════
 async function getMinimaxScoresFast(board,player,depth){
   try{
     const proto=location.protocol==='https:'?'wss':'ws';
     return await new Promise(resolve=>{
       const hws=new WebSocket(`${proto}://${location.host}/ws`);
-      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve(null);},3500);
+      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve(null);},MINIMAX_WS_TIMEOUT);
       hws.onopen=()=>hws.send(JSON.stringify({action:'ai_minimax_scores',board:[...board],player,minimax_depth:depth}));
       hws.onmessage=e=>{
         clearTimeout(t);
@@ -1306,27 +1305,52 @@ async function getMinimaxScoresFast(board,player,depth){
   }catch(e){return null;}
 }
 
+// ════════════════════════════════════════════════════════════
+// BEST COL — timeout augmenté + fallback aléatoire robuste
+// ════════════════════════════════════════════════════════════
 async function getHardBestColFast(board,player,depth){
   try{
     const proto=location.protocol==='https:'?'wss':'ws';
     return await new Promise(resolve=>{
       const hws=new WebSocket(`${proto}://${location.host}/ws`);
-      const t=setTimeout(()=>{try{hws.close();}catch(e){}resolve(null);},3000);
+      // Timeout élevé : Minimax depth 4+ sur plateau rempli peut prendre plusieurs secondes
+      const t=setTimeout(()=>{
+        try{hws.close();}catch(e){}
+        // Fallback : coup aléatoire valide plutôt que null (évite le blocage)
+        const v=getValidColsFlat(board);
+        console.warn('[Minimax] timeout — fallback aléatoire');
+        resolve(v.length?v[Math.floor(Math.random()*v.length)]:null);
+      },MINIMAX_WS_TIMEOUT);
       hws.onopen=()=>hws.send(JSON.stringify({action:'ai_best_col',board:[...board],player,minimax_depth:depth}));
       hws.onmessage=e=>{
         clearTimeout(t);
         const m=JSON.parse(e.data);
         try{hws.close();}catch(e){}
-        if(m.type!=='ai_best_col') return resolve(null);
+        if(m.type!=='ai_best_col'){
+          const v=getValidColsFlat(board);
+          return resolve(v.length?v[Math.floor(Math.random()*v.length)]:null);
+        }
         const col=m.best_col;
-        if(col===undefined||col===null) return resolve(null);
+        if(col===undefined||col===null){
+          const v=getValidColsFlat(board);
+          return resolve(v.length?v[Math.floor(Math.random()*v.length)]:null);
+        }
         const n=Number(col);
         resolve(Number.isInteger(n)?n:null);
       };
-      hws.onerror=()=>{clearTimeout(t);resolve(null);};
+      hws.onerror=()=>{
+        clearTimeout(t);
+        const v=getValidColsFlat(board);
+        console.warn('[Minimax] WS error — fallback aléatoire');
+        resolve(v.length?v[Math.floor(Math.random()*v.length)]:null);
+      };
     });
-  }catch(e){return null;}
+  }catch(e){
+    const v=getValidColsFlat(board);
+    return v.length?v[Math.floor(Math.random()*v.length)]:null;
+  }
 }
+
 function showHintOnBoard(col){
   clearHint(); hintCol=col;
   let targetRow=-1;
@@ -1361,22 +1385,27 @@ function hideAIMsg(){
 }
 
 // ════════════════════════════════════════════════════════════
-// MINIMAX COL SCORES
+// MINIMAX COL SCORES — affichage après chaque coup
 // ════════════════════════════════════════════════════════════
 function updateMinimaxScores(){
+  // Afficher les scores pour mode ai (vs minimax) ET aiai
   const show=aiLevel==='hard'&&(gameMode==='ai'||gameMode==='aiai')&&gameStatus==='playing'&&!reviewMode;
   const el=document.getElementById('col-scores');
   if(!show){el.classList.remove('show');return;}
   el.classList.add('show');
   const reqId=++minimaxScoreReqId;
-  getMinimaxScoresFast(liveBoard,liveCurrent,minimaxDepth).then(res=>{
-    if(reqId!==minimaxScoreReqId) return;
+  // Snapshot du board et du joueur courant AVANT l'appel async
+  const boardSnapshot=[...liveBoard];
+  const playerSnapshot=liveCurrent;
+  getMinimaxScoresFast(boardSnapshot,playerSnapshot,minimaxDepth).then(res=>{
+    if(reqId!==minimaxScoreReqId) return; // résultat périmé, ignorer
     const scores=res&&res.scores?res.scores:{};
     const bestCol=res&&res.best_col!==undefined&&res.best_col!==null?Number(res.best_col):null;
     const vals=Object.values(scores).map(v=>Number(v)).filter(v=>Number.isFinite(v));
     if(!vals.length){
       for(let c=0;c<COLS;c++){
         const bar=document.getElementById('csb-'+c),val=document.getElementById('csv-'+c);
+        if(!bar||!val) continue;
         bar.style.height='0%';bar.style.background='var(--border)';val.textContent='✕';val.style.color='var(--muted)';
       }
       return;
@@ -1384,6 +1413,7 @@ function updateMinimaxScores(){
     const minV=Math.min(...vals),maxV=Math.max(...vals),range=maxV-minV||1;
     for(let c=0;c<COLS;c++){
       const bar=document.getElementById('csb-'+c),val=document.getElementById('csv-'+c);
+      if(!bar||!val) continue;
       const raw=scores[c];
       const v=raw===undefined||raw===null?null:Number(raw);
       if(v===null||!Number.isFinite(v)){bar.style.height='0%';bar.style.background='var(--border)';val.textContent='✕';val.style.color='var(--muted)';continue;}
@@ -1396,6 +1426,7 @@ function updateMinimaxScores(){
     }
   });
 }
+
 function quickEval(flat,col,player){
   const nb=[...flat];
   for(let r=ROWS-1;r>=0;r--){if(nb[r*COLS+col]===0){nb[r*COLS+col]=player;break;}}
@@ -1507,8 +1538,11 @@ function openDrawModeChooser(){document.getElementById('draw-chooser').classList
 
 // ════════════════════════════════════════════════════════════
 // LAUNCH FROM DRAW — CORRIGÉ
-// En mode AI : l'IA prend la couleur du prochain coup,
-// le joueur humain prend l'autre couleur.
+// - Valide la gravité du plateau dessiné
+// - Détermine qui joue en premier (nextColor)
+// - En mode AI : l'humain prend la couleur OPPOSÉE au prochain coup
+//   (donc l'IA joue le prochain coup)
+// - Déclenche doLocalAIMove si c'est à l'IA de commencer
 // ════════════════════════════════════════════════════════════
 function launchFromDraw(mode, level){
   closeDMC(); drawMode=false;
@@ -1531,8 +1565,35 @@ function launchFromDraw(mode, level){
     myColor=RED;
   }
 
-  const history=drawImportedSequence?drawImportedSequence.split('').map(ch=>parseInt(ch,10)-1):[];
-  initLocalGame(mode, level||'hard', [...drawBoardState], history);
+  const history=drawImportedSequence
+    ?drawImportedSequence.split('').map(ch=>parseInt(ch,10)-1)
+    :[];
+
+  // initLocalGame sans déclencher doLocalAIMove automatiquement
+  // (on le fait manuellement ci-dessous pour éviter le double appel)
+  gameMode=mode; aiLevel=level||'hard';
+  liveBoard=[...drawBoardState];
+  liveHistory=[...history];
+  liveCurrent=nextColor;
+  gameStatus='playing';
+  reviewMode=false; reviewCursor=liveHistory.length;
+  showPage('game-page');
+  resetAdvicePanel();
+  setAdviceVisibility(true);
+  buildBoard(); updateScoreNames(); setupModeUI();
+  renderBoard(); updateTurnPill(); updateNavUI();
+  refreshPredictionAuto();
+
+  if(mode==='aiai'){
+    runAIAILoop();
+  } else if(mode==='ai'){
+    // Si c'est à l'IA de jouer en premier (nextColor !== myColor)
+    // on déclenche doLocalAIMove avec un léger délai pour que l'UI soit prête
+    if(liveCurrent!==myColor){
+      setTimeout(doLocalAIMove, 800);
+    }
+  }
+  // mode==='local' : rien à faire, le joueur joue directement
 }
 
 // ════════════════════════════════════════════════════════════
