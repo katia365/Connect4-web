@@ -318,10 +318,6 @@ header{display:flex;align-items:center;justify-content:space-between;
       <div class="hcard-icon">✏️</div><div class="hcard-label">Dessiner une situation</div>
       <div class="hcard-desc">Pose les pions puis lance</div>
     </div>
-    <div class="hcard c-accent" onclick="triggerImportFile()">
-      <div class="hcard-icon">📂</div><div class="hcard-label">Importer une séquence</div>
-      <div class="hcard-desc">Charge une partie depuis un fichier .txt</div>
-    </div>
     <div class="hcard c-accent" onclick="openDBViewer()" style="grid-column:1/-1">
       <div class="hcard-icon">🗄️</div><div class="hcard-label">Visualiser la base de données</div>
       <div class="hcard-desc">Parcourir et rejouer toutes les parties enregistrées</div>
@@ -434,6 +430,7 @@ header{display:flex;align-items:center;justify-content:space-between;
     </button>
     <button class="draw-start-btn" onclick="openDrawModeChooser()">▶ Lancer la partie</button>
     <button class="draw-clear-btn" onclick="clearDrawBoard()">✕ Effacer</button>
+    <button class="draw-clear-btn" onclick="triggerImportFile()">📂 Importer</button>
     <button class="back-btn" onclick="exitDrawMode()">↩ Annuler</button>
   </div>
   <div class="board-and-advice">
@@ -687,7 +684,7 @@ function handleImportFile(event){
     if(!sequence.match(/^\d+$/)) sequence=content.match(/\d+/)?.[0]||"";
     
     if(!sequence.match(/^\d+$/)){
-      toast("❌ Fichier invalide. Format attendu: '5567.txt OU fichier contenant une séquence");
+      toast("❌ Fichier invalide. Format attendu: '5567.txt' OU fichier contenant une séquence");
       return;
     }
     
@@ -698,18 +695,10 @@ function handleImportFile(event){
     }
     
     // Reconstituire le plateau à partir de la séquence
-    const board=reconstructBoardFromSequence(sequence);
-    
-    // Déterminer qui doit jouer (évaluer les reds/yellows)
-    const reds=board.filter(v=>v===RED).length;
-    const yellows=board.filter(v=>v===YELLOW).length;
-    myColor=reds<=yellows?RED:YELLOW;
-    
-    // Fermer les modales et lancer le jeu
-    showPage('game-page');
-    if(ws){ws.close();ws=null;}
-    initLocalGame('local','hard',board);
-    toast(`✅ Partie chargée: ${sequence.length} coups`);
+    drawBoardState=reconstructBoardFromSequence(sequence);
+    liveBoard=[...drawBoardState];
+    renderDrawBoard();
+    toast(`✅ Séquence chargée: ${sequence.length} coups - Modifie ou lance la partie`);
   };
   
   reader.readAsText(file);
